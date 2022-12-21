@@ -81,6 +81,10 @@ int Game::Run()
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> deviceContext = nullptr;
 	// 機能レベル
 	D3D_FEATURE_LEVEL featureLevel = {};
+	// スワップチェーン
+	Microsoft::WRL::ComPtr<IDXGISwapChain> swapchain = nullptr;
+	// レンダーターゲット
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> renderTargetView = nullptr;
 
 	HRESULT hr = S_OK;
 
@@ -90,18 +94,22 @@ int Game::Run()
 	crationFlag |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
-	// 作成する機能レベル
-	const D3D_FEATURE_LEVEL featureLevels[] = {
-		D3D_FEATURE_LEVEL_11_0,
-		D3D_FEATURE_LEVEL_10_1,
-		D3D_FEATURE_LEVEL_11_0,
-	};
-
-	// デバイスの作成
-	hr = D3D11CreateDevice(NULL, D3D_DRIVER_TYPE_HARDWARE, 0, crationFlag, featureLevels, _countof(featureLevels),
-		D3D11_SDK_VERSION, &device, &featureLevel, &deviceContext);
-	if (FAILED(hr))
-	{
+	// スワップチェーンの作成
+	DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
+	swapChainDesc.BufferDesc.Width = width;
+	swapChainDesc.BufferDesc.Height = height;
+	swapChainDesc.BufferDesc.RefreshRate = { 60, 1 };
+	swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	swapChainDesc.SampleDesc = { 1, 0 };
+	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	swapChainDesc.BufferCount = 2;
+	swapChainDesc.OutputWindow = hWnd;
+	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	swapChainDesc.Windowed = TRUE;
+	// デバイスとスワップチェーンの作成
+	hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, 0, crationFlag, 
+		NULL, 0, D3D11_SDK_VERSION, &swapChainDesc, &swapchain, &device, &featureLevel, &deviceContext);
+	if (FAILED(hr)) {
 		OutputDebugStringA("デバイスの作成に失敗\n");
 		return -1;
 	}
@@ -109,6 +117,10 @@ int Game::Run()
 	// メッセージループ
 	MSG msg = {};
 	while (true) {
+		// 表示
+		swapchain->Present(1, 0);
+
+
 		if (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
 			// メッセージを取得
 			if (!GetMessage(&msg, NULL, 0, 0)) {
@@ -120,7 +132,10 @@ int Game::Run()
 		}
 	}
 
+	// リソースの解放
 	device.Reset();
 	deviceContext.Reset();
+	swapchain.Reset();
+
 	return 0;
 }
