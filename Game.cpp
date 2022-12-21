@@ -2,9 +2,11 @@
 #include <DirectXMath.h>
 #include "Game.h"
 #include "VertexShader.h"
+#include  "GeometryShader.h"
 #include "PixelShader.h"
 
 using namespace Microsoft::WRL;
+using namespace DirectX;
 
 // 受信したメッセージに応じた処理
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -225,7 +227,7 @@ int Game::Run()
 
 	// 1つの頂点に含まれる型
 	struct VertexPosition {
-		DirectX::XMFLOAT3 position;
+		XMFLOAT3 position;
 	};
 
 	// 頂点データの配列
@@ -272,9 +274,40 @@ int Game::Run()
 	// バッファーにデータを転送
 	deviceContext->UpdateSubresource(indexBuffer.Get(), 0, NULL, indices, 0, 0);
 
+	// 定数バッファーでシェーダーに毎フレーム送るデータ
+	struct MatricesPerFrame {
+		XMFLOAT4X4 world;					// ワールド行列
+		XMFLOAT4X4 view;					// ビュー行列
+		XMFLOAT4X4 projection;				// プロジェクション行列
+		XMFLOAT4X4 worldViewProjection;		// WVP行列
+	};
+	
+	// 定数バッファーの作成
+	ComPtr<ID3D11Buffer> constantBuffer = nullptr;
+	D3D11_BUFFER_DESC constantBufferDesc = {};
+	constantBufferDesc.ByteWidth = sizeof(MatricesPerFrame);
+	constantBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	constantBufferDesc.CPUAccessFlags = 0;
+	constantBufferDesc.MiscFlags = 0;
+	constantBufferDesc.StructureByteStride = 0;
+	hr = device->CreateBuffer(&constantBufferDesc, NULL, &constantBuffer);
+	if (FAILED(hr)) {
+		OutputDebugStringA("定数バッファーの作成に失敗\n");
+		return -1;
+	}
+
 	// 頂点シェーダーの作成
 	ComPtr<ID3D11VertexShader> vertexShader = nullptr;
 	hr = device->CreateVertexShader(g_VertexShader, sizeof(g_VertexShader), NULL, &vertexShader);
+	if (FAILED(hr)) {
+		OutputDebugStringA("頂点シェーダーの作成に失敗\n");
+		return -1;
+	}
+
+	// ジオメトリシェーダーの作成
+	ComPtr<ID3D11GeometryShader> geometryShader = nullptr;
+	hr = device->CreateGeometryShader(g_GeometryShader, sizeof(g_GeometryShader), NULL, &geometryShader);
 	if (FAILED(hr)) {
 		OutputDebugStringA("頂点シェーダーの作成に失敗\n");
 		return -1;
@@ -303,6 +336,30 @@ int Game::Run()
 	// メッセージループ
 	MSG msg = {};
 	while (true) {
+		// ワールド行列
+		auto world = XMMatrixTranslation(0.0f, 0.0f, 0.0f);
+		// ビュー行列
+		auto eyePosition = XMVectorSet(0.0f, 1.0f, -10.0f, 1.0f);
+		auto focusPosition = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+		auto upDirection = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+		auto view = XMMatrixLookAtLH(eyePosition, focusPosition, upDirection);
+		// プロジェクション行列
+		auto fovAngleY = 60.0f;
+		auto aspectRatio = (float)(width / height);
+		auto nearZ = 0.3f;
+		auto farZ = 1000.0f;
+		auto projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(fovAngleY), aspectRatio, nearZ, farZ);
+
+		// 用意した定数バッファの構造体に値を設定する
+		MatricesPerFrame matricesPerFrame = {};
+		XMStoreFloat4x4(&matricesPerFrame.world, XMMatrixTranspose(world));
+		XMStoreFloat4x4(&matricesPerFrame.view, XMMatrixTranspose(view));
+		XMStoreFloat4x4(&matricesPerFrame.projection, XMMatrixTranspose(projection));
+		XMStoreFloat4x4(&matricesPerFrame.worldViewProjection, XMMatrixTranspose(world * view * projection));
+		// 定数バッファの更新
+		deviceContext->UpdateSubresource(constantBuffer.Get(), 0, NULL, &matricesPerFrame, 0, 0);
+
+
 		// レンダーターゲットを設定
 		deviceContext->OMSetRenderTargets(_countof(renderTargetView), renderTargetView->GetAddressOf(), depthStencilView.Get());
 		// 画面のクリア
@@ -320,7 +377,12 @@ int Game::Run()
 
 		// シェーダーを設定
 		deviceContext->VSSetShader(vertexShader.Get(), NULL, 0);
+		deviceContext->GSSetShader(geometryShader.Get(), NULL, 0);
 		deviceContext->PSSetShader(pixelShader.Get(), NULL, 0);
+
+		// 頂点シェーダーに定数バッファーを設定
+		ID3D11Buffer* constantBuffers[1] = { constantBuffer.Get() };
+		deviceContext->VSSetConstantBuffers(0, _countof(constantBuffers), constantBuffers);
 
 		// インプットレイアウトの設定
 		deviceContext->IASetInputLayout(inputLayout.Get());
@@ -328,9 +390,6 @@ int Game::Run()
 		deviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		// インデックスバッファーの設定
 		deviceContext->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
-
-
-
 		// 描画
 		deviceContext->DrawIndexed(3, 0, 0);
 
