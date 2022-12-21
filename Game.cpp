@@ -85,8 +85,12 @@ int Game::Run()
 	Microsoft::WRL::ComPtr<IDXGISwapChain> swapchain = nullptr;
 	// レンダーターゲット
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> renderTargetView[1];
+	// 深度ステンシル
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> depthStencilView = nullptr;
+	// 深度ステンシルのフォーマット
+	const DXGI_FORMAT depthStencilFormat = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
 	// 画面をクリアするときに使用するカラー
-	FLOAT clearColor[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+	const FLOAT clearColor[] = { 0.4f, 0.4f, 0.4f, 1.0f };
 
 	HRESULT hr = S_OK;
 
@@ -132,6 +136,63 @@ int Game::Run()
 		OutputDebugStringA("レンダーターゲットビューの作成に失敗\n");
 		return -1;
 	}
+	backBuffer.Reset();
+
+	// テクスチャのフォーマットを設定
+	DXGI_FORMAT textureFormat = depthStencilFormat;
+	switch (depthStencilFormat)
+	{
+	case DXGI_FORMAT_D16_UNORM:
+		textureFormat = DXGI_FORMAT_R16_TYPELESS;
+		break;
+	case DXGI_FORMAT_D24_UNORM_S8_UINT:
+		textureFormat = DXGI_FORMAT_R24G8_TYPELESS;
+		break;
+	case DXGI_FORMAT_D32_FLOAT:
+		textureFormat = DXGI_FORMAT_R32_TYPELESS;
+		break;
+	case DXGI_FORMAT_D32_FLOAT_S8X24_UINT:
+		textureFormat = DXGI_FORMAT_R32G8X24_TYPELESS;
+		break;
+	}
+
+	// 深度ステンシルの作成
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> depthStencil = nullptr;
+	D3D11_TEXTURE2D_DESC depthStencilDesc = {};
+	depthStencilDesc.Width = width;
+	depthStencilDesc.Height = height;
+	depthStencilDesc.MipLevels = 1;
+	depthStencilDesc.ArraySize = 1;
+	depthStencilDesc.Format = textureFormat;
+	depthStencilDesc.SampleDesc = swapChainDesc.SampleDesc;
+	depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
+	depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	depthStencilDesc.CPUAccessFlags = 0;
+	depthStencilDesc.MiscFlags = 0;
+	hr = device->CreateTexture2D(&depthStencilDesc, NULL, &depthStencil);
+	if (FAILED(hr)) {
+		OutputDebugStringA("深度ステンシルの作成に失敗\n");
+		return -1;
+	}
+
+	// 深度ステンシルビューの作成
+	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc = {};
+	depthStencilViewDesc.Format = depthStencilFormat;
+
+	if (depthStencilDesc.SampleDesc.Count > 0) {
+		depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+	}
+	else {
+		depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	}
+
+	depthStencilViewDesc.Texture2D.MipSlice = 0;
+	hr = device->CreateDepthStencilView(depthStencil.Get(), &depthStencilViewDesc, &depthStencilView);
+	if (FAILED(hr)) {
+		OutputDebugStringA("深度ステンシルビューの作成に失敗\n");
+		return -1;
+	}
+	depthStencil.Reset();
 
 	// メッセージループ
 	MSG msg = {};
@@ -140,6 +201,7 @@ int Game::Run()
 		deviceContext->OMSetRenderTargets(1, renderTargetView->GetAddressOf(), nullptr);
 		// 画面のクリア
 		deviceContext->ClearRenderTargetView(renderTargetView[0].Get(), clearColor);
+		deviceContext->ClearDepthStencilView(depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 		// 表示
 		swapchain->Present(1, 0);
@@ -157,9 +219,11 @@ int Game::Run()
 	}
 
 	// リソースの解放
-	device.Reset();
-	deviceContext.Reset();
+	depthStencilView.Reset();
+	renderTargetView->Reset();
 	swapchain.Reset();
+	deviceContext.Reset();
+	device.Reset();
 
 	return 0;
 }
