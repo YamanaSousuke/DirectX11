@@ -253,6 +253,25 @@ int Game::Run()
 	// バッファーにデータを転送
 	deviceContext->UpdateSubresource(vertexBuffer.Get(), 0, NULL, vertices, 0, 0);
 
+	// インデックスデータ
+	UINT16 indices[] = { 0, 1 , 2 };
+	// インデックスバッファーの作成
+	ComPtr<ID3D11Buffer> indexBuffer = nullptr;
+	D3D11_BUFFER_DESC indexBufferDesc = {};
+	indexBufferDesc.ByteWidth = sizeof(indices);
+	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	indexBufferDesc.CPUAccessFlags = 0;
+	indexBufferDesc.MiscFlags = 0;
+	indexBufferDesc.StructureByteStride = 0;
+	hr = device->CreateBuffer(&indexBufferDesc, NULL, &indexBuffer);
+	if (FAILED(hr)) {
+		OutputDebugStringA("インデックスバッファーの作成に失敗\n");
+		return -1;
+	}
+	// バッファーにデータを転送
+	deviceContext->UpdateSubresource(indexBuffer.Get(), 0, NULL, indices, 0, 0);
+
 	// 頂点シェーダーの作成
 	ComPtr<ID3D11VertexShader> vertexShader = nullptr;
 	hr = device->CreateVertexShader(g_VertexShader, sizeof(g_VertexShader), NULL, &vertexShader);
@@ -307,9 +326,13 @@ int Game::Run()
 		deviceContext->IASetInputLayout(inputLayout.Get());
 		// トライアングル
 		deviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		// 描画
-		deviceContext->Draw(3, 0);
+		// インデックスバッファーの設定
+		deviceContext->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
 
+
+
+		// 描画
+		deviceContext->DrawIndexed(3, 0, 0);
 
 		// 表示
 		swapchain->Present(1, 0);
@@ -324,6 +347,12 @@ int Game::Run()
 			DispatchMessage(&msg);
 		}
 	}
+
+	// リソースの解放
+	vertexBuffer.Reset();
+	vertexShader.Reset();
+	pixelShader.Reset();
+	inputLayout.Reset();
 
 	Release();
 	return 0;
