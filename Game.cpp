@@ -1,6 +1,7 @@
-#include <d3d11.h>
+#include <DirectXMath.h>
 #include "Game.h"
-#include <wrl/client.h>
+
+using namespace Microsoft::WRL;
 
 // 受信したメッセージに応じた処理
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -67,33 +68,9 @@ bool Game::InitWindow()
 	return true;
 }
 
-// メッセージループの実行
-int Game::Run()
+// グラフィックデバイスの作成
+bool Game::InitGraphicsDevice()
 {
-	// ウィンドウの作成に失敗
-	if (!InitWindow()) {
-		return-1;
-	}
-
-	// デバイス
-	Microsoft::WRL::ComPtr<ID3D11Device> device = nullptr;
-	// デバイスコンテキスト
-	Microsoft::WRL::ComPtr<ID3D11DeviceContext> deviceContext = nullptr;
-	// 機能レベル
-	D3D_FEATURE_LEVEL featureLevel = {};
-	// スワップチェーン
-	Microsoft::WRL::ComPtr<IDXGISwapChain> swapchain = nullptr;
-	// レンダーターゲット
-	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> renderTargetView[1];
-	// 深度ステンシル
-	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> depthStencilView = nullptr;
-	// 深度ステンシルをシェーダーで利用するためのリソースビュー
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> depthStencilResourceView = nullptr;
-	// 深度ステンシルのフォーマット
-	const DXGI_FORMAT depthStencilFormat = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
-	// 画面をクリアするときに使用するカラー
-	const FLOAT clearColor[] = { 0.4f, 0.4f, 0.4f, 1.0f };
-
 	HRESULT hr = S_OK;
 
 	// デバイス作成時のオプションフラグ
@@ -116,11 +93,11 @@ int Game::Run()
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapChainDesc.Windowed = TRUE;
 	// デバイスとスワップチェーンの作成
-	hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, 0, crationFlag, 
+	hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, 0, crationFlag,
 		NULL, 0, D3D11_SDK_VERSION, &swapChainDesc, &swapchain, &device, &featureLevel, &deviceContext);
 	if (FAILED(hr)) {
 		OutputDebugStringA("デバイスの作成に失敗\n");
-		return -1;
+		return false;
 	}
 
 	// スワップチェーンからバックバッファーの取得
@@ -129,7 +106,7 @@ int Game::Run()
 	if (FAILED(hr))
 	{
 		OutputDebugStringA("バックバッファーの取得に失敗\n");
-		return -1;
+		return false;
 	}
 
 	// レンダーターゲットビューの作成
@@ -137,7 +114,7 @@ int Game::Run()
 	if (FAILED(hr))
 	{
 		OutputDebugStringA("レンダーターゲットビューの作成に失敗\n");
-		return -1;
+		return false;
 	}
 	backBuffer.Reset();
 
@@ -180,7 +157,7 @@ int Game::Run()
 	hr = device->CreateTexture2D(&depthStencilDesc, NULL, &depthStencil);
 	if (FAILED(hr)) {
 		OutputDebugStringA("深度ステンシルの作成に失敗\n");
-		return -1;
+		return false;
 	}
 
 	// 深度ステンシルビューの作成
@@ -196,7 +173,7 @@ int Game::Run()
 	hr = device->CreateDepthStencilView(depthStencil.Get(), &depthStencilViewDesc, &depthStencilView);
 	if (FAILED(hr)) {
 		OutputDebugStringA("深度ステンシルビューの作成に失敗\n");
-		return -1;
+		return false;
 	}
 
 	// 深度ステンシルリソースビューの作成
@@ -213,18 +190,83 @@ int Game::Run()
 	hr = device->CreateShaderResourceView(depthStencil.Get(), &depthStencilResourceViewDesc, &depthStencilResourceView);
 	if (FAILED(hr)) {
 		OutputDebugStringA("深度ステンシルリソースビューの作成に失敗\n");
-		return -1;
+		return false;
 	}
 	depthStencil.Reset();
+
+	// ビューポート
+	viewports[0].Width = static_cast<FLOAT>(width);
+	viewports[0].Height = static_cast<FLOAT>(height);
+	viewports[0].MaxDepth = 1.0f;
+	viewports[0].MinDepth = 0.0f;
+	viewports[0].TopLeftX = 0.0f;
+	viewports[0].TopLeftY = 0.0f;
+
+	return true;
+}
+
+// メッセージループの実行
+int Game::Run()
+{
+	// ウィンドウの作成
+	if (!InitWindow()) {
+		return-1;
+	}
+
+	// グラフィックデバイスの作成
+	if (!InitGraphicsDevice()) {
+		return-1;
+	}
+
+	HRESULT hr = S_OK;
+
+	// 1つの頂点に含まれる型
+	struct VertexPosition {
+		DirectX::XMFLOAT3 position;
+	};
+
+	// 頂点データの配列
+	VertexPosition vertices[] = {
+		{ { -1.0f, 0.0f, 0.0f }, },
+		{ {  0.0f, 1.0f, 0.0f }, },
+		{ {  1.0f, 0.0f, 0.0f }, },
+	};
+
+	// 頂点バッファーについての記述
+	D3D11_BUFFER_DESC vertexBufferDesc = {};
+	vertexBufferDesc.ByteWidth = sizeof(vertices);
+	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexBufferDesc.CPUAccessFlags = 0;
+	vertexBufferDesc.MiscFlags = 0;
+	vertexBufferDesc.StructureByteStride = 0;
+	// 頂点バッファーの作成
+	ComPtr<ID3D11Buffer> vertexBuffer = nullptr;
+	hr = device->CreateBuffer(&vertexBufferDesc, NULL, &vertexBuffer);
+	if (FAILED(hr)) {
+		OutputDebugStringA("頂点バッファーの作成に失敗\n");
+		return -1;
+	}
+	// バッファーにデータを転送
+	deviceContext->UpdateSubresource(vertexBuffer.Get(), 0, NULL, vertices, 0, 0);
 
 	// メッセージループ
 	MSG msg = {};
 	while (true) {
 		// レンダーターゲットを設定
-		deviceContext->OMSetRenderTargets(1, renderTargetView->GetAddressOf(), nullptr);
+		deviceContext->OMSetRenderTargets(_countof(renderTargetView), renderTargetView->GetAddressOf(), nullptr);
 		// 画面のクリア
 		deviceContext->ClearRenderTargetView(renderTargetView[0].Get(), clearColor);
 		deviceContext->ClearDepthStencilView(depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+		// ビューポートの設定
+		deviceContext->RSSetViewports(_countof(viewports), viewports);
+
+		// 頂点バッファーを設定
+		ID3D11Buffer* vertexBuffers[] = {vertexBuffer.Get()};
+		UINT strides[1] = { sizeof(VertexPosition) };
+		UINT offsets[1] = { 0 };
+		deviceContext->IASetVertexBuffers(0, _countof(vertexBuffers), vertexBuffers, strides, offsets);
 
 		// 表示
 		swapchain->Present(1, 0);
@@ -241,13 +283,17 @@ int Game::Run()
 		}
 	}
 
-	// リソースの解放
+	Release();
+	return 0;
+}
+
+// リソースの解放
+void Game::Release()
+{
 	depthStencilResourceView.Reset();
 	depthStencilView.Reset();
 	renderTargetView->Reset();
 	swapchain.Reset();
 	deviceContext.Reset();
 	device.Reset();
-
-	return 0;
 }
