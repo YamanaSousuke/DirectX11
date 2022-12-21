@@ -1,3 +1,4 @@
+#include <d3dcompiler.h>
 #include <DirectXMath.h>
 #include "Game.h"
 
@@ -250,6 +251,32 @@ int Game::Run()
 	// バッファーにデータを転送
 	deviceContext->UpdateSubresource(vertexBuffer.Get(), 0, NULL, vertices, 0, 0);
 
+	// シェーダーのバイトコード
+	ComPtr<ID3DBlob> bytecode = nullptr;
+	// エラーメッセージ
+	ComPtr<ID3DBlob> errorMessage = nullptr;
+
+	// 頂点シェーダーのコンパイル
+	hr = D3DCompileFromFile(L"VertexShader.hlsl", NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE,
+		"main", "vs_5_0", D3DCOMPILE_DEBUG, 0, &bytecode, &errorMessage);
+	if (FAILED(hr)) {
+		// 頂点シェーダーのコンパイルに失敗
+		LPCSTR message = nullptr;
+		message = static_cast<LPCSTR>(errorMessage->GetBufferPointer());
+		OutputDebugStringA(message);
+	}
+	errorMessage.Reset();
+
+	// 頂点シェーダーの作成
+	ComPtr<ID3D11VertexShader> vertexShader = nullptr;
+	hr = device->CreateVertexShader(bytecode->GetBufferPointer(), bytecode->GetBufferSize(), NULL, &vertexShader);
+	if (FAILED(hr)) {
+		OutputDebugStringA("頂点シェーダーの作成に失敗\n");
+		return -1;
+	}
+
+	bytecode.Reset();
+
 	// メッセージループ
 	MSG msg = {};
 	while (true) {
@@ -263,14 +290,16 @@ int Game::Run()
 		deviceContext->RSSetViewports(_countof(viewports), viewports);
 
 		// 頂点バッファーを設定
-		ID3D11Buffer* vertexBuffers[] = {vertexBuffer.Get()};
+		ID3D11Buffer* vertexBuffers[1] = {vertexBuffer.Get()};
 		UINT strides[1] = { sizeof(VertexPosition) };
 		UINT offsets[1] = { 0 };
 		deviceContext->IASetVertexBuffers(0, _countof(vertexBuffers), vertexBuffers, strides, offsets);
 
+		// 頂点シェーダーの設定
+		deviceContext->VSSetShader(vertexShader.Get(), NULL, 0);
+
 		// 表示
 		swapchain->Present(1, 0);
-
 
 		if (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
 			// メッセージを取得
