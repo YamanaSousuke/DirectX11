@@ -84,7 +84,9 @@ int Game::Run()
 	// スワップチェーン
 	Microsoft::WRL::ComPtr<IDXGISwapChain> swapchain = nullptr;
 	// レンダーターゲット
-	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> renderTargetView = nullptr;
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> renderTargetView[1];
+	// 画面をクリアするときに使用するカラー
+	FLOAT clearColor[] = { 1.0f, 0.0f, 0.0f, 1.0f };
 
 	HRESULT hr = S_OK;
 
@@ -114,9 +116,31 @@ int Game::Run()
 		return -1;
 	}
 
+	// スワップチェーンからバックバッファーの取得
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer = nullptr;
+	hr = swapchain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
+	if (FAILED(hr))
+	{
+		OutputDebugStringA("バックバッファーの取得に失敗\n");
+		return -1;
+	}
+
+	// レンダーターゲットビューの作成
+	hr = device->CreateRenderTargetView(backBuffer.Get(), NULL, &renderTargetView[0]);
+	if (FAILED(hr))
+	{
+		OutputDebugStringA("レンダーターゲットビューの作成に失敗\n");
+		return -1;
+	}
+
 	// メッセージループ
 	MSG msg = {};
 	while (true) {
+		// レンダーターゲットを設定
+		deviceContext->OMSetRenderTargets(1, renderTargetView->GetAddressOf(), nullptr);
+		// 画面のクリア
+		deviceContext->ClearRenderTargetView(renderTargetView[0].Get(), clearColor);
+
 		// 表示
 		swapchain->Present(1, 0);
 
