@@ -5,7 +5,8 @@
 #include <wrl/client.h>
 
 // アプリケーション全体を表す
-class Game {
+class Game
+{
 public:
 	// アプリケーションの初期化
 	void Initialize(LPCWSTR title, int width, int height);
@@ -47,6 +48,50 @@ private:
 	bool InitWindow();
 	// グラフィックデバイスの作成
 	bool InitGraphicsDevice();
+	// リソースの解放
+	void Release();
+};
+
+// 頂点シェーダー
+class VertexShader
+{
+private:
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader = nullptr;
+
+public:
+	// このクラスの新しいインスタンスの作成
+	static VertexShader* Create(ID3D11Device* device);
+	// ネイティブポインターの取得
+	ID3D11VertexShader* GetNativePointer();
+	// リソースの解放
+	void Release();
+};
+
+// ジオメトリシェーダー
+class GeometryShader
+{
+private:
+	Microsoft::WRL::ComPtr<ID3D11GeometryShader> geometryShader = nullptr;
+
+public:
+	// このクラスの新しいインスタンスの作成
+	static GeometryShader* Create(ID3D11Device* device);
+	// ネイティブポインターの取得
+	ID3D11GeometryShader* GetNativePointer();
+	// リソースの解放
+	void Release();
+};
+
+// ピクセルシェーダー
+class PixelShader {
+private:
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader = nullptr;
+
+public:
+	// このクラスの新しいインスタンスの作成
+	static PixelShader* Create(ID3D11Device* device);
+	// ネイティブポインターの取得
+	ID3D11PixelShader* GetNativePointer();
 	// リソースの解放
 	void Release();
 };

@@ -298,26 +298,23 @@ int Game::Run()
 	}
 
 	// 頂点シェーダーの作成
-	ComPtr<ID3D11VertexShader> vertexShader = nullptr;
-	hr = device->CreateVertexShader(g_VertexShader, sizeof(g_VertexShader), NULL, &vertexShader);
-	if (FAILED(hr)) {
+	auto vertexShader = VertexShader::Create(device.Get());
+	if (vertexBuffer == nullptr) {
 		OutputDebugStringA("頂点シェーダーの作成に失敗\n");
 		return -1;
 	}
 
 	// ジオメトリシェーダーの作成
-	ComPtr<ID3D11GeometryShader> geometryShader = nullptr;
-	hr = device->CreateGeometryShader(g_GeometryShader, sizeof(g_GeometryShader), NULL, &geometryShader);
-	if (FAILED(hr)) {
-		OutputDebugStringA("頂点シェーダーの作成に失敗\n");
+	auto geometryShader = GeometryShader::Create(device.Get());
+	if (geometryShader == nullptr) {
+		OutputDebugStringA("ジオメトリシェーダーの作成に失敗\n");
 		return -1;
 	}
 
 	// ピクセルシェーダーの作成
-	ComPtr<ID3D11PixelShader> pixelShader = nullptr;
-	hr = device->CreatePixelShader(g_PixelShader, sizeof(g_PixelShader), NULL, &pixelShader);
-	if (FAILED(hr)) {
-		OutputDebugStringA(" ピクセルシェーダーの作成に失敗\n");
+	auto pixelShader = PixelShader::Create(device.Get());
+	if (pixelShader == nullptr) {
+		OutputDebugStringA("ピクセルシェーダーの作成に失敗\n");
 		return -1;
 	}
 
@@ -376,9 +373,9 @@ int Game::Run()
 		deviceContext->IASetVertexBuffers(0, _countof(vertexBuffers), vertexBuffers, strides, offsets);
 
 		// シェーダーを設定
-		deviceContext->VSSetShader(vertexShader.Get(), NULL, 0);
-		deviceContext->GSSetShader(geometryShader.Get(), NULL, 0);
-		deviceContext->PSSetShader(pixelShader.Get(), NULL, 0);
+		deviceContext->VSSetShader(vertexShader->GetNativePointer(), NULL, 0);
+		deviceContext->GSSetShader(geometryShader->GetNativePointer(), NULL, 0);
+		deviceContext->PSSetShader(pixelShader->GetNativePointer(), NULL, 0);
 
 		// 頂点シェーダーに定数バッファーを設定
 		ID3D11Buffer* constantBuffers[1] = { constantBuffer.Get() };
@@ -409,8 +406,9 @@ int Game::Run()
 
 	// リソースの解放
 	vertexBuffer.Reset();
-	vertexShader.Reset();
-	pixelShader.Reset();
+	vertexShader->Release();
+	geometryShader->Release();
+	pixelShader->Release();
 	inputLayout.Reset();
 
 	Release();
@@ -426,4 +424,100 @@ void Game::Release()
 	swapchain.Reset();
 	deviceContext.Reset();
 	device.Reset();
+}
+
+// 頂点シェーダーを表す新しいインスタンスの作成
+VertexShader* VertexShader::Create(ID3D11Device* device)
+{
+	// 頂点シェーダーの作成
+	ComPtr<ID3D11VertexShader> vertexShader = nullptr;
+	auto hr = device->CreateVertexShader(g_VertexShader, sizeof(g_VertexShader), NULL, &vertexShader);
+	if (FAILED(hr)) {
+		return nullptr;
+	}
+
+	// 戻り値として返すインスタンスの作成
+	auto result = new VertexShader();
+	if (result == nullptr) {
+		return nullptr;
+	}
+	result->vertexShader = vertexShader;
+	return result;
+}
+
+// 頂点シェーダーのネイティブポインターの取得
+ID3D11VertexShader* VertexShader::GetNativePointer()
+{
+	return vertexShader.Get();
+}
+
+// リソースの解放
+void VertexShader::Release()
+{
+	vertexShader.Reset();
+	delete this;
+}
+
+// ジオメトリシェーダーを表す新しいインスタンスの作成
+GeometryShader* GeometryShader::Create(ID3D11Device* device)
+{
+	// ジオメトリシェーダーの作成
+	ComPtr<ID3D11GeometryShader> geometryShader = nullptr;
+	auto hr = device->CreateGeometryShader(g_GeometryShader, sizeof(g_GeometryShader), NULL, &geometryShader);
+	if (FAILED(hr)) {
+		return nullptr;
+	}
+
+	// 戻り値として返すインスタンスの作成
+	auto result = new GeometryShader();
+	if (result == nullptr) {
+		return nullptr;
+	}
+	result->geometryShader = geometryShader;
+	return result;
+}
+
+// ジオメトリシェーダーのネイティブポインターの取得
+ID3D11GeometryShader* GeometryShader::GetNativePointer()
+{
+	return geometryShader.Get();
+}
+
+// リソースの解放
+void GeometryShader::Release()
+{
+	geometryShader.Reset();
+	delete this;
+}
+
+// ピクセルシェーダーを表す新しいインスタンスの作成
+PixelShader* PixelShader::Create(ID3D11Device* device)
+{
+	// ピクセルシェーダーの作成
+	ComPtr<ID3D11PixelShader> pixelShader = nullptr;
+	auto hr = device->CreatePixelShader(g_PixelShader, sizeof(g_PixelShader), NULL, &pixelShader);
+	if (FAILED(hr)) {
+		return nullptr;
+	}
+
+	// 戻り値として返すインスタンスの作成
+	auto result = new PixelShader();
+	if (result == nullptr) {
+		return nullptr;
+	}
+	result->pixelShader = pixelShader;
+	return result;
+}
+
+// ピクセルシェーダーのネイティブポインターの取得
+ID3D11PixelShader* PixelShader::GetNativePointer()
+{
+	return pixelShader.Get();
+}
+
+// リソースの解放
+void PixelShader::Release()
+{
+	pixelShader.Reset();
+	delete this;
 }
