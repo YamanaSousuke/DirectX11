@@ -1,6 +1,8 @@
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
 #include "Game.h"
+#include "VertexShader.h"
+#include "PixelShader.h"
 
 using namespace Microsoft::WRL;
 
@@ -251,37 +253,39 @@ int Game::Run()
 	// バッファーにデータを転送
 	deviceContext->UpdateSubresource(vertexBuffer.Get(), 0, NULL, vertices, 0, 0);
 
-	// シェーダーのバイトコード
-	ComPtr<ID3DBlob> bytecode = nullptr;
-	// エラーメッセージ
-	ComPtr<ID3DBlob> errorMessage = nullptr;
-
-	// 頂点シェーダーのコンパイル
-	hr = D3DCompileFromFile(L"VertexShader.hlsl", NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE,
-		"main", "vs_5_0", D3DCOMPILE_DEBUG, 0, &bytecode, &errorMessage);
-	if (FAILED(hr)) {
-		// 頂点シェーダーのコンパイルに失敗
-		LPCSTR message = nullptr;
-		message = static_cast<LPCSTR>(errorMessage->GetBufferPointer());
-		OutputDebugStringA(message);
-	}
-	errorMessage.Reset();
-
 	// 頂点シェーダーの作成
 	ComPtr<ID3D11VertexShader> vertexShader = nullptr;
-	hr = device->CreateVertexShader(bytecode->GetBufferPointer(), bytecode->GetBufferSize(), NULL, &vertexShader);
+	hr = device->CreateVertexShader(g_VertexShader, sizeof(g_VertexShader), NULL, &vertexShader);
 	if (FAILED(hr)) {
 		OutputDebugStringA("頂点シェーダーの作成に失敗\n");
 		return -1;
 	}
 
-	bytecode.Reset();
+	// ピクセルシェーダーの作成
+	ComPtr<ID3D11PixelShader> pixelShader = nullptr;
+	hr = device->CreatePixelShader(g_PixelShader, sizeof(g_PixelShader), NULL, &pixelShader);
+	if (FAILED(hr)) {
+		OutputDebugStringA(" ピクセルシェーダーの作成に失敗\n");
+		return -1;
+	}
+
+	// 入力レイアウトの作成
+	D3D11_INPUT_ELEMENT_DESC inputElementDescs[] = {
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
+	ComPtr<ID3D11InputLayout> inputLayout = nullptr;
+	hr = device->CreateInputLayout(inputElementDescs, _countof(inputElementDescs), 
+		g_VertexShader, _countof(g_VertexShader), &inputLayout);
+	if (FAILED(hr)) {
+		OutputDebugStringA("入力レイアウトの作成に失敗\n");
+		return -1;
+	}
 
 	// メッセージループ
 	MSG msg = {};
 	while (true) {
 		// レンダーターゲットを設定
-		deviceContext->OMSetRenderTargets(_countof(renderTargetView), renderTargetView->GetAddressOf(), nullptr);
+		deviceContext->OMSetRenderTargets(_countof(renderTargetView), renderTargetView->GetAddressOf(), depthStencilView.Get());
 		// 画面のクリア
 		deviceContext->ClearRenderTargetView(renderTargetView[0].Get(), clearColor);
 		deviceContext->ClearDepthStencilView(depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
@@ -295,8 +299,17 @@ int Game::Run()
 		UINT offsets[1] = { 0 };
 		deviceContext->IASetVertexBuffers(0, _countof(vertexBuffers), vertexBuffers, strides, offsets);
 
-		// 頂点シェーダーの設定
+		// シェーダーを設定
 		deviceContext->VSSetShader(vertexShader.Get(), NULL, 0);
+		deviceContext->PSSetShader(pixelShader.Get(), NULL, 0);
+
+		// インプットレイアウトの設定
+		deviceContext->IASetInputLayout(inputLayout.Get());
+		// トライアングル
+		deviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		// 描画
+		deviceContext->Draw(3, 0);
+
 
 		// 表示
 		swapchain->Present(1, 0);
