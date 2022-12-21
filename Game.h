@@ -95,3 +95,51 @@ public:
 	// リソースの解放
 	void Release();
 };
+
+// 頂点バッファー
+class VertexBuffer
+{
+	//  リソース
+	Microsoft::WRL::ComPtr<ID3D11Buffer> buffer = nullptr;
+public:
+	// このクラスの新しいインスタンスの作成
+	static VertexBuffer* Create(ID3D11Device* device, UINT byteWidth);
+	// バッファーにデータを設定する
+	void SetData(void* data);
+	// ネイティブポインターの取得
+	ID3D11Buffer* GetNativePointer();
+	// リソースの解放
+	void Release();
+};
+
+// インデックスバッファー
+class IndexBuffer
+{
+	//  リソース
+	Microsoft::WRL::ComPtr<ID3D11Buffer> buffer = nullptr;
+public:
+	// このクラスの新しいインスタンスの作成
+	static IndexBuffer* Create(ID3D11Device* device, UINT indexCount);
+	// バッファーにデータを設定する
+	void SetData(UINT16* data);
+	// ネイティブポインターの取得
+	ID3D11Buffer* GetNativePointer();
+	// リソースの解放
+	void Release();
+};
+
+// 定数バッファー
+class ConstantBuffer
+{
+	//  リソース
+	Microsoft::WRL::ComPtr<ID3D11Buffer> buffer = nullptr;
+public:
+	// このクラスの新しいインスタンスの作成
+	static ConstantBuffer* Create(ID3D11Device* device, UINT byteWidth);
+	// バッファーにデータを設定する
+	void SetData(void* data);
+	// ネイティブポインターの取得
+	ID3D11Buffer* GetNativePointer();
+	// リソースの解放
+	void Release();
+};

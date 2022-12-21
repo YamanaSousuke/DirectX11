@@ -2,8 +2,6 @@
 #include <DirectXMath.h>
 #include "Game.h"
 #include "VertexShader.h"
-#include  "GeometryShader.h"
-#include "PixelShader.h"
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
@@ -237,42 +235,27 @@ int Game::Run()
 		{ {  1.0f, 0.0f, 0.0f }, },
 	};
 
-	// 頂点バッファーについての記述
-	D3D11_BUFFER_DESC vertexBufferDesc = {};
-	vertexBufferDesc.ByteWidth = sizeof(vertices);
-	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = 0;
-	vertexBufferDesc.MiscFlags = 0;
-	vertexBufferDesc.StructureByteStride = 0;
 	// 頂点バッファーの作成
-	ComPtr<ID3D11Buffer> vertexBuffer = nullptr;
-	hr = device->CreateBuffer(&vertexBufferDesc, NULL, &vertexBuffer);
-	if (FAILED(hr)) {
+	auto vertexBuffer = VertexBuffer::Create(device.Get(), sizeof(vertices));
+	if (vertexBuffer == nullptr) {
 		OutputDebugStringA("頂点バッファーの作成に失敗\n");
 		return -1;
 	}
-	// バッファーにデータを転送
-	deviceContext->UpdateSubresource(vertexBuffer.Get(), 0, NULL, vertices, 0, 0);
+	// 頂点バッファーにデータを転送
+	vertexBuffer->SetData(vertices);
 
 	// インデックスデータ
 	UINT16 indices[] = { 0, 1 , 2 };
+
 	// インデックスバッファーの作成
-	ComPtr<ID3D11Buffer> indexBuffer = nullptr;
-	D3D11_BUFFER_DESC indexBufferDesc = {};
-	indexBufferDesc.ByteWidth = sizeof(indices);
-	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	indexBufferDesc.CPUAccessFlags = 0;
-	indexBufferDesc.MiscFlags = 0;
-	indexBufferDesc.StructureByteStride = 0;
-	hr = device->CreateBuffer(&indexBufferDesc, NULL, &indexBuffer);
-	if (FAILED(hr)) {
+	auto indexBuffer = IndexBuffer::Create(device.Get(), _countof(indices));
+	if (indexBuffer == nullptr) {
 		OutputDebugStringA("インデックスバッファーの作成に失敗\n");
 		return -1;
 	}
-	// バッファーにデータを転送
-	deviceContext->UpdateSubresource(indexBuffer.Get(), 0, NULL, indices, 0, 0);
+	// インデックスバッファーにデータを転送
+	indexBuffer->SetData(indices);
+
 
 	// 定数バッファーでシェーダーに毎フレーム送るデータ
 	struct MatricesPerFrame {
@@ -283,16 +266,8 @@ int Game::Run()
 	};
 	
 	// 定数バッファーの作成
-	ComPtr<ID3D11Buffer> constantBuffer = nullptr;
-	D3D11_BUFFER_DESC constantBufferDesc = {};
-	constantBufferDesc.ByteWidth = sizeof(MatricesPerFrame);
-	constantBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	constantBufferDesc.CPUAccessFlags = 0;
-	constantBufferDesc.MiscFlags = 0;
-	constantBufferDesc.StructureByteStride = 0;
-	hr = device->CreateBuffer(&constantBufferDesc, NULL, &constantBuffer);
-	if (FAILED(hr)) {
+	auto constantBuffer = ConstantBuffer::Create(device.Get(), sizeof(MatricesPerFrame));
+	if (constantBuffer == nullptr) {
 		OutputDebugStringA("定数バッファーの作成に失敗\n");
 		return -1;
 	}
@@ -354,8 +329,7 @@ int Game::Run()
 		XMStoreFloat4x4(&matricesPerFrame.projection, XMMatrixTranspose(projection));
 		XMStoreFloat4x4(&matricesPerFrame.worldViewProjection, XMMatrixTranspose(world * view * projection));
 		// 定数バッファの更新
-		deviceContext->UpdateSubresource(constantBuffer.Get(), 0, NULL, &matricesPerFrame, 0, 0);
-
+		constantBuffer->SetData(&matricesPerFrame);
 
 		// レンダーターゲットを設定
 		deviceContext->OMSetRenderTargets(_countof(renderTargetView), renderTargetView->GetAddressOf(), depthStencilView.Get());
@@ -367,7 +341,7 @@ int Game::Run()
 		deviceContext->RSSetViewports(_countof(viewports), viewports);
 
 		// 頂点バッファーを設定
-		ID3D11Buffer* vertexBuffers[1] = {vertexBuffer.Get()};
+		ID3D11Buffer* vertexBuffers[1] = {vertexBuffer->GetNativePointer() };
 		UINT strides[1] = { sizeof(VertexPosition) };
 		UINT offsets[1] = { 0 };
 		deviceContext->IASetVertexBuffers(0, _countof(vertexBuffers), vertexBuffers, strides, offsets);
@@ -378,7 +352,7 @@ int Game::Run()
 		deviceContext->PSSetShader(pixelShader->GetNativePointer(), NULL, 0);
 
 		// 頂点シェーダーに定数バッファーを設定
-		ID3D11Buffer* constantBuffers[1] = { constantBuffer.Get() };
+		ID3D11Buffer* constantBuffers[1] = { constantBuffer->GetNativePointer()};
 		deviceContext->VSSetConstantBuffers(0, _countof(constantBuffers), constantBuffers);
 
 		// インプットレイアウトの設定
@@ -386,9 +360,9 @@ int Game::Run()
 		// トライアングル
 		deviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		// インデックスバッファーの設定
-		deviceContext->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
+		deviceContext->IASetIndexBuffer(indexBuffer->GetNativePointer(), DXGI_FORMAT_R16_UINT, 0);
 		// 描画
-		deviceContext->DrawIndexed(3, 0, 0);
+		deviceContext->DrawIndexed(_countof(indices), 0, 0);
 
 		// 表示
 		swapchain->Present(1, 0);
@@ -405,7 +379,9 @@ int Game::Run()
 	}
 
 	// リソースの解放
-	vertexBuffer.Reset();
+	indexBuffer->Release();
+	vertexBuffer->Release();
+	constantBuffer->Release();
 	vertexShader->Release();
 	geometryShader->Release();
 	pixelShader->Release();
@@ -424,100 +400,4 @@ void Game::Release()
 	swapchain.Reset();
 	deviceContext.Reset();
 	device.Reset();
-}
-
-// 頂点シェーダーを表す新しいインスタンスの作成
-VertexShader* VertexShader::Create(ID3D11Device* device)
-{
-	// 頂点シェーダーの作成
-	ComPtr<ID3D11VertexShader> vertexShader = nullptr;
-	auto hr = device->CreateVertexShader(g_VertexShader, sizeof(g_VertexShader), NULL, &vertexShader);
-	if (FAILED(hr)) {
-		return nullptr;
-	}
-
-	// 戻り値として返すインスタンスの作成
-	auto result = new VertexShader();
-	if (result == nullptr) {
-		return nullptr;
-	}
-	result->vertexShader = vertexShader;
-	return result;
-}
-
-// 頂点シェーダーのネイティブポインターの取得
-ID3D11VertexShader* VertexShader::GetNativePointer()
-{
-	return vertexShader.Get();
-}
-
-// リソースの解放
-void VertexShader::Release()
-{
-	vertexShader.Reset();
-	delete this;
-}
-
-// ジオメトリシェーダーを表す新しいインスタンスの作成
-GeometryShader* GeometryShader::Create(ID3D11Device* device)
-{
-	// ジオメトリシェーダーの作成
-	ComPtr<ID3D11GeometryShader> geometryShader = nullptr;
-	auto hr = device->CreateGeometryShader(g_GeometryShader, sizeof(g_GeometryShader), NULL, &geometryShader);
-	if (FAILED(hr)) {
-		return nullptr;
-	}
-
-	// 戻り値として返すインスタンスの作成
-	auto result = new GeometryShader();
-	if (result == nullptr) {
-		return nullptr;
-	}
-	result->geometryShader = geometryShader;
-	return result;
-}
-
-// ジオメトリシェーダーのネイティブポインターの取得
-ID3D11GeometryShader* GeometryShader::GetNativePointer()
-{
-	return geometryShader.Get();
-}
-
-// リソースの解放
-void GeometryShader::Release()
-{
-	geometryShader.Reset();
-	delete this;
-}
-
-// ピクセルシェーダーを表す新しいインスタンスの作成
-PixelShader* PixelShader::Create(ID3D11Device* device)
-{
-	// ピクセルシェーダーの作成
-	ComPtr<ID3D11PixelShader> pixelShader = nullptr;
-	auto hr = device->CreatePixelShader(g_PixelShader, sizeof(g_PixelShader), NULL, &pixelShader);
-	if (FAILED(hr)) {
-		return nullptr;
-	}
-
-	// 戻り値として返すインスタンスの作成
-	auto result = new PixelShader();
-	if (result == nullptr) {
-		return nullptr;
-	}
-	result->pixelShader = pixelShader;
-	return result;
-}
-
-// ピクセルシェーダーのネイティブポインターの取得
-ID3D11PixelShader* PixelShader::GetNativePointer()
-{
-	return pixelShader.Get();
-}
-
-// リソースの解放
-void PixelShader::Release()
-{
-	pixelShader.Reset();
-	delete this;
 }
