@@ -302,6 +302,7 @@ int Game::Run()
 		XMFLOAT4X4 view;					// ビュー行列
 		XMFLOAT4X4 projection;				// プロジェクション行列
 		XMFLOAT4X4 worldViewProjection;		// WVP行列
+		XMFLOAT4 testTimer;
 	};
 	
 	// 定数バッファーの作成
@@ -340,6 +341,25 @@ int Game::Run()
 		return -1;
 	}
 
+	// ラスタライザステートの作成
+	D3D11_RASTERIZER_DESC rasterizerDesc = {};
+	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
+	rasterizerDesc.CullMode = D3D11_CULL_NONE;
+	rasterizerDesc.FrontCounterClockwise = FALSE;
+	rasterizerDesc.DepthBias = 0;
+	rasterizerDesc.SlopeScaledDepthBias = 0.0f;
+	rasterizerDesc.DepthBiasClamp = 0.0f;
+	rasterizerDesc.DepthClipEnable = TRUE;
+	rasterizerDesc.ScissorEnable = FALSE;
+	rasterizerDesc.MultisampleEnable = FALSE;
+	rasterizerDesc.AntialiasedLineEnable = FALSE;
+	ComPtr<ID3D11RasterizerState> rasterizerState = nullptr;
+	hr = device->CreateRasterizerState(&rasterizerDesc, &rasterizerState);
+	if (FAILED(hr)) {
+		OutputDebugStringA("ラスタライザステートの作成に失敗\n");
+		return -1;
+	}
+
 	float time = 0.0f;
 
 	// メッセージループ
@@ -371,6 +391,9 @@ int Game::Run()
 		XMStoreFloat4x4(&matricesPerFrame.view, XMMatrixTranspose(view));
 		XMStoreFloat4x4(&matricesPerFrame.projection, XMMatrixTranspose(projection));
 		XMStoreFloat4x4(&matricesPerFrame.worldViewProjection, XMMatrixTranspose(world * view * projection));
+
+		XMVECTOR setTimer = XMVectorSet(time, 1.0f, 1.0f, 1.0f);
+		XMStoreFloat4(&matricesPerFrame.testTimer, setTimer);
 		// 定数バッファの更新
 		constantBuffer->SetData(&matricesPerFrame);
 
@@ -400,6 +423,9 @@ int Game::Run()
 
 		// インプットレイアウトの設定
 		deviceContext->IASetInputLayout(inputLayout->GetNativePointer());
+		// ラスタライザステートの設定
+		deviceContext->RSSetState(rasterizerState.Get());
+
 		// トライアングル
 		deviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		// インデックスバッファーの設定
@@ -429,6 +455,7 @@ int Game::Run()
 	geometryShader->Release();
 	pixelShader->Release();
 	inputLayout->Release();
+	rasterizerState.Reset();
 
 	Release();
 	return 0;
