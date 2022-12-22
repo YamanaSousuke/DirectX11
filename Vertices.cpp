@@ -1,4 +1,3 @@
-
 #include "Game.h"
 
 namespace {
@@ -24,4 +23,16 @@ const D3D11_INPUT_ELEMENT_DESC* VertexPosition::GetInputElementDescs()
 UINT VertexPosition::GetInputElementDescsLength()
 {
 	return _countof(VertexPosition_InputElementDescs);
+}
+
+// インプットレイアウトの配列の取得
+const D3D11_INPUT_ELEMENT_DESC* VertexPositionNormal::GetInputElementDescs()
+{
+	return VertexPositionNormal_InputElementDescs;
+}
+
+// インプットレイアウトの配列の要素数の取得
+UINT VertexPositionNormal::GetInputElementDescsLength()
+{
+	return _countof(VertexPositionNormal_InputElementDescs);
 }

@@ -56,7 +56,19 @@ private:
 // 位置情報のみを持つ頂点データ
 struct VertexPosition
 {
-	DirectX::XMFLOAT3 position;		// 位置情報
+	DirectX::XMFLOAT3 position;		// 位置座標
+
+	// インプットレイアウトの配列の取得
+	static const D3D11_INPUT_ELEMENT_DESC* GetInputElementDescs();
+	// インプットレイアウトの配列の要素数の取得
+	static UINT GetInputElementDescsLength();
+};
+
+// 位置情報と法線情報を持つ頂点データ
+struct VertexPositionNormal
+{
+	DirectX::XMFLOAT3 position;		// 位置座標
+	DirectX::XMFLOAT3 normal;		// 法線ベクトル
 
 	// インプットレイアウトの配列の取得
 	static const D3D11_INPUT_ELEMENT_DESC* GetInputElementDescs();
@@ -68,11 +80,15 @@ struct VertexPosition
 class VertexShader
 {
 private:
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader = nullptr;
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> shader = nullptr;
 
 public:
 	// このクラスの新しいインスタンスの作成
 	static VertexShader* Create(ID3D11Device* device);
+	// バイトコードの取得
+	const BYTE* GetBytecode();
+	// バイトコードのサイズの取得
+	SIZE_T GetBytecodeLength();
 	// ネイティブポインターの取得
 	ID3D11VertexShader* GetNativePointer();
 	// リソースの解放
@@ -83,7 +99,7 @@ public:
 class GeometryShader
 {
 private:
-	Microsoft::WRL::ComPtr<ID3D11GeometryShader> geometryShader = nullptr;
+	Microsoft::WRL::ComPtr<ID3D11GeometryShader> shader = nullptr;
 
 public:
 	// このクラスの新しいインスタンスの作成
@@ -97,7 +113,7 @@ public:
 // ピクセルシェーダー
 class PixelShader {
 private:
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader = nullptr;
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> shader = nullptr;
 
 public:
 	// このクラスの新しいインスタンスの作成
@@ -133,7 +149,7 @@ public:
 	// このクラスの新しいインスタンスの作成
 	static IndexBuffer* Create(ID3D11Device* device, UINT indexCount);
 	// バッファーにデータを設定する
-	void SetData(UINT16* data);
+	void SetData(UINT32* data);
 	// ネイティブポインターの取得
 	ID3D11Buffer* GetNativePointer();
 	// リソースの解放

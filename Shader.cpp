@@ -8,95 +8,104 @@ using namespace Microsoft::WRL;
 // 頂点シェーダーを表す新しいインスタンスの作成
 VertexShader* VertexShader::Create(ID3D11Device* device)
 {
-	// 頂点シェーダーの作成
-	ComPtr<ID3D11VertexShader> vertexShader = nullptr;
-	auto hr = device->CreateVertexShader(g_VertexShader, sizeof(g_VertexShader), NULL, &vertexShader);
-	if (FAILED(hr)) {
-		return nullptr;
-	}
-
 	// 戻り値として返すインスタンスの作成
 	auto result = new VertexShader();
 	if (result == nullptr) {
 		return nullptr;
 	}
-	result->vertexShader = vertexShader;
+
+	// 頂点シェーダーの作成
+	auto hr = device->CreateVertexShader(g_VertexShader, _countof(g_VertexShader), NULL, &result->shader);
+	if (FAILED(hr)) {
+		return nullptr;
+	}
+
 	return result;
+}
+
+// バイトコードの取得
+const BYTE* VertexShader::GetBytecode()
+{
+	return g_VertexShader;
+}
+
+// バイトコードのサイズの取得
+SIZE_T VertexShader::GetBytecodeLength()
+{
+	return _countof(g_VertexShader);
 }
 
 // 頂点シェーダーのネイティブポインターの取得
 ID3D11VertexShader* VertexShader::GetNativePointer()
 {
-	return vertexShader.Get();
+	return shader.Get();
 }
 
 // リソースの解放
 void VertexShader::Release()
 {
-	vertexShader.Reset();
+	shader.Reset();
 	delete this;
 }
 
 // ジオメトリシェーダーを表す新しいインスタンスの作成
 GeometryShader* GeometryShader::Create(ID3D11Device* device)
 {
-	// ジオメトリシェーダーの作成
-	ComPtr<ID3D11GeometryShader> geometryShader = nullptr;
-	auto hr = device->CreateGeometryShader(g_GeometryShader, sizeof(g_GeometryShader), NULL, &geometryShader);
-	if (FAILED(hr)) {
-		return nullptr;
-	}
-
 	// 戻り値として返すインスタンスの作成
 	auto result = new GeometryShader();
 	if (result == nullptr) {
 		return nullptr;
 	}
-	result->geometryShader = geometryShader;
+
+	// ジオメトリシェーダーの作成
+	auto hr = device->CreateGeometryShader(g_GeometryShader, _countof(g_GeometryShader), NULL, &result->shader);
+	if (FAILED(hr)) {
+		return nullptr;
+	}
+
 	return result;
 }
 
 // ジオメトリシェーダーのネイティブポインターの取得
 ID3D11GeometryShader* GeometryShader::GetNativePointer()
 {
-	return geometryShader.Get();
+	return shader.Get();
 }
 
 // リソースの解放
 void GeometryShader::Release()
 {
-	geometryShader.Reset();
+	shader.Reset();
 	delete this;
 }
 
 // ピクセルシェーダーを表す新しいインスタンスの作成
 PixelShader* PixelShader::Create(ID3D11Device* device)
 {
-	// ピクセルシェーダーの作成
-	ComPtr<ID3D11PixelShader> pixelShader = nullptr;
-	auto hr = device->CreatePixelShader(g_PixelShader, sizeof(g_PixelShader), NULL, &pixelShader);
-	if (FAILED(hr)) {
-		return nullptr;
-	}
-
 	// 戻り値として返すインスタンスの作成
 	auto result = new PixelShader();
 	if (result == nullptr) {
 		return nullptr;
 	}
-	result->pixelShader = pixelShader;
+
+	// ピクセルシェーダーの作成
+	auto hr = device->CreatePixelShader(g_PixelShader, _countof(g_PixelShader), NULL, &result->shader);
+	if (FAILED(hr)) {
+		return nullptr;
+	}
+
 	return result;
 }
 
 // ピクセルシェーダーのネイティブポインターの取得
 ID3D11PixelShader* PixelShader::GetNativePointer()
 {
-	return pixelShader.Get();
+	return shader.Get();
 }
 
 // リソースの解放
 void PixelShader::Release()
 {
-	pixelShader.Reset();
+	shader.Reset();
 	delete this;
 }

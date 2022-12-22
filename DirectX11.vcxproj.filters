@@ -44,4 +44,7 @@
     <FxCompile Include="PixelShader.hlsl" />
     <FxCompile Include="GeometryShader.hlsl" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="BasicShader.hlsli" />
+  </ItemGroup>
 </Project>

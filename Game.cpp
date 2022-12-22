@@ -1,6 +1,5 @@
 #include <d3dcompiler.h>
 #include "Game.h"
-#include "VertexShader.h"
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
@@ -48,11 +47,11 @@ bool Game::InitWindow()
 	}
 
 	// クライアント領域の指定
-	RECT rect = { 0, 0, 640, 480 };
+	RECT rect = { 0, 0, width, height };
 	AdjustWindowRectEx(&rect, WS_OVERLAPPEDWINDOW, FALSE, 0);
 
 	// ウィンドウの作成
-	hWnd = CreateWindowEx(0, className, L"Title", WS_OVERLAPPEDWINDOW,
+	auto hWnd = CreateWindowEx(0, className, title, WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT,
 		(rect.right - rect.left), (rect.bottom - rect.top),
 		NULL, NULL, hInstance, NULL);
@@ -61,6 +60,8 @@ bool Game::InitWindow()
 		OutputDebugStringA("ウィンドウの作成に失敗\n");
 		return false;
 	}
+
+	this->hWnd = hWnd;
 
 	// ウィンドウの表示
 	ShowWindow(hWnd, SW_SHOWNORMAL);
@@ -103,18 +104,16 @@ bool Game::InitGraphicsDevice()
 	}
 
 	// スワップチェーンからバックバッファーの取得
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer = nullptr;
+	ComPtr<ID3D11Texture2D> backBuffer = nullptr;
 	hr = swapchain->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
-	if (FAILED(hr))
-	{
+	if (FAILED(hr)) {
 		OutputDebugStringA("バックバッファーの取得に失敗\n");
 		return false;
 	}
 
 	// レンダーターゲットビューの作成
 	hr = device->CreateRenderTargetView(backBuffer.Get(), NULL, &renderTargetView[0]);
-	if (FAILED(hr))
-	{
+	if (FAILED(hr)) {
 		OutputDebugStringA("レンダーターゲットビューの作成に失敗\n");
 		return false;
 	}
@@ -199,8 +198,8 @@ bool Game::InitGraphicsDevice()
 	// ビューポート
 	viewports[0].Width = static_cast<FLOAT>(width);
 	viewports[0].Height = static_cast<FLOAT>(height);
-	viewports[0].MaxDepth = 1.0f;
 	viewports[0].MinDepth = 0.0f;
+	viewports[0].MaxDepth = 1.0f;
 	viewports[0].TopLeftX = 0.0f;
 	viewports[0].TopLeftY = 0.0f;
 
@@ -223,10 +222,49 @@ int Game::Run()
 	HRESULT hr = S_OK;
 
 	// 頂点データの配列
-	VertexPosition vertices[] = {
-		{ { -1.0f, 0.0f, 0.0f }, },
-		{ {  0.0f, 1.0f, 0.0f }, },
-		{ {  1.0f, 0.0f, 0.0f }, },
+	VertexPositionNormal vertices[] = {
+		// Front
+		{ {-1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ {-1.0f,-1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ { 1.0f,-1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ {-1.0f,-1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
+		// Back
+		{ {-1.0f, 1.0f,-1.0f }, { 0.0f, 0.0f,-1.0f } },
+		{ { 1.0f, 1.0f,-1.0f }, { 0.0f, 0.0f,-1.0f } },
+		{ {-1.0f,-1.0f,-1.0f }, { 0.0f, 0.0f,-1.0f } },
+		{ { 1.0f,-1.0f,-1.0f }, { 0.0f, 0.0f,-1.0f } },
+		{ {-1.0f,-1.0f,-1.0f }, { 0.0f, 0.0f,-1.0f } },
+		{ { 1.0f, 1.0f,-1.0f }, { 0.0f, 0.0f,-1.0f } },
+		// Right
+		{ { 1.0f, 1.0f,-1.0f }, { 1.0f, 0.0f, 0.0f } },
+		{ { 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f } },
+		{ { 1.0f,-1.0f,-1.0f }, { 1.0f, 0.0f, 0.0f } },
+		{ { 1.0f,-1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f } },
+		{ { 1.0f,-1.0f,-1.0f }, { 1.0f, 0.0f, 0.0f } },
+		{ { 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f } },
+		// Left
+		{ {-1.0f, 1.0f,-1.0f }, {-1.0f, 0.0f, 0.0f } },
+		{ {-1.0f,-1.0f,-1.0f }, {-1.0f, 0.0f, 0.0f } },
+		{ {-1.0f, 1.0f, 1.0f }, {-1.0f, 0.0f, 0.0f } },
+		{ {-1.0f,-1.0f, 1.0f }, {-1.0f, 0.0f, 0.0f } },
+		{ {-1.0f, 1.0f, 1.0f }, {-1.0f, 0.0f, 0.0f } },
+		{ {-1.0f,-1.0f,-1.0f }, {-1.0f, 0.0f, 0.0f } },
+		// UP
+		{ {-1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f } },
+		{ { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f } },
+		{ {-1.0f, 1.0f,-1.0f }, { 0.0f, 1.0f, 0.0f } },
+		{ { 1.0f, 1.0f,-1.0f }, { 0.0f, 1.0f, 0.0f } },
+		{ {-1.0f, 1.0f,-1.0f }, { 0.0f, 1.0f, 0.0f } },
+		{ { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f } },
+		// DOWN
+		{ {-1.0f,-1.0f, 1.0f }, { 0.0f,-1.0f, 0.0f } },
+		{ {-1.0f,-1.0f,-1.0f }, { 0.0f,-1.0f, 0.0f } },
+		{ { 1.0f,-1.0f, 1.0f }, { 0.0f,-1.0f, 0.0f } },
+		{ { 1.0f,-1.0f,-1.0f }, { 0.0f,-1.0f, 0.0f } },
+		{ { 1.0f,-1.0f, 1.0f }, { 0.0f,-1.0f, 0.0f } },
+		{ {-1.0f,-1.0f,-1.0f }, { 0.0f,-1.0f, 0.0f } },
 	};
 
 	// 頂点バッファーの作成
@@ -239,12 +277,19 @@ int Game::Run()
 	vertexBuffer->SetData(vertices);
 
 	// インデックスデータ
-	UINT16 indices[] = { 0, 1 , 2 };
+	UINT32 indices[] = {
+		 0,  1,  2,  3,  4,  5,
+		 6,  7,  8,  9, 10, 11,
+		12, 13, 14, 15, 16, 17,
+		18, 19, 20, 21, 22, 23,
+		24, 25, 26, 27, 28, 29,
+		30, 31, 32, 33, 34, 35,
+	};
 
 	// インデックスバッファーの作成
 	auto indexBuffer = IndexBuffer::Create(device.Get(), _countof(indices));
 	if (indexBuffer == nullptr) {
-		OutputDebugStringA("インデックスバッファーの作成に失敗\n");
+		OutputDebugString(L"インデックスバッファーの作成に失敗\n");
 		return -1;
 	}
 	// インデックスバッファーにデータを転送
@@ -288,41 +333,37 @@ int Game::Run()
 	}
 
 	// 入力レイアウトの作成
-	D3D11_INPUT_ELEMENT_DESC inputElementDescs[] = {
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	};
-	/*ComPtr<ID3D11InputLayout> inputLayout = nullptr;
-	hr = device->CreateInputLayout(inputElementDescs, _countof(inputElementDescs), 
-		g_VertexShader, _countof(g_VertexShader), &inputLayout);
-	if (FAILED(hr)) {
-		OutputDebugStringA("入力レイアウトの作成に失敗\n");
-		return -1;
-	}*/
-
-	// 入力レイアウトの作成
-	auto inputLayout = InputLayout::Create(device.Get(), vertices->GetInputElementDescs(), vertices->GetInputElementDescsLength(),
-		g_VertexShader, _countof(g_VertexShader));
+	auto inputLayout = InputLayout::Create(device.Get(), VertexPositionNormal::GetInputElementDescs(), VertexPositionNormal::GetInputElementDescsLength(),
+		vertexShader->GetBytecode(), vertexShader->GetBytecodeLength());
 	if (inputLayout == nullptr) {
 		OutputDebugStringA("入力レイアウトの作成に失敗\n");
 		return -1;
 	}
 
+	float time = 0.0f;
+
 	// メッセージループ
 	MSG msg = {};
 	while (true) {
+		time += 0.01666f;
+
 		// ワールド行列
-		auto world = XMMatrixTranslation(0.0f, 0.0f, 0.0f);
+		XMMATRIX world = XMMatrixIdentity();
+		XMVECTOR axis = XMVectorSet(1.0f, 1.0f, 0.0f, 0.0f);
+		world *= XMMatrixRotationAxis(axis, time);
+
+
 		// ビュー行列
-		auto eyePosition = XMVectorSet(0.0f, 1.0f, -10.0f, 1.0f);
-		auto focusPosition = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
-		auto upDirection = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
-		auto view = XMMatrixLookAtLH(eyePosition, focusPosition, upDirection);
+		XMVECTOR eyePosition = XMVectorSet(0.0f, 1.0f, -10.0f, 1.0f);
+		XMVECTOR focusPosition = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+		XMVECTOR upDirection = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+		XMMATRIX view = XMMatrixLookAtLH(eyePosition, focusPosition, upDirection);
 		// プロジェクション行列
 		auto fovAngleY = 60.0f;
-		auto aspectRatio = (float)(width / height);
+		auto aspectRatio = (float)(width) / (float)(height);
 		auto nearZ = 0.3f;
 		auto farZ = 1000.0f;
-		auto projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(fovAngleY), aspectRatio, nearZ, farZ);
+		XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(fovAngleY), aspectRatio, nearZ, farZ);
 
 		// 用意した定数バッファの構造体に値を設定する
 		MatricesPerFrame matricesPerFrame = {};
@@ -344,7 +385,7 @@ int Game::Run()
 
 		// 頂点バッファーを設定
 		ID3D11Buffer* vertexBuffers[1] = {vertexBuffer->GetNativePointer() };
-		UINT strides[1] = { sizeof(VertexPosition) };
+		UINT strides[1] = { sizeof(VertexPositionNormal) };
 		UINT offsets[1] = { 0 };
 		deviceContext->IASetVertexBuffers(0, _countof(vertexBuffers), vertexBuffers, strides, offsets);
 
@@ -353,16 +394,16 @@ int Game::Run()
 		deviceContext->GSSetShader(geometryShader->GetNativePointer(), NULL, 0);
 		deviceContext->PSSetShader(pixelShader->GetNativePointer(), NULL, 0);
 
-		// 頂点シェーダーに定数バッファーを設定
-		ID3D11Buffer* constantBuffers[1] = { constantBuffer->GetNativePointer()};
-		deviceContext->VSSetConstantBuffers(0, _countof(constantBuffers), constantBuffers);
+		// ジオメトリシェーダーに定数バッファーを設定
+		ID3D11Buffer* constantBuffers[1] = { constantBuffer->GetNativePointer() };
+		deviceContext->GSSetConstantBuffers(0, _countof(constantBuffers), constantBuffers);
 
 		// インプットレイアウトの設定
 		deviceContext->IASetInputLayout(inputLayout->GetNativePointer());
 		// トライアングル
 		deviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		// インデックスバッファーの設定
-		deviceContext->IASetIndexBuffer(indexBuffer->GetNativePointer(), DXGI_FORMAT_R16_UINT, 0);
+		deviceContext->IASetIndexBuffer(indexBuffer->GetNativePointer(), DXGI_FORMAT_R32_UINT, 0);
 		// 描画
 		deviceContext->DrawIndexed(_countof(indices), 0, 0);
 
