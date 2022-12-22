@@ -1,5 +1,4 @@
 #include <d3dcompiler.h>
-#include <DirectXMath.h>
 #include "Game.h"
 #include "VertexShader.h"
 
@@ -223,11 +222,6 @@ int Game::Run()
 
 	HRESULT hr = S_OK;
 
-	// 1つの頂点に含まれる型
-	struct VertexPosition {
-		XMFLOAT3 position;
-	};
-
 	// 頂点データの配列
 	VertexPosition vertices[] = {
 		{ { -1.0f, 0.0f, 0.0f }, },
@@ -297,10 +291,18 @@ int Game::Run()
 	D3D11_INPUT_ELEMENT_DESC inputElementDescs[] = {
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
-	ComPtr<ID3D11InputLayout> inputLayout = nullptr;
+	/*ComPtr<ID3D11InputLayout> inputLayout = nullptr;
 	hr = device->CreateInputLayout(inputElementDescs, _countof(inputElementDescs), 
 		g_VertexShader, _countof(g_VertexShader), &inputLayout);
 	if (FAILED(hr)) {
+		OutputDebugStringA("入力レイアウトの作成に失敗\n");
+		return -1;
+	}*/
+
+	// 入力レイアウトの作成
+	auto inputLayout = InputLayout::Create(device.Get(), vertices->GetInputElementDescs(), vertices->GetInputElementDescsLength(),
+		g_VertexShader, _countof(g_VertexShader));
+	if (inputLayout == nullptr) {
 		OutputDebugStringA("入力レイアウトの作成に失敗\n");
 		return -1;
 	}
@@ -356,7 +358,7 @@ int Game::Run()
 		deviceContext->VSSetConstantBuffers(0, _countof(constantBuffers), constantBuffers);
 
 		// インプットレイアウトの設定
-		deviceContext->IASetInputLayout(inputLayout.Get());
+		deviceContext->IASetInputLayout(inputLayout->GetNativePointer());
 		// トライアングル
 		deviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		// インデックスバッファーの設定
@@ -385,7 +387,7 @@ int Game::Run()
 	vertexShader->Release();
 	geometryShader->Release();
 	pixelShader->Release();
-	inputLayout.Reset();
+	inputLayout->Release();
 
 	Release();
 	return 0;

@@ -2,6 +2,7 @@
 
 #include <Windows.h>
 #include <d3d11.h>
+#include <DirectXMath.h>
 #include <wrl/client.h>
 
 // アプリケーション全体を表す
@@ -50,6 +51,17 @@ private:
 	bool InitGraphicsDevice();
 	// リソースの解放
 	void Release();
+};
+
+// 位置情報のみを持つ頂点データ
+struct VertexPosition
+{
+	DirectX::XMFLOAT3 position;		// 位置情報
+
+	// インプットレイアウトの配列の取得
+	static const D3D11_INPUT_ELEMENT_DESC* GetInputElementDescs();
+	// インプットレイアウトの配列の要素数の取得
+	static UINT GetInputElementDescsLength();
 };
 
 // 頂点シェーダー
@@ -140,6 +152,22 @@ public:
 	void SetData(void* data);
 	// ネイティブポインターの取得
 	ID3D11Buffer* GetNativePointer();
+	// リソースの解放
+	void Release();
+};
+
+// インプットレイアウト
+class InputLayout
+{
+	// リソース
+	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout = nullptr;
+
+public:
+	// このクラスの新しいインスタンスの作成
+	static InputLayout* Create(ID3D11Device* device, const D3D11_INPUT_ELEMENT_DESC* descs, UINT numElements,
+		const void* shaderBytecode, SIZE_T bytecodeLength);
+	// ネイティブポインターの取得
+	ID3D11InputLayout* GetNativePointer();
 	// リソースの解放
 	void Release();
 };
