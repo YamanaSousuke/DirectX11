@@ -187,3 +187,33 @@ public:
 	// リソースの解放
 	void Release();
 };
+
+// ラスタライザステート
+class RasterizerState
+{
+	// リソース
+	Microsoft::WRL::ComPtr<ID3D11RasterizerState> state = nullptr;
+public:
+	// このクラスの新しいインスタンスの作成
+	static RasterizerState* Create(ID3D11Device* device);
+	// ネイティブポインターの取得
+	ID3D11RasterizerState* GetNativePointer();
+	// リソースの解放
+	void Release();
+};
+
+// ブレンドステート
+class BlendState
+{
+	// リソース
+	Microsoft::WRL::ComPtr<ID3D11BlendState> state = nullptr;
+public:
+	// このクラスの新しいインスタンスの作成
+	static BlendState* Create(ID3D11Device* device);
+	// ネイティブポインターの取得
+	ID3D11BlendState* GetNativePointer();
+	// BlendFactorの取得
+	const FLOAT* GetBlendFactor();
+	// リソースの解放
+	void Release();
+};

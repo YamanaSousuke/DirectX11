@@ -289,7 +289,7 @@ int Game::Run()
 	// インデックスバッファーの作成
 	auto indexBuffer = IndexBuffer::Create(device.Get(), _countof(indices));
 	if (indexBuffer == nullptr) {
-		OutputDebugString(L"インデックスバッファーの作成に失敗\n");
+		OutputDebugStringA("インデックスバッファーの作成に失敗\n");
 		return -1;
 	}
 	// インデックスバッファーにデータを転送
@@ -297,17 +297,17 @@ int Game::Run()
 
 
 	// 定数バッファーでシェーダーに毎フレーム送るデータ
-	struct MatricesPerFrame {
+	struct SceneParameter {
 		XMFLOAT4X4 world;					// ワールド行列
 		XMFLOAT4X4 view;					// ビュー行列
 		XMFLOAT4X4 projection;				// プロジェクション行列
 		XMFLOAT4X4 worldViewProjection;		// WVP行列
-		float time = 0.0f;				    // 
+		float time = 0.0f;				    // 時間
 		float alpha = 1.0f;					// アルファ値
 	};
 	
 	// 定数バッファーの作成
-	auto constantBuffer = ConstantBuffer::Create(device.Get(), sizeof(MatricesPerFrame));
+	auto constantBuffer = ConstantBuffer::Create(device.Get(), sizeof(SceneParameter));
 	if (constantBuffer == nullptr) {
 		OutputDebugStringA("定数バッファーの作成に失敗\n");
 		return -1;
@@ -335,7 +335,7 @@ int Game::Run()
 	}
 
 	// 入力レイアウトの作成
-	auto inputLayout = InputLayout::Create(device.Get(), VertexPositionNormal::GetInputElementDescs(), VertexPositionNormal::GetInputElementDescsLength(),
+	auto inputLayout = InputLayout::Create(device.Get(), vertices->GetInputElementDescs(), vertices->GetInputElementDescsLength(),
 		vertexShader->GetBytecode(), vertexShader->GetBytecodeLength());
 	if (inputLayout == nullptr) {
 		OutputDebugStringA("入力レイアウトの作成に失敗\n");
@@ -343,40 +343,15 @@ int Game::Run()
 	}
 
 	// ラスタライザステートの作成
-	D3D11_RASTERIZER_DESC rasterizerDesc = {};
-	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
-	rasterizerDesc.CullMode = D3D11_CULL_NONE;
-	rasterizerDesc.FrontCounterClockwise = FALSE;
-	rasterizerDesc.DepthBias = 0;
-	rasterizerDesc.SlopeScaledDepthBias = 0.0f;
-	rasterizerDesc.DepthBiasClamp = 0.0f;
-	rasterizerDesc.DepthClipEnable = TRUE;
-	rasterizerDesc.ScissorEnable = FALSE;
-	rasterizerDesc.MultisampleEnable = FALSE;
-	rasterizerDesc.AntialiasedLineEnable = FALSE;
-	ComPtr<ID3D11RasterizerState> rasterizerState = nullptr;
-	hr = device->CreateRasterizerState(&rasterizerDesc, &rasterizerState);
-	if (FAILED(hr)) {
+	auto rasterizerState = RasterizerState::Create(device.Get());
+	if (rasterizerState == nullptr) {
 		OutputDebugStringA("ラスタライザステートの作成に失敗\n");
 		return -1;
 	}
 
 	// ブレンドステートの作成
-	D3D11_BLEND_DESC blendDesc = {};
-	blendDesc.AlphaToCoverageEnable = FALSE;
-	blendDesc.IndependentBlendEnable = FALSE;
-	// 半透明合成を行う
-	blendDesc.RenderTarget[0].BlendEnable = TRUE;
-	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-	blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-	ComPtr<ID3D11BlendState> blendState = nullptr;
-	hr = device->CreateBlendState(&blendDesc, &blendState);
-	if (FAILED(hr)) {
+	auto blendState = BlendState::Create(device.Get());
+	if (blendState == nullptr) {
 		OutputDebugStringA("ブレンドステートの作成に失敗\n");
 		return -1;
 	}
@@ -407,7 +382,7 @@ int Game::Run()
 		XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(fovAngleY), aspectRatio, nearZ, farZ);
 
 		// 用意した定数バッファの構造体に値を設定する
-		MatricesPerFrame matricesPerFrame = {};
+		SceneParameter matricesPerFrame = {};
 		XMStoreFloat4x4(&matricesPerFrame.world, XMMatrixTranspose(world));
 		XMStoreFloat4x4(&matricesPerFrame.view, XMMatrixTranspose(view));
 		XMStoreFloat4x4(&matricesPerFrame.projection, XMMatrixTranspose(projection));
@@ -423,8 +398,7 @@ int Game::Run()
 		// レンダーターゲットを設定
 		deviceContext->OMSetRenderTargets(_countof(renderTargetView), renderTargetView->GetAddressOf(), depthStencilView.Get());
 		// ブレンドステートを設定
-		FLOAT blendFactor[4] = { 0.0f, 0.0f,0.0f, 0.0f };
-		deviceContext->OMSetBlendState(blendState.Get(), blendFactor, 0xffffffff);
+		deviceContext->OMSetBlendState(blendState->GetNativePointer(), blendState->GetBlendFactor(), 0xffffffff);
 
 		// 画面のクリア
 		deviceContext->ClearRenderTargetView(renderTargetView[0].Get(), clearColor);
@@ -451,7 +425,7 @@ int Game::Run()
 		// インプットレイアウトの設定
 		deviceContext->IASetInputLayout(inputLayout->GetNativePointer());
 		// ラスタライザステートの設定
-		deviceContext->RSSetState(rasterizerState.Get());
+		deviceContext->RSSetState(rasterizerState->GetNativePointer());
 
 		// トライアングル
 		deviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -482,7 +456,8 @@ int Game::Run()
 	geometryShader->Release();
 	pixelShader->Release();
 	inputLayout->Release();
-	rasterizerState.Reset();
+	rasterizerState->Release();
+	blendState->Release();
 
 	Release();
 	return 0;

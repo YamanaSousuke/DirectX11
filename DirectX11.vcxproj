@@ -136,6 +136,7 @@
     <ClCompile Include="InputLayout.cpp" />
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="State.cpp" />
     <ClCompile Include="Vertices.cpp" />
   </ItemGroup>
   <ItemGroup>
