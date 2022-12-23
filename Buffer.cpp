@@ -121,6 +121,11 @@ ConstantBuffer* ConstantBuffer::Create(ID3D11Device* device, UINT byteWidth)
 		return nullptr;
 	}
 
+	// 16バイトに統一する
+	if (byteWidth % 16 != 0) {
+		byteWidth = byteWidth + 16 - byteWidth % 16;
+	}
+
 	// インデックスバッファーについての記述
 	D3D11_BUFFER_DESC bufferDesc = {};
 	bufferDesc.ByteWidth = byteWidth;

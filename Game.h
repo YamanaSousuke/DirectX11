@@ -40,7 +40,7 @@ private:
 	// 深度ステンシルのフォーマット
 	const DXGI_FORMAT depthStencilFormat = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
 	// 画面をクリアするときに使用するカラー
-	const FLOAT clearColor[4] = { 0.4f, 0.4f, 0.4f, 1.0f };
+	const FLOAT clearColor[4] = { 0.2f, 0.2f, 0.2f, 1.0f };
 	// ビューポート
 	D3D11_VIEWPORT viewports[1] = {};
 

@@ -302,7 +302,8 @@ int Game::Run()
 		XMFLOAT4X4 view;					// ビュー行列
 		XMFLOAT4X4 projection;				// プロジェクション行列
 		XMFLOAT4X4 worldViewProjection;		// WVP行列
-		XMFLOAT4 testTimer;
+		float time = 0.0f;				    // 
+		float alpha = 1.0f;					// アルファ値
 	};
 	
 	// 定数バッファーの作成
@@ -360,6 +361,26 @@ int Game::Run()
 		return -1;
 	}
 
+	// ブレンドステートの作成
+	D3D11_BLEND_DESC blendDesc = {};
+	blendDesc.AlphaToCoverageEnable = FALSE;
+	blendDesc.IndependentBlendEnable = FALSE;
+	// 半透明合成を行う
+	blendDesc.RenderTarget[0].BlendEnable = TRUE;
+	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	ComPtr<ID3D11BlendState> blendState = nullptr;
+	hr = device->CreateBlendState(&blendDesc, &blendState);
+	if (FAILED(hr)) {
+		OutputDebugStringA("ブレンドステートの作成に失敗\n");
+		return -1;
+	}
+
 	float time = 0.0f;
 
 	// メッセージループ
@@ -369,9 +390,9 @@ int Game::Run()
 
 		// ワールド行列
 		XMMATRIX world = XMMatrixIdentity();
+		// 回転
 		XMVECTOR axis = XMVectorSet(1.0f, 1.0f, 0.0f, 0.0f);
 		world *= XMMatrixRotationAxis(axis, time);
-
 
 		// ビュー行列
 		XMVECTOR eyePosition = XMVectorSet(0.0f, 1.0f, -10.0f, 1.0f);
@@ -391,14 +412,20 @@ int Game::Run()
 		XMStoreFloat4x4(&matricesPerFrame.view, XMMatrixTranspose(view));
 		XMStoreFloat4x4(&matricesPerFrame.projection, XMMatrixTranspose(projection));
 		XMStoreFloat4x4(&matricesPerFrame.worldViewProjection, XMMatrixTranspose(world * view * projection));
-
-		XMVECTOR setTimer = XMVectorSet(time, 1.0f, 1.0f, 1.0f);
-		XMStoreFloat4(&matricesPerFrame.testTimer, setTimer);
+		matricesPerFrame.time = time;
+		if (matricesPerFrame.alpha > 0.0f)
+		{
+			matricesPerFrame.alpha -= time;
+		}
 		// 定数バッファの更新
 		constantBuffer->SetData(&matricesPerFrame);
 
 		// レンダーターゲットを設定
 		deviceContext->OMSetRenderTargets(_countof(renderTargetView), renderTargetView->GetAddressOf(), depthStencilView.Get());
+		// ブレンドステートを設定
+		FLOAT blendFactor[4] = { 0.0f, 0.0f,0.0f, 0.0f };
+		deviceContext->OMSetBlendState(blendState.Get(), blendFactor, 0xffffffff);
+
 		// 画面のクリア
 		deviceContext->ClearRenderTargetView(renderTargetView[0].Get(), clearColor);
 		deviceContext->ClearDepthStencilView(depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
@@ -407,7 +434,7 @@ int Game::Run()
 		deviceContext->RSSetViewports(_countof(viewports), viewports);
 
 		// 頂点バッファーを設定
-		ID3D11Buffer* vertexBuffers[1] = {vertexBuffer->GetNativePointer() };
+		ID3D11Buffer* vertexBuffers[1] = { vertexBuffer->GetNativePointer() };
 		UINT strides[1] = { sizeof(VertexPositionNormal) };
 		UINT offsets[1] = { 0 };
 		deviceContext->IASetVertexBuffers(0, _countof(vertexBuffers), vertexBuffers, strides, offsets);

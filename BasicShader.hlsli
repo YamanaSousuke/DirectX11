@@ -5,7 +5,8 @@ cbuffer ConstantBuffer
 	matrix view;					// ビュー行列
 	matrix projection;				// プロジェクション行列
 	matrix worldViewProjection;		// WVP行列
-	float4 time;
+	float time;
+	float alpha;
 };
 
 // 頂点シェーダーへの入力
