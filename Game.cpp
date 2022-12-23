@@ -40,8 +40,7 @@ bool Game::InitWindow()
 	wndClass.lpfnWndProc = WindowProc;
 	wndClass.hInstance = hInstance;
 	wndClass.lpszClassName = className;
-	if (!RegisterClassEx(&wndClass))
-	{
+	if (!RegisterClassEx(&wndClass)) {
 		OutputDebugStringA("ウィンドウクラスの登録に失敗\n");
 		return false;
 	}
@@ -55,8 +54,7 @@ bool Game::InitWindow()
 		CW_USEDEFAULT, CW_USEDEFAULT,
 		(rect.right - rect.left), (rect.bottom - rect.top),
 		NULL, NULL, hInstance, NULL);
-	if (hWnd == NULL)
-	{
+	if (hWnd == NULL) {
 		OutputDebugStringA("ウィンドウの作成に失敗\n");
 		return false;
 	}
@@ -117,7 +115,6 @@ bool Game::InitGraphicsDevice()
 		OutputDebugStringA("レンダーターゲットビューの作成に失敗\n");
 		return false;
 	}
-	backBuffer.Reset();
 
 	// テクスチャとシェーダーリソースビューのフォーマットを設定
 	DXGI_FORMAT textureFormat = depthStencilFormat;
@@ -193,7 +190,6 @@ bool Game::InitGraphicsDevice()
 		OutputDebugStringA("深度ステンシルリソースビューの作成に失敗\n");
 		return false;
 	}
-	depthStencil.Reset();
 
 	// ビューポート
 	viewports[0].Width = static_cast<FLOAT>(width);
@@ -222,49 +218,37 @@ int Game::Run()
 	HRESULT hr = S_OK;
 
 	// 頂点データの配列
-	VertexPositionNormal vertices[] = {
+	VertexPositionNormalTexture vertices[] = {
 		// Front
-		{ {-1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-		{ {-1.0f,-1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-		{ { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-		{ { 1.0f,-1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-		{ { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-		{ {-1.0f,-1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f } },
+		{ {-1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f } },
+		{ { 1.0f,-1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } },
+		{ {-1.0f,-1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f } },
 		// Back
-		{ {-1.0f, 1.0f,-1.0f }, { 0.0f, 0.0f,-1.0f } },
-		{ { 1.0f, 1.0f,-1.0f }, { 0.0f, 0.0f,-1.0f } },
-		{ {-1.0f,-1.0f,-1.0f }, { 0.0f, 0.0f,-1.0f } },
-		{ { 1.0f,-1.0f,-1.0f }, { 0.0f, 0.0f,-1.0f } },
-		{ {-1.0f,-1.0f,-1.0f }, { 0.0f, 0.0f,-1.0f } },
-		{ { 1.0f, 1.0f,-1.0f }, { 0.0f, 0.0f,-1.0f } },
+		{ {-1.0f, 1.0f,-1.0f }, { 0.0f, 0.0f,-1.0f }, { 0.0f, 0.0f } },
+		{ { 1.0f, 1.0f,-1.0f }, { 0.0f, 0.0f,-1.0f }, { 1.0f, 0.0f } },
+		{ {-1.0f,-1.0f,-1.0f }, { 0.0f, 0.0f,-1.0f }, { 0.0f, 1.0f } },
+		{ { 1.0f,-1.0f,-1.0f }, { 0.0f, 0.0f,-1.0f }, { 1.0f, 1.0f } },
 		// Right
-		{ { 1.0f, 1.0f,-1.0f }, { 1.0f, 0.0f, 0.0f } },
-		{ { 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f } },
-		{ { 1.0f,-1.0f,-1.0f }, { 1.0f, 0.0f, 0.0f } },
-		{ { 1.0f,-1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f } },
-		{ { 1.0f,-1.0f,-1.0f }, { 1.0f, 0.0f, 0.0f } },
-		{ { 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f } },
+		{ { 1.0f, 1.0f,-1.0f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
+		{ { 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f } },
+		{ { 1.0f,-1.0f,-1.0f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f } },
+		{ { 1.0f,-1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f } },
 		// Left
-		{ {-1.0f, 1.0f,-1.0f }, {-1.0f, 0.0f, 0.0f } },
-		{ {-1.0f,-1.0f,-1.0f }, {-1.0f, 0.0f, 0.0f } },
-		{ {-1.0f, 1.0f, 1.0f }, {-1.0f, 0.0f, 0.0f } },
-		{ {-1.0f,-1.0f, 1.0f }, {-1.0f, 0.0f, 0.0f } },
-		{ {-1.0f, 1.0f, 1.0f }, {-1.0f, 0.0f, 0.0f } },
-		{ {-1.0f,-1.0f,-1.0f }, {-1.0f, 0.0f, 0.0f } },
+		{ {-1.0f, 1.0f, 1.0f }, {-1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
+		{ {-1.0f, 1.0f,-1.0f }, {-1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f } },
+		{ {-1.0f,-1.0f, 1.0f }, {-1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f } },
+		{ {-1.0f,-1.0f,-1.0f }, {-1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f } },
 		// UP
-		{ {-1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f } },
-		{ { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f } },
-		{ {-1.0f, 1.0f,-1.0f }, { 0.0f, 1.0f, 0.0f } },
-		{ { 1.0f, 1.0f,-1.0f }, { 0.0f, 1.0f, 0.0f } },
-		{ {-1.0f, 1.0f,-1.0f }, { 0.0f, 1.0f, 0.0f } },
-		{ { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f } },
+		{ {-1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f } },
+		{ { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f } },
+		{ {-1.0f, 1.0f,-1.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f } },
+		{ { 1.0f, 1.0f,-1.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f } },
 		// DOWN
-		{ {-1.0f,-1.0f, 1.0f }, { 0.0f,-1.0f, 0.0f } },
-		{ {-1.0f,-1.0f,-1.0f }, { 0.0f,-1.0f, 0.0f } },
-		{ { 1.0f,-1.0f, 1.0f }, { 0.0f,-1.0f, 0.0f } },
-		{ { 1.0f,-1.0f,-1.0f }, { 0.0f,-1.0f, 0.0f } },
-		{ { 1.0f,-1.0f, 1.0f }, { 0.0f,-1.0f, 0.0f } },
-		{ {-1.0f,-1.0f,-1.0f }, { 0.0f,-1.0f, 0.0f } },
+		{ { 1.0f,-1.0f, 1.0f }, { 0.0f,-1.0f, 0.0f }, { 0.0f, 0.0f } },
+		{ {-1.0f,-1.0f, 1.0f }, { 0.0f,-1.0f, 0.0f }, { 1.0f, 0.0f } },
+		{ { 1.0f,-1.0f,-1.0f }, { 0.0f,-1.0f, 0.0f }, { 0.0f, 1.0f } },
+		{ {-1.0f,-1.0f,-1.0f }, { 0.0f,-1.0f, 0.0f }, { 1.0f, 1.0f } },
 	};
 
 	// 頂点バッファーの作成
@@ -278,12 +262,12 @@ int Game::Run()
 
 	// インデックスデータ
 	UINT32 indices[] = {
-		 0,  1,  2,  3,  4,  5,
-		 6,  7,  8,  9, 10, 11,
-		12, 13, 14, 15, 16, 17,
-		18, 19, 20, 21, 22, 23,
-		24, 25, 26, 27, 28, 29,
-		30, 31, 32, 33, 34, 35,
+		 0,  1,  2,  3,  2,  1,	// Front
+		 4,  5,  6,  7,  6,  5,	// Back
+		 8,  9, 10, 11, 10,  9,	// Right
+		12, 13, 14, 15, 14, 13,	// Left
+		16, 17, 18, 19, 18, 17,	// Top
+		20, 21, 22, 23, 22, 21,	// Bottom
 	};
 
 	// インデックスバッファーの作成
@@ -356,6 +340,24 @@ int Game::Run()
 		return -1;
 	}
 
+	// 画像データのダミー
+	const uint8_t source[][4] = {
+		{0xFF, 0xFF, 0x00, 0xFF}, {0x00, 0x00, 0x00, 0xFF}, {0xFF, 0xFF, 0x00, 0xFF}, {0x00, 0x00, 0x00, 0xFF},
+		{0x00, 0x00, 0x00, 0xFF}, {0xFF, 0xFF, 0x00, 0xFF}, {0x00, 0x00, 0x00, 0xFF}, {0xFF, 0xFF, 0x00, 0xFF},
+		{0xFF, 0xFF, 0x00, 0xFF}, {0x00, 0x00, 0x00, 0xFF}, {0xFF, 0xFF, 0x00, 0xFF}, {0x00, 0x00, 0x00, 0xFF},
+		{0x00, 0x00, 0x00, 0xFF}, {0xFF, 0xFF, 0x00, 0xFF}, {0x00, 0x00, 0x00, 0xFF}, {0xFF, 0xFF, 0x00, 0xFF},
+	};
+
+	// テクスチャーを作成
+	auto texture = Texture2D::Create(device.Get(),4, 4, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, false);
+	if (texture == nullptr) {
+		OutputDebugStringA("テクスチャーの作成に失敗\n");
+		return -1;
+	}
+	// バッファにデータを転送
+	texture->SetData(source);
+	
+
 	float time = 0.0f;
 
 	// メッセージループ
@@ -387,11 +389,11 @@ int Game::Run()
 		XMStoreFloat4x4(&matricesPerFrame.view, XMMatrixTranspose(view));
 		XMStoreFloat4x4(&matricesPerFrame.projection, XMMatrixTranspose(projection));
 		XMStoreFloat4x4(&matricesPerFrame.worldViewProjection, XMMatrixTranspose(world * view * projection));
-		matricesPerFrame.time = time;
-		if (matricesPerFrame.alpha > 0.0f)
-		{
-			matricesPerFrame.alpha -= time;
-		}
+		// matricesPerFrame.time = time;
+		// if (matricesPerFrame.alpha > 0.0f)
+		// {
+		// 	matricesPerFrame.alpha -= time;
+		// }
 		// 定数バッファの更新
 		constantBuffer->SetData(&matricesPerFrame);
 
@@ -409,7 +411,7 @@ int Game::Run()
 
 		// 頂点バッファーを設定
 		ID3D11Buffer* vertexBuffers[1] = { vertexBuffer->GetNativePointer() };
-		UINT strides[1] = { sizeof(VertexPositionNormal) };
+		UINT strides[1] = { sizeof(VertexPositionNormalTexture) };
 		UINT offsets[1] = { 0 };
 		deviceContext->IASetVertexBuffers(0, _countof(vertexBuffers), vertexBuffers, strides, offsets);
 
@@ -421,6 +423,13 @@ int Game::Run()
 		// ジオメトリシェーダーに定数バッファーを設定
 		ID3D11Buffer* constantBuffers[1] = { constantBuffer->GetNativePointer() };
 		deviceContext->GSSetConstantBuffers(0, _countof(constantBuffers), constantBuffers);
+
+		// ピクセルシェーダーにシェーダーリソースビューを設定する
+		ID3D11ShaderResourceView* textureViews[1] = { texture->GetShaderResourceView() };
+		deviceContext->PSSetShaderResources(0, _countof(textureViews), textureViews);
+		// ピクセルシェーダーにサンプラーステートを設定する
+		ID3D11SamplerState* samplerStates[1] = { texture->GetSapmlerState() };
+		deviceContext->PSSetSamplers(0, _countof(samplerStates), samplerStates);
 
 		// インプットレイアウトの設定
 		deviceContext->IASetInputLayout(inputLayout->GetNativePointer());
@@ -458,18 +467,6 @@ int Game::Run()
 	inputLayout->Release();
 	rasterizerState->Release();
 	blendState->Release();
-
-	Release();
+	texture->Release();
 	return 0;
-}
-
-// リソースの解放
-void Game::Release()
-{
-	depthStencilResourceView.Reset();
-	depthStencilView.Reset();
-	renderTargetView->Reset();
-	swapchain.Reset();
-	deviceContext.Reset();
-	device.Reset();
 }

@@ -5,6 +5,10 @@
 
 using namespace Microsoft::WRL;
 
+//=============================================================================
+// 頂点シェーダー
+//=============================================================================
+
 // 頂点シェーダーを表す新しいインスタンスの作成
 VertexShader* VertexShader::Create(ID3D11Device* device)
 {
@@ -44,9 +48,12 @@ ID3D11VertexShader* VertexShader::GetNativePointer()
 // リソースの解放
 void VertexShader::Release()
 {
-	shader.Reset();
 	delete this;
 }
+
+//=============================================================================
+// ジオメトリシェーダー
+//=============================================================================
 
 // ジオメトリシェーダーを表す新しいインスタンスの作成
 GeometryShader* GeometryShader::Create(ID3D11Device* device)
@@ -75,9 +82,12 @@ ID3D11GeometryShader* GeometryShader::GetNativePointer()
 // リソースの解放
 void GeometryShader::Release()
 {
-	shader.Reset();
 	delete this;
 }
+
+//=============================================================================
+// ピクセルシェーダー
+//=============================================================================
 
 // ピクセルシェーダーを表す新しいインスタンスの作成
 PixelShader* PixelShader::Create(ID3D11Device* device)
@@ -106,6 +116,5 @@ ID3D11PixelShader* PixelShader::GetNativePointer()
 // リソースの解放
 void PixelShader::Release()
 {
-	shader.Reset();
 	delete this;
 }

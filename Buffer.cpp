@@ -2,6 +2,10 @@
 
 using namespace Microsoft::WRL;
 
+//=============================================================================
+// 頂点バッファー
+//=============================================================================
+
 // 頂点バッファーを表す新しいインスタンスの作成
 VertexBuffer* VertexBuffer::Create(ID3D11Device* device, UINT byteWidth)
 {
@@ -31,17 +35,11 @@ VertexBuffer* VertexBuffer::Create(ID3D11Device* device, UINT byteWidth)
 // バッファーにデータを設定する
 void VertexBuffer::SetData(void* data)
 {
-	// デバイスの取得
 	ComPtr<ID3D11Device> device = nullptr;
 	buffer->GetDevice(&device);
-	// デバイスコンテキストの取得
 	ComPtr<ID3D11DeviceContext> deviceContext = nullptr;
 	device->GetImmediateContext(&deviceContext);
-	// バッファーにデータを転送
 	deviceContext->UpdateSubresource(buffer.Get(), 0, NULL, data, 0, 0);
-
-	device.Reset();
-	deviceContext.Reset();
 }
 
 // ネイティブポインターの取得
@@ -53,9 +51,12 @@ ID3D11Buffer* VertexBuffer::GetNativePointer()
 // リソースの解放
 void VertexBuffer::Release()
 {
-	buffer.Reset();
 	delete this;
 }
+
+//=============================================================================
+// インデックスバッファー
+//=============================================================================
 
 // インデックスバッファーを表す新しいインスタンスの作成
 IndexBuffer* IndexBuffer::Create(ID3D11Device* device, UINT indexCount)
@@ -86,17 +87,11 @@ IndexBuffer* IndexBuffer::Create(ID3D11Device* device, UINT indexCount)
 // バッファーにデータを設定する
 void IndexBuffer::SetData(UINT32* data)
 {
-	// デバイスの取得
 	ComPtr<ID3D11Device> device = nullptr;
 	buffer->GetDevice(&device);
-	// デバイスコンテキストの取得
 	ComPtr<ID3D11DeviceContext> deviceContext = nullptr;
 	device->GetImmediateContext(&deviceContext);
-	// バッファーにデータを転送
 	deviceContext->UpdateSubresource(buffer.Get(), 0, NULL, data, 0, 0);
-
-	device.Reset();
-	deviceContext.Reset();
 }
 
 // ネイティブポインターの取得
@@ -108,9 +103,12 @@ ID3D11Buffer* IndexBuffer::GetNativePointer()
 // リソースの解放
 void IndexBuffer::Release()
 {
-	buffer.Reset();
 	delete this;
 }
+
+//=============================================================================
+// 定数バッファー
+//=============================================================================
 
 // 定数バッファーを表す新しいインスタンスの作成
 ConstantBuffer* ConstantBuffer::Create(ID3D11Device* device, UINT byteWidth)
@@ -146,17 +144,11 @@ ConstantBuffer* ConstantBuffer::Create(ID3D11Device* device, UINT byteWidth)
 // バッファーにデータを設定する
 void ConstantBuffer::SetData(void* data)
 {
-	// デバイスの取得
 	ComPtr<ID3D11Device> device = nullptr;
 	buffer->GetDevice(&device);
-	// デバイスコンテキストの取得
 	ComPtr<ID3D11DeviceContext> deviceContext = nullptr;
 	device->GetImmediateContext(&deviceContext);
-	// バッファーにデータを転送
 	deviceContext->UpdateSubresource(buffer.Get(), 0, NULL, data, 0, 0);
-
-	device.Reset();
-	deviceContext.Reset();
 }
 
 // ネイティブポインターの取得
@@ -168,6 +160,5 @@ ID3D11Buffer* ConstantBuffer::GetNativePointer()
 // リソースの解放
 void ConstantBuffer::Release()
 {
-	buffer.Reset();
 	delete this;
 }

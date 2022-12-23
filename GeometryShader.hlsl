@@ -34,11 +34,7 @@ void main(
 		// ワールド変換
 		float4 position = mul(input[i].position, world);
 		// 重力落下運動
-		// position = 0.5f * gravity * time.x * time.x + initialVelocity * time.x + position;
-		position = 0.5f * gravity * time * time + initialVelocity * time + position;
-
-		// position = float4(randomNormal, 1.0f) * time.x + position;
-
+		// position = 0.5f * gravity * time * time + initialVelocity * time + position;
 		// ビュー変換
 		position = mul(position, view);
 		// プロジェクション変換
@@ -46,8 +42,7 @@ void main(
 
 		float3 normal = normalize(mul(input[i].normal, (float3x3)world));
 
-		// element.position = float4(normal, 1.0f) * randomVector * time.x * intencity + element.position;
-		element.position = float4(normal, 1.0f) * randomVector * time * intencity + element.position;
+		//  element.position = float4(normal, 1.0f) * randomVector * time * intencity + element.position;
 
 		// 光源ベクトル
 		float3 light = normalize(lightPosition.xyz);
@@ -56,6 +51,8 @@ void main(
 		// ランバート反射
 		float diffuse = max(dot(light, worldNormal), 0);
 		element.color = float4(diffuse * diffuseColor.xyz, alpha);
+
+		element.texCoord = input[i].texCoord;
 		output.Append(element);
 	}
 }

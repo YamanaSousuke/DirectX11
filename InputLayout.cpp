@@ -28,6 +28,5 @@ ID3D11InputLayout* InputLayout::GetNativePointer()
 // ƒŠƒ\[ƒX‚Ì‰ğ•ú
 void InputLayout::Release()
 {
-	inputLayout.Reset();
 	delete this;
 }

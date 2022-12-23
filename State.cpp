@@ -40,7 +40,6 @@ ID3D11RasterizerState* RasterizerState::GetNativePointer()
 // リソースの解放
 void RasterizerState::Release()
 {
-	state.Reset();
 	delete this;
 }
 
@@ -90,6 +89,5 @@ const FLOAT* BlendState::GetBlendFactor()
 // リソースの解放
 void BlendState::Release()
 {
-	state.Reset();
 	delete this;
 }

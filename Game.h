@@ -49,8 +49,6 @@ private:
 	bool InitWindow();
 	// グラフィックデバイスの作成
 	bool InitGraphicsDevice();
-	// リソースの解放
-	void Release();
 };
 
 // 位置情報のみを持つ頂点データ
@@ -69,6 +67,19 @@ struct VertexPositionNormal
 {
 	DirectX::XMFLOAT3 position;		// 位置座標
 	DirectX::XMFLOAT3 normal;		// 法線ベクトル
+
+	// インプットレイアウトの配列の取得
+	static const D3D11_INPUT_ELEMENT_DESC* GetInputElementDescs();
+	// インプットレイアウトの配列の要素数の取得
+	static UINT GetInputElementDescsLength();
+};
+
+// 位置情報と法線情報とテクスチャー座標を持つ頂点データ
+struct VertexPositionNormalTexture
+{
+	DirectX::XMFLOAT3 position;		// 位置座標
+	DirectX::XMFLOAT3 normal;		// 法線ベクトル
+	DirectX::XMFLOAT2 texCoord;		// テクスチャ座標
 
 	// インプットレイアウトの配列の取得
 	static const D3D11_INPUT_ELEMENT_DESC* GetInputElementDescs();
@@ -184,6 +195,31 @@ public:
 		const void* shaderBytecode, SIZE_T bytecodeLength);
 	// ネイティブポインターの取得
 	ID3D11InputLayout* GetNativePointer();
+	// リソースの解放
+	void Release();
+};
+
+// 2Dテクスチャー
+class Texture2D
+{
+	// リソース
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> texture = nullptr;
+	// サンプラーステート
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState = nullptr;
+	// シェーダーリソースビュー
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shaderResourceView = nullptr;
+
+public:
+	// このクラスの新しいインスタンスの作成
+	static Texture2D* Create(ID3D11Device* device, UINT width, UINT height,
+		DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, bool mipChain = true);
+
+	// バッファーにデータを設定する
+	void SetData(const void* data);
+	// ネイティブポインターの取得
+	ID3D11Texture2D* GetNativePointer();
+	ID3D11SamplerState* GetSapmlerState();
+	ID3D11ShaderResourceView* GetShaderResourceView();
 	// リソースの解放
 	void Release();
 };
