@@ -252,7 +252,7 @@ int Game::Run()
 	};
 
 	// 頂点バッファーの作成
-	auto vertexBuffer = VertexBuffer::Create(device.Get(), sizeof(vertices));
+	auto vertexBuffer = new VertexBuffer(device.Get(), sizeof(vertices));
 	if (vertexBuffer == nullptr) {
 		OutputDebugStringA("頂点バッファーの作成に失敗\n");
 		return -1;
@@ -271,7 +271,7 @@ int Game::Run()
 	};
 
 	// インデックスバッファーの作成
-	auto indexBuffer = IndexBuffer::Create(device.Get(), _countof(indices));
+	auto indexBuffer = new IndexBuffer(device.Get(), _countof(indices));
 	if (indexBuffer == nullptr) {
 		OutputDebugStringA("インデックスバッファーの作成に失敗\n");
 		return -1;
@@ -291,35 +291,35 @@ int Game::Run()
 	};
 	
 	// 定数バッファーの作成
-	auto constantBuffer = ConstantBuffer::Create(device.Get(), sizeof(SceneParameter));
+	auto constantBuffer = new ConstantBuffer(device.Get(), sizeof(SceneParameter));
 	if (constantBuffer == nullptr) {
 		OutputDebugStringA("定数バッファーの作成に失敗\n");
 		return -1;
 	}
 
 	// 頂点シェーダーの作成
-	auto vertexShader = VertexShader::Create(device.Get());
+	auto vertexShader = new VertexShader(device.Get());
 	if (vertexBuffer == nullptr) {
 		OutputDebugStringA("頂点シェーダーの作成に失敗\n");
 		return -1;
 	}
 
 	// ジオメトリシェーダーの作成
-	auto geometryShader = GeometryShader::Create(device.Get());
+	auto geometryShader = new GeometryShader(device.Get());
 	if (geometryShader == nullptr) {
 		OutputDebugStringA("ジオメトリシェーダーの作成に失敗\n");
 		return -1;
 	}
 
 	// ピクセルシェーダーの作成
-	auto pixelShader = PixelShader::Create(device.Get());
+	auto pixelShader = new PixelShader(device.Get());
 	if (pixelShader == nullptr) {
 		OutputDebugStringA("ピクセルシェーダーの作成に失敗\n");
 		return -1;
 	}
 
 	// 入力レイアウトの作成
-	auto inputLayout = InputLayout::Create(device.Get(), vertices->GetInputElementDescs(), vertices->GetInputElementDescsLength(),
+	auto inputLayout = new InputLayout(device.Get(), vertices->GetInputElementDescs(), vertices->GetInputElementDescsLength(),
 		vertexShader->GetBytecode(), vertexShader->GetBytecodeLength());
 	if (inputLayout == nullptr) {
 		OutputDebugStringA("入力レイアウトの作成に失敗\n");
@@ -349,14 +349,13 @@ int Game::Run()
 	};
 
 	// テクスチャーを作成
-	auto texture = Texture2D::Create(device.Get(),4, 4, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, false);
+	auto texture = new Texture2D(device.Get(),4, 4, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, false);
 	if (texture == nullptr) {
 		OutputDebugStringA("テクスチャーの作成に失敗\n");
 		return -1;
 	}
 	// バッファにデータを転送
 	texture->SetData(source);
-	
 
 	float time = 0.0f;
 
@@ -372,7 +371,7 @@ int Game::Run()
 		world *= XMMatrixRotationAxis(axis, time);
 
 		// ビュー行列
-		XMVECTOR eyePosition = XMVectorSet(0.0f, 1.0f, -10.0f, 1.0f);
+		XMVECTOR eyePosition = XMVectorSet(0.0f, 1.0f, 10.0f, 1.0f);
 		XMVECTOR focusPosition = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
 		XMVECTOR upDirection = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 		XMMATRIX view = XMMatrixLookAtLH(eyePosition, focusPosition, upDirection);
@@ -389,11 +388,11 @@ int Game::Run()
 		XMStoreFloat4x4(&matricesPerFrame.view, XMMatrixTranspose(view));
 		XMStoreFloat4x4(&matricesPerFrame.projection, XMMatrixTranspose(projection));
 		XMStoreFloat4x4(&matricesPerFrame.worldViewProjection, XMMatrixTranspose(world * view * projection));
-		// matricesPerFrame.time = time;
-		// if (matricesPerFrame.alpha > 0.0f)
-		// {
-		// 	matricesPerFrame.alpha -= time;
-		// }
+		matricesPerFrame.time = time;
+		if (matricesPerFrame.alpha > 0.0f)
+		{
+			matricesPerFrame.alpha -= time;
+		}
 		// 定数バッファの更新
 		constantBuffer->SetData(&matricesPerFrame);
 
@@ -401,7 +400,6 @@ int Game::Run()
 		deviceContext->OMSetRenderTargets(_countof(renderTargetView), renderTargetView->GetAddressOf(), depthStencilView.Get());
 		// ブレンドステートを設定
 		deviceContext->OMSetBlendState(blendState->GetNativePointer(), blendState->GetBlendFactor(), 0xffffffff);
-
 		// 画面のクリア
 		deviceContext->ClearRenderTargetView(renderTargetView[0].Get(), clearColor);
 		deviceContext->ClearDepthStencilView(depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
@@ -431,19 +429,14 @@ int Game::Run()
 		ID3D11SamplerState* samplerStates[1] = { texture->GetSapmlerState() };
 		deviceContext->PSSetSamplers(0, _countof(samplerStates), samplerStates);
 
-		// インプットレイアウトの設定
-		deviceContext->IASetInputLayout(inputLayout->GetNativePointer());
 		// ラスタライザステートの設定
 		deviceContext->RSSetState(rasterizerState->GetNativePointer());
-
-		// トライアングル
 		deviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		deviceContext->IASetInputLayout(inputLayout->GetNativePointer());
 		// インデックスバッファーの設定
 		deviceContext->IASetIndexBuffer(indexBuffer->GetNativePointer(), DXGI_FORMAT_R32_UINT, 0);
 		// 描画
 		deviceContext->DrawIndexed(_countof(indices), 0, 0);
-
-		// 表示
 		swapchain->Present(1, 0);
 
 		if (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {

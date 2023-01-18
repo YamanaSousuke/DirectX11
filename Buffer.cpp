@@ -7,14 +7,8 @@ using namespace Microsoft::WRL;
 //=============================================================================
 
 // 頂点バッファーを表す新しいインスタンスの作成
-VertexBuffer* VertexBuffer::Create(ID3D11Device* device, UINT byteWidth)
+VertexBuffer::VertexBuffer(ID3D11Device* device, UINT byteWidth)
 {
-	// このクラスのメモリーを確保
-	auto result = new VertexBuffer();
-	if (result == nullptr) {
-		return nullptr;
-	}
-
 	// 頂点バッファーについての記述
 	D3D11_BUFFER_DESC bufferDesc = {};
 	bufferDesc.ByteWidth = byteWidth;
@@ -24,12 +18,10 @@ VertexBuffer* VertexBuffer::Create(ID3D11Device* device, UINT byteWidth)
 	bufferDesc.MiscFlags = 0;
 	bufferDesc.StructureByteStride = 0;
 	// 頂点バッファーの作成
-	auto hr = device->CreateBuffer(&bufferDesc, NULL, &result->buffer);
+	auto hr = device->CreateBuffer(&bufferDesc, NULL, &buffer);
 	if (FAILED(hr)) {
-		return nullptr;
+		buffer = nullptr;
 	}
-
-	return result;
 }
 
 // バッファーにデータを設定する
@@ -59,14 +51,8 @@ void VertexBuffer::Release()
 //=============================================================================
 
 // インデックスバッファーを表す新しいインスタンスの作成
-IndexBuffer* IndexBuffer::Create(ID3D11Device* device, UINT indexCount)
+IndexBuffer::IndexBuffer(ID3D11Device* device, UINT indexCount)
 {
-	// このクラスのメモリーを確保
-	auto result = new IndexBuffer();
-	if (result == nullptr) {
-		return nullptr;
-	}
-
 	// インデックスバッファーについての記述
 	D3D11_BUFFER_DESC bufferDesc = {};
 	bufferDesc.ByteWidth = sizeof(UINT32) * indexCount;
@@ -76,12 +62,10 @@ IndexBuffer* IndexBuffer::Create(ID3D11Device* device, UINT indexCount)
 	bufferDesc.MiscFlags = 0;
 	bufferDesc.StructureByteStride = 0;
 	// インデックスバッファーの作成
-	auto hr = device->CreateBuffer(&bufferDesc, NULL, &result->buffer);
+	auto hr = device->CreateBuffer(&bufferDesc, NULL, &buffer);
 	if (FAILED(hr)) {
-		return nullptr;
+		buffer = nullptr;
 	}
-
-	return result;
 }
 
 // バッファーにデータを設定する
@@ -111,20 +95,14 @@ void IndexBuffer::Release()
 //=============================================================================
 
 // 定数バッファーを表す新しいインスタンスの作成
-ConstantBuffer* ConstantBuffer::Create(ID3D11Device* device, UINT byteWidth)
+ConstantBuffer::ConstantBuffer(ID3D11Device* device, UINT byteWidth)
 {
-	// このクラスのメモリーを確保
-	auto result = new ConstantBuffer();
-	if (result == nullptr) {
-		return nullptr;
-	}
-
 	// 16バイトに統一する
 	if (byteWidth % 16 != 0) {
 		byteWidth = byteWidth + 16 - byteWidth % 16;
 	}
 
-	// インデックスバッファーについての記述
+	// 定数バッファーについての記述
 	D3D11_BUFFER_DESC bufferDesc = {};
 	bufferDesc.ByteWidth = byteWidth;
 	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -133,12 +111,10 @@ ConstantBuffer* ConstantBuffer::Create(ID3D11Device* device, UINT byteWidth)
 	bufferDesc.MiscFlags = 0;
 	bufferDesc.StructureByteStride = 0;
 	// 定数バッファーの作成
-	auto hr = device->CreateBuffer(&bufferDesc, NULL, &result->buffer);
+	auto hr = device->CreateBuffer(&bufferDesc, NULL, &buffer);
 	if (FAILED(hr)) {
-		return nullptr;
+		buffer = nullptr;
 	}
-
-	return result;
 }
 
 // バッファーにデータを設定する

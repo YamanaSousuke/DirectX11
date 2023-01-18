@@ -13,16 +13,16 @@ cbuffer ConstantBuffer
 struct VSInput
 {
 	float4 position : POSITION;
-	float3 normal : NORMAL;
-	float2 texCoord : TEXCOORD;
+	float3 normal : NORMAL0;
+	float2 texCoord : TEXCOORD0;
 };
 
 // 頂点シェーダーからの出力
 struct VSOutput
 {
 	float4 position : SV_POSITION;
-	float3 normal : NORMAL;
-	float2 texCoord : TEXCOORD;
+	float3 normal : NORMAL0;
+	float2 texCoord : TEXCOORD0;
 };
 
 // ジオメトリシェーダーへの入力
@@ -33,7 +33,7 @@ struct GSOutput
 {
 	float4 position : SV_POSITION;
 	float4 color : COLOR;
-	float2 texCoord : TEXCOORD;
+	float2 texCoord : TEXCOORD0;
 };
 
 // ピクセルシェーダーへの入力

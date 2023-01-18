@@ -74,6 +74,18 @@ struct VertexPositionNormal
 	static UINT GetInputElementDescsLength();
 };
 
+// 位置情報とテクスチャ情報
+struct VertexPositionTexture
+{
+	DirectX::XMFLOAT3 position;		// 位置座標
+	DirectX::XMFLOAT2 texCoord;		// テクスチャ座標
+
+	// インプットレイアウトの配列の取得
+	static const D3D11_INPUT_ELEMENT_DESC* GetInputElementDescs();
+	// インプットレイアウトの配列の要素数の取得
+	static UINT GetInputElementDescsLength();
+};
+
 // 位置情報と法線情報とテクスチャー座標を持つ頂点データ
 struct VertexPositionNormalTexture
 {
@@ -91,11 +103,11 @@ struct VertexPositionNormalTexture
 class VertexShader
 {
 private:
+	//  リソース
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> shader = nullptr;
-
 public:
 	// このクラスの新しいインスタンスの作成
-	static VertexShader* Create(ID3D11Device* device);
+	VertexShader(ID3D11Device* device);
 	// バイトコードの取得
 	const BYTE* GetBytecode();
 	// バイトコードのサイズの取得
@@ -110,11 +122,11 @@ public:
 class GeometryShader
 {
 private:
+	//  リソース
 	Microsoft::WRL::ComPtr<ID3D11GeometryShader> shader = nullptr;
-
 public:
 	// このクラスの新しいインスタンスの作成
-	static GeometryShader* Create(ID3D11Device* device);
+	GeometryShader(ID3D11Device* device);
 	// ネイティブポインターの取得
 	ID3D11GeometryShader* GetNativePointer();
 	// リソースの解放
@@ -124,11 +136,11 @@ public:
 // ピクセルシェーダー
 class PixelShader {
 private:
+	//  リソース
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> shader = nullptr;
-
 public:
 	// このクラスの新しいインスタンスの作成
-	static PixelShader* Create(ID3D11Device* device);
+	PixelShader(ID3D11Device* device);
 	// ネイティブポインターの取得
 	ID3D11PixelShader* GetNativePointer();
 	// リソースの解放
@@ -142,7 +154,7 @@ class VertexBuffer
 	Microsoft::WRL::ComPtr<ID3D11Buffer> buffer = nullptr;
 public:
 	// このクラスの新しいインスタンスの作成
-	static VertexBuffer* Create(ID3D11Device* device, UINT byteWidth);
+	VertexBuffer(ID3D11Device* device, UINT byteWidth);
 	// バッファーにデータを設定する
 	void SetData(void* data);
 	// ネイティブポインターの取得
@@ -158,7 +170,7 @@ class IndexBuffer
 	Microsoft::WRL::ComPtr<ID3D11Buffer> buffer = nullptr;
 public:
 	// このクラスの新しいインスタンスの作成
-	static IndexBuffer* Create(ID3D11Device* device, UINT indexCount);
+	IndexBuffer(ID3D11Device* device, UINT indexCount);
 	// バッファーにデータを設定する
 	void SetData(UINT32* data);
 	// ネイティブポインターの取得
@@ -174,7 +186,7 @@ class ConstantBuffer
 	Microsoft::WRL::ComPtr<ID3D11Buffer> buffer = nullptr;
 public:
 	// このクラスの新しいインスタンスの作成
-	static ConstantBuffer* Create(ID3D11Device* device, UINT byteWidth);
+	ConstantBuffer(ID3D11Device* device, UINT byteWidth);
 	// バッファーにデータを設定する
 	void SetData(void* data);
 	// ネイティブポインターの取得
@@ -188,10 +200,9 @@ class InputLayout
 {
 	// リソース
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout = nullptr;
-
 public:
 	// このクラスの新しいインスタンスの作成
-	static InputLayout* Create(ID3D11Device* device, const D3D11_INPUT_ELEMENT_DESC* descs, UINT numElements,
+	InputLayout(ID3D11Device* device, const D3D11_INPUT_ELEMENT_DESC* descs, UINT numElements,
 		const void* shaderBytecode, SIZE_T bytecodeLength);
 	// ネイティブポインターの取得
 	ID3D11InputLayout* GetNativePointer();
@@ -211,9 +222,8 @@ class Texture2D
 
 public:
 	// このクラスの新しいインスタンスの作成
-	static Texture2D* Create(ID3D11Device* device, UINT width, UINT height,
+	Texture2D(ID3D11Device* device, UINT width, UINT height,
 		DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, bool mipChain = true);
-
 	// バッファーにデータを設定する
 	void SetData(const void* data);
 	// ネイティブポインターの取得

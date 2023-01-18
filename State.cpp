@@ -14,6 +14,7 @@ RasterizerState* RasterizerState::Create(ID3D11Device* device)
 	// ラスタライザステートの作成
 	D3D11_RASTERIZER_DESC rasterizerDesc = {};
 	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
+	// 両面描画
 	rasterizerDesc.CullMode = D3D11_CULL_NONE;
 	rasterizerDesc.FrontCounterClockwise = FALSE;
 	rasterizerDesc.DepthBias = 0;
@@ -24,7 +25,10 @@ RasterizerState* RasterizerState::Create(ID3D11Device* device)
 	rasterizerDesc.MultisampleEnable = FALSE;
 	rasterizerDesc.AntialiasedLineEnable = FALSE;
 	auto hr = device->CreateRasterizerState(&rasterizerDesc, &result->state);
+
+
 	if (FAILED(hr)) {
+
 		return nullptr;
 	}
 

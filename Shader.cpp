@@ -10,21 +10,13 @@ using namespace Microsoft::WRL;
 //=============================================================================
 
 // 頂点シェーダーを表す新しいインスタンスの作成
-VertexShader* VertexShader::Create(ID3D11Device* device)
+VertexShader::VertexShader(ID3D11Device* device)
 {
-	// 戻り値として返すインスタンスの作成
-	auto result = new VertexShader();
-	if (result == nullptr) {
-		return nullptr;
-	}
-
 	// 頂点シェーダーの作成
-	auto hr = device->CreateVertexShader(g_VertexShader, _countof(g_VertexShader), NULL, &result->shader);
+	auto hr = device->CreateVertexShader(g_VertexShader, _countof(g_VertexShader), NULL, &shader);
 	if (FAILED(hr)) {
-		return nullptr;
+		shader = nullptr;
 	}
-
-	return result;
 }
 
 // バイトコードの取得
@@ -56,21 +48,13 @@ void VertexShader::Release()
 //=============================================================================
 
 // ジオメトリシェーダーを表す新しいインスタンスの作成
-GeometryShader* GeometryShader::Create(ID3D11Device* device)
+GeometryShader::GeometryShader(ID3D11Device* device)
 {
-	// 戻り値として返すインスタンスの作成
-	auto result = new GeometryShader();
-	if (result == nullptr) {
-		return nullptr;
-	}
-
 	// ジオメトリシェーダーの作成
-	auto hr = device->CreateGeometryShader(g_GeometryShader, _countof(g_GeometryShader), NULL, &result->shader);
+	auto hr = device->CreateGeometryShader(g_GeometryShader, _countof(g_GeometryShader), NULL, &shader);
 	if (FAILED(hr)) {
-		return nullptr;
+		shader = nullptr;
 	}
-
-	return result;
 }
 
 // ジオメトリシェーダーのネイティブポインターの取得
@@ -90,21 +74,13 @@ void GeometryShader::Release()
 //=============================================================================
 
 // ピクセルシェーダーを表す新しいインスタンスの作成
-PixelShader* PixelShader::Create(ID3D11Device* device)
+PixelShader::PixelShader(ID3D11Device* device)
 {
-	// 戻り値として返すインスタンスの作成
-	auto result = new PixelShader();
-	if (result == nullptr) {
-		return nullptr;
-	}
-
 	// ピクセルシェーダーの作成
-	auto hr = device->CreatePixelShader(g_PixelShader, _countof(g_PixelShader), NULL, &result->shader);
+	auto hr = device->CreatePixelShader(g_PixelShader, _countof(g_PixelShader), NULL, &shader);
 	if (FAILED(hr)) {
-		return nullptr;
+		shader = nullptr;
 	}
-
-	return result;
 }
 
 // ピクセルシェーダーのネイティブポインターの取得

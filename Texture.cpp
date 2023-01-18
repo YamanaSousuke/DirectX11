@@ -3,15 +3,8 @@
 using namespace Microsoft::WRL;
 
 // このクラスの新しいインスタンスの作成
-Texture2D* Texture2D::Create(ID3D11Device* device, UINT width, UINT height, DXGI_FORMAT format, bool mipChain)
+Texture2D::Texture2D(ID3D11Device* device, UINT width, UINT height, DXGI_FORMAT format, bool mipChain)
 {
-	// このクラスのメモリーを確保
-	auto result = new Texture2D();
-	if (result == nullptr) {
-		return nullptr;
-	}
-
-	// テクスチャーを作成
 	D3D11_TEXTURE2D_DESC textureDesc = {};
 	textureDesc.Width = width;
 	textureDesc.Height = height;
@@ -23,9 +16,8 @@ Texture2D* Texture2D::Create(ID3D11Device* device, UINT width, UINT height, DXGI
 	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 	textureDesc.CPUAccessFlags = 0;
 	textureDesc.MiscFlags = 0;
-	auto hr = device->CreateTexture2D(&textureDesc, nullptr, &result->texture);
+	auto hr = device->CreateTexture2D(&textureDesc, nullptr, &texture);
 	if (FAILED(hr)) {
-		return nullptr;
 	}
 
 	// サンプラーステートの作成
@@ -43,9 +35,9 @@ Texture2D* Texture2D::Create(ID3D11Device* device, UINT width, UINT height, DXGI
 	samplerDesc.BorderColor[3] = 0;
 	samplerDesc.MinLOD = 0;
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
-	hr = device->CreateSamplerState(&samplerDesc, &result->samplerState);
+	hr = device->CreateSamplerState(&samplerDesc, &samplerState);
 	if (FAILED(hr)) {
-		return nullptr;
+		// return nullptr;
 	}
 
 	// テクスチャ用のシェーダーリソースビューを作成
@@ -53,12 +45,10 @@ Texture2D* Texture2D::Create(ID3D11Device* device, UINT width, UINT height, DXGI
 	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = mipChain ? 0 : 1;
-	hr = device->CreateShaderResourceView(result->texture.Get(), &srvDesc, &result->shaderResourceView);
+	hr = device->CreateShaderResourceView(texture.Get(), &srvDesc, &shaderResourceView);
 	if (FAILED(hr)) {
-		return nullptr;
+		// return nullptr;
 	}
-
-	return result;
 }
 
 // バッファーにデータを設定する
