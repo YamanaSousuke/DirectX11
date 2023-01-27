@@ -6,7 +6,17 @@ cbuffer ConstantBuffer
 	matrix projection;				// プロジェクション行列
 	matrix worldViewProjection;		// WVP行列
 	float time;
-	float alpha;
+};
+
+// ディレクショナルライト
+struct DirectionalLight {
+	float4 lightColor;
+	float4 lightDirection;
+};
+
+// ライト
+cbuffer LightParameter {
+	DirectionalLight directionalLight;
 };
 
 // 頂点シェーダーへの入力
@@ -30,7 +40,7 @@ typedef VSOutput GSInput;
 struct GSOutput
 {
 	float4 position : SV_POSITION;
-	float4 color : COLOR;
+	float3 normal : NORMAL;
 };
 
 // ピクセルシェーダーへの入力

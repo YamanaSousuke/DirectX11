@@ -303,12 +303,18 @@ int Game::Run()
 		XMFLOAT4X4 projection;				// プロジェクション行列
 		XMFLOAT4X4 worldViewProjection;		// WVP行列
 		float time = 0.0f;				    // 時間
-		float alpha = 1.0f;					// アルファ値
 	};
 	
 	// 定数バッファーの作成
 	auto constantBuffer = ConstantBuffer::Create(device.Get(), sizeof(SceneParameter));
 	if (constantBuffer == nullptr) {
+		OutputDebugStringA("定数バッファーの作成に失敗\n");
+		return -1;
+	}
+
+	// 定数バッファーの作成
+	auto lightConstantBuffer = ConstantBuffer::Create(device.Get(), sizeof(LightParameter));
+	if (lightConstantBuffer == nullptr) {
 		OutputDebugStringA("定数バッファーの作成に失敗\n");
 		return -1;
 	}
@@ -388,17 +394,16 @@ int Game::Run()
 		XMStoreFloat4x4(&matricesPerFrame.projection, XMMatrixTranspose(projection));
 		XMStoreFloat4x4(&matricesPerFrame.worldViewProjection, XMMatrixTranspose(world * view * projection));
 		matricesPerFrame.time = time;
-		if (matricesPerFrame.alpha > 0.0f)
-		{
-			matricesPerFrame.alpha -= time;
-		}
-		// 定数バッファの更新
 		constantBuffer->SetData(&matricesPerFrame);
+
+		// ライト
+		LightParameter lightParameter = {};
+		lightParameter.directionalLight.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);;
+		lightParameter.directionalLight.direction = XMFLOAT4(1.0f, 2.0f, -2.0f, 0.0f);
+		lightConstantBuffer->SetData(&lightParameter);
 
 		// レンダーターゲットを設定
 		deviceContext->OMSetRenderTargets(_countof(renderTargetView), renderTargetView->GetAddressOf(), depthStencilView.Get());
-		// ブレンドステートを設定
-		deviceContext->OMSetBlendState(blendState->GetNativePointer(), blendState->GetBlendFactor(), 0xffffffff);
 
 		// 画面のクリア
 		deviceContext->ClearRenderTargetView(renderTargetView[0].Get(), clearColor);
@@ -421,6 +426,10 @@ int Game::Run()
 		// ジオメトリシェーダーに定数バッファーを設定
 		ID3D11Buffer* constantBuffers[1] = { constantBuffer->GetNativePointer() };
 		deviceContext->GSSetConstantBuffers(0, _countof(constantBuffers), constantBuffers);
+
+		// ピクセルシェーダーに定数バッファーを設定
+		ID3D11Buffer* psConstantBuffers[1] = { lightConstantBuffer->GetNativePointer() };
+		deviceContext->PSSetConstantBuffers(0, _countof(psConstantBuffers), psConstantBuffers);
 
 		// インプットレイアウトの設定
 		deviceContext->IASetInputLayout(inputLayout->GetNativePointer());
@@ -452,6 +461,7 @@ int Game::Run()
 	indexBuffer->Release();
 	vertexBuffer->Release();
 	constantBuffer->Release();
+	lightConstantBuffer->Release();
 	vertexShader->Release();
 	geometryShader->Release();
 	pixelShader->Release();

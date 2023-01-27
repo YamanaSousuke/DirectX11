@@ -5,6 +5,8 @@
 #include <DirectXMath.h>
 #include <wrl/client.h>
 
+#include "Lightings.h"
+
 // アプリケーション全体を表す
 class Game
 {
@@ -15,6 +17,12 @@ public:
 	int Run();
 
 private:
+	// ライト
+	struct LightParameter {
+		DirectionalLight directionalLight = {};
+	};
+
+
 	// ウィンドウのタイトル
 	LPCWSTR title = L"Title";
 	// ウィンドウの幅
