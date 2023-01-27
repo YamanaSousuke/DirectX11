@@ -55,7 +55,7 @@ IndexBuffer::IndexBuffer(ID3D11Device* device, UINT indexCount)
 {
 	// インデックスバッファーについての記述
 	D3D11_BUFFER_DESC bufferDesc = {};
-	bufferDesc.ByteWidth = sizeof(UINT32) * indexCount;
+	bufferDesc.ByteWidth = sizeof(UINT16) * indexCount;
 	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	bufferDesc.CPUAccessFlags = 0;
@@ -69,7 +69,7 @@ IndexBuffer::IndexBuffer(ID3D11Device* device, UINT indexCount)
 }
 
 // バッファーにデータを設定する
-void IndexBuffer::SetData(UINT32* data)
+void IndexBuffer::SetData(UINT16* data)
 {
 	ComPtr<ID3D11Device> device = nullptr;
 	buffer->GetDevice(&device);

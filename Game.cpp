@@ -1,6 +1,7 @@
 #include <d3dcompiler.h>
 #include "Game.h"
 #include "Geometry.h"
+#include "Vertex.h"
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
@@ -223,80 +224,22 @@ int Game::Run()
 	HRESULT hr = S_OK;
 
 	auto box = Geometry::CreateBox<VertexPosition>();
-
-	// 頂点データの配列
-	//VertexPositionNormal vertices[] = {
-	//	// Front
-	//	{ {-1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-	//	{ {-1.0f,-1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-	//	{ { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-	//	{ { 1.0f,-1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-	//	{ { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-	//	{ {-1.0f,-1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-	//	// Back
-	//	{ {-1.0f, 1.0f,-1.0f }, { 0.0f, 0.0f,-1.0f } },
-	//	{ { 1.0f, 1.0f,-1.0f }, { 0.0f, 0.0f,-1.0f } },
-	//	{ {-1.0f,-1.0f,-1.0f }, { 0.0f, 0.0f,-1.0f } },
-	//	{ { 1.0f,-1.0f,-1.0f }, { 0.0f, 0.0f,-1.0f } },
-	//	{ {-1.0f,-1.0f,-1.0f }, { 0.0f, 0.0f,-1.0f } },
-	//	{ { 1.0f, 1.0f,-1.0f }, { 0.0f, 0.0f,-1.0f } },
-	//	// Right
-	//	{ { 1.0f, 1.0f,-1.0f }, { 1.0f, 0.0f, 0.0f } },
-	//	{ { 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f } },
-	//	{ { 1.0f,-1.0f,-1.0f }, { 1.0f, 0.0f, 0.0f } },
-	//	{ { 1.0f,-1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f } },
-	//	{ { 1.0f,-1.0f,-1.0f }, { 1.0f, 0.0f, 0.0f } },
-	//	{ { 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f } },
-	//	// Left
-	//	{ {-1.0f, 1.0f,-1.0f }, {-1.0f, 0.0f, 0.0f } },
-	//	{ {-1.0f,-1.0f,-1.0f }, {-1.0f, 0.0f, 0.0f } },
-	//	{ {-1.0f, 1.0f, 1.0f }, {-1.0f, 0.0f, 0.0f } },
-	//	{ {-1.0f,-1.0f, 1.0f }, {-1.0f, 0.0f, 0.0f } },
-	//	{ {-1.0f, 1.0f, 1.0f }, {-1.0f, 0.0f, 0.0f } },
-	//	{ {-1.0f,-1.0f,-1.0f }, {-1.0f, 0.0f, 0.0f } },
-	//	// UP
-	//	{ {-1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f } },
-	//	{ { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f } },
-	//	{ {-1.0f, 1.0f,-1.0f }, { 0.0f, 1.0f, 0.0f } },
-	//	{ { 1.0f, 1.0f,-1.0f }, { 0.0f, 1.0f, 0.0f } },
-	//	{ {-1.0f, 1.0f,-1.0f }, { 0.0f, 1.0f, 0.0f } },
-	//	{ { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f } },
-	//	// DOWN
-	//	{ {-1.0f,-1.0f, 1.0f }, { 0.0f,-1.0f, 0.0f } },
-	//	{ {-1.0f,-1.0f,-1.0f }, { 0.0f,-1.0f, 0.0f } },
-	//	{ { 1.0f,-1.0f, 1.0f }, { 0.0f,-1.0f, 0.0f } },
-	//	{ { 1.0f,-1.0f,-1.0f }, { 0.0f,-1.0f, 0.0f } },
-	//	{ { 1.0f,-1.0f, 1.0f }, { 0.0f,-1.0f, 0.0f } },
-	//	{ {-1.0f,-1.0f,-1.0f }, { 0.0f,-1.0f, 0.0f } },
-	//};
-
-	// 頂点バッファーの作成
-	auto vertexBuffer = new VertexBuffer(device.Get(), box.vertices.size());
+	auto vertexBuffer = new VertexBuffer(device.Get(), (UINT)box.vertices.size() * sizeof(VertexPosition));
 	if (vertexBuffer == nullptr) {
 		OutputDebugStringA("頂点バッファーの作成に失敗\n");
 		return -1;
 	}
 	// 頂点バッファーにデータを転送
-	vertexBuffer->SetData(box.vertices.data());
-
-	// インデックスデータ
-	UINT32 indices[] = {
-		 0,  1,  2,  3,  4,  5,
-		 6,  7,  8,  9, 10, 11,
-		12, 13, 14, 15, 16, 17,
-		18, 19, 20, 21, 22, 23,
-		24, 25, 26, 27, 28, 29,
-		30, 31, 32, 33, 34, 35,
-	};
+	vertexBuffer->SetData(box.position.data());
 
 	// インデックスバッファーの作成
-	auto indexBuffer = new IndexBuffer(device.Get(), _countof(indices));
+	auto indexBuffer = new IndexBuffer(device.Get(), (UINT)box.indices.size());
 	if (indexBuffer == nullptr) {
 		OutputDebugStringA("インデックスバッファーの作成に失敗\n");
 		return -1;
 	}
 	// インデックスバッファーにデータを転送
-	indexBuffer->SetData(indices);
+	indexBuffer->SetData(box.indices.data());
 
 
 	// 定数バッファーでシェーダーに毎フレーム送るデータ
@@ -344,8 +287,8 @@ int Game::Run()
 	}
 
 	// 入力レイアウトの作成
-	auto inputLayout = new InputLayout(device.Get(), vertices->GetInputElementDescs(), vertices->GetInputElementDescsLength(),
-		vertexShader->GetBytecode(), vertexShader->GetBytecodeLength());
+	auto inputLayout = new InputLayout(device.Get(), VertexPosition::inputLayout,
+		ARRAYSIZE(VertexPosition::inputLayout), vertexShader->GetBytecode(), vertexShader->GetBytecodeLength());
 	if (inputLayout == nullptr) {
 		OutputDebugStringA("入力レイアウトの作成に失敗\n");
 		return -1;
@@ -420,7 +363,7 @@ int Game::Run()
 
 		// 頂点バッファーを設定
 		ID3D11Buffer* vertexBuffers[1] = { vertexBuffer->GetNativePointer() };
-		UINT strides[1] = { sizeof(VertexPositionNormal) };
+		UINT strides[1] = { sizeof(VertexPosition) };
 		UINT offsets[1] = { 0 };
 		deviceContext->IASetVertexBuffers(0, _countof(vertexBuffers), vertexBuffers, strides, offsets);
 
@@ -445,9 +388,9 @@ int Game::Run()
 		// トライアングル
 		deviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		// インデックスバッファーの設定
-		deviceContext->IASetIndexBuffer(indexBuffer->GetNativePointer(), DXGI_FORMAT_R32_UINT, 0);
+		deviceContext->IASetIndexBuffer(indexBuffer->GetNativePointer(), DXGI_FORMAT_R16_UINT, 0);
 		// 描画
-		deviceContext->DrawIndexed(_countof(indices), 0, 0);
+		deviceContext->DrawIndexed((UINT)box.indices.size(), 0, 0);
 
 		// 表示
 		swapchain->Present(1, 0);

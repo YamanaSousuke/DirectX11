@@ -59,54 +59,6 @@ private:
 	bool InitGraphicsDevice();
 };
 
-// 位置情報のみを持つ頂点データ
-struct VertexPosition
-{
-	DirectX::XMFLOAT3 position;		// 位置座標
-
-	// インプットレイアウトの配列の取得
-	static const D3D11_INPUT_ELEMENT_DESC* GetInputElementDescs();
-	// インプットレイアウトの配列の要素数の取得
-	static UINT GetInputElementDescsLength();
-};
-
-// 位置情報と法線情報を持つ頂点データ
-struct VertexPositionNormal
-{
-	DirectX::XMFLOAT3 position;		// 位置座標
-	DirectX::XMFLOAT3 normal;		// 法線ベクトル
-
-	// インプットレイアウトの配列の取得
-	static const D3D11_INPUT_ELEMENT_DESC* GetInputElementDescs();
-	// インプットレイアウトの配列の要素数の取得
-	static UINT GetInputElementDescsLength();
-};
-
-// 位置情報とテクスチャ情報
-struct VertexPositionTexture
-{
-	DirectX::XMFLOAT3 position;		// 位置座標
-	DirectX::XMFLOAT2 texCoord;		// テクスチャ座標
-
-	// インプットレイアウトの配列の取得
-	static const D3D11_INPUT_ELEMENT_DESC* GetInputElementDescs();
-	// インプットレイアウトの配列の要素数の取得
-	static UINT GetInputElementDescsLength();
-};
-
-// 位置情報と法線情報とテクスチャー座標を持つ頂点データ
-struct VertexPositionNormalTexture
-{
-	DirectX::XMFLOAT3 position;		// 位置座標
-	DirectX::XMFLOAT3 normal;		// 法線ベクトル
-	DirectX::XMFLOAT2 texCoord;		// テクスチャ座標
-
-	// インプットレイアウトの配列の取得
-	static const D3D11_INPUT_ELEMENT_DESC* GetInputElementDescs();
-	// インプットレイアウトの配列の要素数の取得
-	static UINT GetInputElementDescsLength();
-};
-
 // 頂点シェーダー
 class VertexShader
 {
@@ -180,7 +132,7 @@ public:
 	// このクラスの新しいインスタンスの作成
 	IndexBuffer(ID3D11Device* device, UINT indexCount);
 	// バッファーにデータを設定する
-	void SetData(UINT32* data);
+	void SetData(UINT16* data);
 	// ネイティブポインターの取得
 	ID3D11Buffer* GetNativePointer();
 	// リソースの解放
