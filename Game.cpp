@@ -268,7 +268,7 @@ int Game::Run()
 	};
 
 	// 頂点バッファーの作成
-	auto vertexBuffer = VertexBuffer::Create(device.Get(), sizeof(vertices));
+	auto vertexBuffer = new VertexBuffer(device.Get(), sizeof(vertices));
 	if (vertexBuffer == nullptr) {
 		OutputDebugStringA("頂点バッファーの作成に失敗\n");
 		return -1;
@@ -287,7 +287,7 @@ int Game::Run()
 	};
 
 	// インデックスバッファーの作成
-	auto indexBuffer = IndexBuffer::Create(device.Get(), _countof(indices));
+	auto indexBuffer = new IndexBuffer(device.Get(), _countof(indices));
 	if (indexBuffer == nullptr) {
 		OutputDebugStringA("インデックスバッファーの作成に失敗\n");
 		return -1;
@@ -306,42 +306,42 @@ int Game::Run()
 	};
 	
 	// 定数バッファーの作成
-	auto constantBuffer = ConstantBuffer::Create(device.Get(), sizeof(SceneParameter));
+	auto constantBuffer = new ConstantBuffer(device.Get(), sizeof(SceneParameter));
 	if (constantBuffer == nullptr) {
 		OutputDebugStringA("定数バッファーの作成に失敗\n");
 		return -1;
 	}
 
 	// 定数バッファーの作成
-	auto lightConstantBuffer = ConstantBuffer::Create(device.Get(), sizeof(LightParameter));
+	auto lightConstantBuffer = new ConstantBuffer(device.Get(), sizeof(LightParameter));
 	if (lightConstantBuffer == nullptr) {
 		OutputDebugStringA("定数バッファーの作成に失敗\n");
 		return -1;
 	}
 
 	// 頂点シェーダーの作成
-	auto vertexShader = VertexShader::Create(device.Get());
+	auto vertexShader = new VertexShader(device.Get());
 	if (vertexBuffer == nullptr) {
 		OutputDebugStringA("頂点シェーダーの作成に失敗\n");
 		return -1;
 	}
 
 	// ジオメトリシェーダーの作成
-	auto geometryShader = GeometryShader::Create(device.Get());
+	auto geometryShader = new GeometryShader(device.Get());
 	if (geometryShader == nullptr) {
 		OutputDebugStringA("ジオメトリシェーダーの作成に失敗\n");
 		return -1;
 	}
 
 	// ピクセルシェーダーの作成
-	auto pixelShader = PixelShader::Create(device.Get());
+	auto pixelShader = new PixelShader(device.Get());
 	if (pixelShader == nullptr) {
 		OutputDebugStringA("ピクセルシェーダーの作成に失敗\n");
 		return -1;
 	}
 
 	// 入力レイアウトの作成
-	auto inputLayout = InputLayout::Create(device.Get(), vertices->GetInputElementDescs(), vertices->GetInputElementDescsLength(),
+	auto inputLayout = new InputLayout(device.Get(), vertices->GetInputElementDescs(), vertices->GetInputElementDescsLength(),
 		vertexShader->GetBytecode(), vertexShader->GetBytecodeLength());
 	if (inputLayout == nullptr) {
 		OutputDebugStringA("入力レイアウトの作成に失敗\n");
@@ -398,8 +398,11 @@ int Game::Run()
 
 		// ライト
 		LightParameter lightParameter = {};
-		lightParameter.directionalLight.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);;
-		lightParameter.directionalLight.direction = XMFLOAT4(1.0f, 2.0f, -2.0f, 0.0f);
+		lightParameter.directionalLight[0].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		lightParameter.directionalLight[0].direction = XMFLOAT4(1.0f, 2.0f, -2.0f, 0.0f);
+		lightParameter.directionalLight[1].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		lightParameter.directionalLight[1].direction = XMFLOAT4(1.0f, 2.0f, -2.0f, 0.0f);
+		lightParameter.eyePosition = XMFLOAT4(0.0f, 1.0f, -10.0f, 1.0f);
 		lightConstantBuffer->SetData(&lightParameter);
 
 		// レンダーターゲットを設定
@@ -468,18 +471,5 @@ int Game::Run()
 	inputLayout->Release();
 	rasterizerState->Release();
 	blendState->Release();
-
-	Release();
 	return 0;
-}
-
-// リソースの解放
-void Game::Release()
-{
-	depthStencilResourceView.Reset();
-	depthStencilView.Reset();
-	renderTargetView->Reset();
-	swapchain.Reset();
-	deviceContext.Reset();
-	device.Reset();
 }

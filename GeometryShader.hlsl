@@ -25,6 +25,7 @@ void main(
 	{
 		GSOutput element;
 		element.position = mul(input[i].position, worldViewProjection);
+		element.worldPosition = mul(input[i].position, world);
 		element.normal = normalize(mul(input[i].normal, (float3x3)world));
 		output.Append(element);
 	}

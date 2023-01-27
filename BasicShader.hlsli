@@ -1,3 +1,7 @@
+
+// ディレクショナルライトの個数
+static const int numDirectionalLight = 4;
+
 // 定数バッファー
 cbuffer ConstantBuffer
 {
@@ -16,13 +20,15 @@ struct DirectionalLight {
 
 // ライト
 cbuffer LightParameter {
-	DirectionalLight directionalLight;
+	DirectionalLight directionalLight[4];
+	float4 eyePosition;				// 視点
 };
 
 // 頂点シェーダーへの入力
 struct VSInput
 {
 	float4 position : POSITION;
+	float4 worldPosition : POSITION;
 	float3 normal : NORMAL;
 };
 
@@ -30,6 +36,7 @@ struct VSInput
 struct VSOutput
 {
 	float4 position : SV_POSITION;
+	float4 worldPosition : POSITION;
 	float3 normal : NORMAL;
 };
 
@@ -40,6 +47,7 @@ typedef VSOutput GSInput;
 struct GSOutput
 {
 	float4 position : SV_POSITION;
+	float4 worldPosition : POSITION;
 	float3 normal : NORMAL;
 };
 

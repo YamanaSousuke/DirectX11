@@ -19,9 +19,9 @@ public:
 private:
 	// ライト
 	struct LightParameter {
-		DirectionalLight directionalLight = {};
+		DirectionalLight directionalLight[4] = {};
+		DirectX::XMFLOAT4 eyePosition;
 	};
-
 
 	// ウィンドウのタイトル
 	LPCWSTR title = L"Title";
