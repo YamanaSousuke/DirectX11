@@ -13,6 +13,8 @@ public:
 	// 頂点バッファーとインデックスバッファーの設定
 	template<class VertexType>
 	void SetBuffer(ID3D11Device* device, ID3D11DeviceContext* immediateContext, Geometry::Meshdata<VertexType> meshdata);
+	// テクスチャの設定
+	void SetTexture(ID3D11ShaderResourceView* texture);
 	// 描画
 	void Draw(ID3D11DeviceContext* immediateContext, const DirectX::XMFLOAT3& position);
 	// リソースの解放
@@ -30,6 +32,8 @@ private:
 	ComPtr<ID3D11Buffer> vertexBuffer = nullptr;
 	// インデックスバッファー
 	ComPtr<ID3D11Buffer> indexBuffer = nullptr;
+	// テクスチャー
+	ComPtr<ID3D11ShaderResourceView> texture = nullptr;
 	// 1頂点のサイズ
 	UINT vertexStride = 0;
 	// インデックスの個数

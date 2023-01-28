@@ -38,6 +38,12 @@ using namespace DirectX;
 //	immediateContext->UpdateSubresource(indexBuffer, 0, nullptr, meshdata.indices.data(), 0, 0);
 //}
 
+// テクスチャの設定
+void GameObject::SetTexture(ID3D11ShaderResourceView* texture)
+{
+	this->texture = texture;
+}
+
 // 描画
 void GameObject::Draw(ID3D11DeviceContext* immediateContext, const XMFLOAT3& position)
 {
@@ -59,9 +65,14 @@ void GameObject::Draw(ID3D11DeviceContext* immediateContext, const XMFLOAT3& pos
 	world *= XMMatrixTranslation(position.x, position.y, position.z);
 	XMStoreFloat4x4(&modelParameter.world, XMMatrixTranspose(world));
 
+	// 定数バッファーを取得して、データの転送を行う
 	ComPtr<ID3D11Buffer> constnatBuffer = nullptr;
 	immediateContext->GSGetConstantBuffers(1, 1, constnatBuffer.GetAddressOf());
 	immediateContext->UpdateSubresource(constnatBuffer.Get(), 0, nullptr, &modelParameter, 0, 0);
+
+	// テクスチャの設定
+	ID3D11ShaderResourceView* textureViews[1] = { texture.Get() };
+	immediateContext->PSSetShaderResources(0, 1, textureViews);
 	immediateContext->DrawIndexed(indexCount, 0, 0);
 }
 

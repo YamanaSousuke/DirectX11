@@ -10,14 +10,14 @@
 #include "Vertex.h"
 
 namespace Geometry {
-    template<class VertexType = VertexPositionTexture>
+    template<class VertexType = VertexPositionNormalTexture>
     struct Meshdata {
         std::vector<VertexType> vertices;
         std::vector<uint16_t> indices;
     };
 
     // ƒLƒ…[ƒu‚Ìì¬
-    template<class VertexType = VertexPositionTexture>
+    template<class VertexType = VertexPositionNormalTexture>
     Meshdata<VertexType> CreateBox(float width = 2.0f, float height = 2.0f, float depth = 2.0f);
 }
 

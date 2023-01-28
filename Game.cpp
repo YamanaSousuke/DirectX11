@@ -225,9 +225,12 @@ int Game::Run()
 
 	HRESULT hr = S_OK;
 
-	// 箱の描画
+	// 木箱の描画の準備
 	auto box = new GameObject();
-	box->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreateBox());
+	ComPtr<ID3D11ShaderResourceView> texture = nullptr;
+	DirectX::CreateDDSTextureFromFile(device.Get(), L"Texture/Wood.dds", nullptr, texture.GetAddressOf());
+	box->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreateBox<VertexPositionNormalTexture>());
+	box->SetTexture(texture.Get());
 
 	// モデル情報
 	struct ModelParameter {
@@ -304,8 +307,27 @@ int Game::Run()
 		return -1;
 	}
 
-	ComPtr<ID3D11ShaderResourceView> texture = nullptr;
-	DirectX::CreateDDSTextureFromFile(device.Get(), L"Test", nullptr, texture.GetAddressOf());
+	// サンプラーの作成
+	D3D11_SAMPLER_DESC samplerDesc = {};
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.MinLOD = 0;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	samplerDesc.MipLODBias = 0.0f;
+	samplerDesc.MaxAnisotropy = 1;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	samplerDesc.BorderColor[0] = 0.0f;
+	samplerDesc.BorderColor[1] = 0.0f;
+	samplerDesc.BorderColor[2] = 0.0f;
+	samplerDesc.BorderColor[3] = 0.0f;
+	ComPtr<ID3D11SamplerState> samplerState = nullptr;
+	hr = device->CreateSamplerState(&samplerDesc, samplerState.GetAddressOf());
+	if (FAILED(hr)) {
+		OutputDebugString(L"サンプラーの作成に失敗\n");
+	}
+
 
 	float time = 0.0f;
 
@@ -365,6 +387,9 @@ int Game::Run()
 		deviceContext->IASetInputLayout(inputLayout->GetNativePointer());
 		deviceContext->RSSetState(rasterizerState->GetNativePointer());
 		deviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		ID3D11SamplerState* samplerStates[1] = { samplerState.Get() };
+		deviceContext->PSSetSamplers(0, 1, samplerStates);
 
 		// 描画
 		box->Draw(deviceContext.Get(), XMFLOAT3(-3.0f, 0.0f, 0.0f));

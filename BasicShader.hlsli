@@ -2,6 +2,9 @@
 // ディレクショナルライトの個数
 static const int numDirectionalLight = 4;
 
+Texture2D diffuseTexture;
+SamplerState diffuseSampler;
+
 cbuffer ModelParameter : register(b1) {
 	matrix modelWorld;
 };
@@ -25,8 +28,7 @@ cbuffer LightParameter {
 };
 
 // 頂点シェーダーへの入力
-struct VSInput
-{
+struct VSInput {
 	float4 position : POSITION;
 	float4 worldPosition : POSITION;
     float3 normal : NORMAL;
@@ -34,8 +36,7 @@ struct VSInput
 };
 
 // 頂点シェーダーからの出力
-struct VSOutput
-{
+struct VSOutput {
 	float4 position : SV_POSITION;
 	float4 worldPosition : POSITION;
 	float3 normal : NORMAL;
@@ -46,8 +47,7 @@ struct VSOutput
 typedef VSOutput GSInput;
 
 // ジオメトリシェーダーからの入力
-struct GSOutput
-{
+struct GSOutput {
 	float4 position : SV_POSITION;
 	float4 worldPosition : POSITION;
 	float3 normal : NORMAL;
