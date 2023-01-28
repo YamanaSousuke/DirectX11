@@ -4,6 +4,8 @@
 #include "Vertex.h"
 #include "GameObject.h"
 
+#include "DirectXTK/Inc/DDSTextureLoader.h"
+
 using namespace Microsoft::WRL;
 using namespace DirectX;
 
@@ -302,6 +304,9 @@ int Game::Run()
 		OutputDebugStringA("ブレンドステートの作成に失敗\n");
 		return -1;
 	}
+
+	ComPtr<ID3D11ShaderResourceView> texture = nullptr;
+	DirectX::CreateDDSTextureFromFile(device.Get(), L"Test", nullptr, texture.GetAddressOf());
 
 	float time = 0.0f;
 
