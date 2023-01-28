@@ -2,6 +2,12 @@
 
 using namespace DirectX;
 
+// トランスフォームの取得
+Transform& GameObject::GetTransform()
+{
+	return transform;
+}
+
 // テクスチャの設定
 void GameObject::SetTexture(ID3D11ShaderResourceView* texture)
 {
@@ -31,7 +37,9 @@ void GameObject::Draw(ID3D11DeviceContext* immediateContext)
 	// ワールド行列
 	XMMATRIX world = XMMatrixIdentity();
 	XMVECTOR axis = XMVectorSet(1.0f, 1.0f, 0.0f, 0.0f);
-	world *= XMMatrixRotationAxis(axis, time);
+	world *= XMMatrixRotationAxis(axis, time * 0.5f);
+
+	auto position = transform.GetPosition();
 	world *= XMMatrixTranslation(position.x, position.y, position.z);
 	XMStoreFloat4x4(&modelParameter.world, XMMatrixTranspose(world));
 

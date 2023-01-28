@@ -231,21 +231,14 @@ int Game::Run()
 	DirectX::CreateDDSTextureFromFile(device.Get(), L"Texture/Wood.dds", nullptr, texture.GetAddressOf());
 	box->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreateBox<VertexPositionNormalTexture>());
 	box->SetTexture(texture.Get());
-	box->SetPosition(XMFLOAT3(-4.0f, 0.0f, 0.0f));
-
-	// 木箱2の描画の準備
-	auto box2 = new GameObject();
-	DirectX::CreateDDSTextureFromFile(device.Get(), L"Texture/Wood.dds", nullptr, texture.ReleaseAndGetAddressOf());
-	box2->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreateBox<VertexPositionNormalTexture>());
-	box2->SetTexture(texture.Get());
-	box2->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
+	box->GetTransform().SetPosition(XMFLOAT3(-2.0f, 0.0f, 0.0f));
 
 	// 球の描画の準備
 	auto sphere = new GameObject();
-	// DirectX::CreateDDSTextureFromFile(device.Get(), L"Texture/Wood.dds", nullptr, texture.ReleaseAndGetAddressOf());
+	DirectX::CreateDDSTextureFromFile(device.Get(), L"Texture/Uranus.dds", nullptr, texture.ReleaseAndGetAddressOf());
 	sphere->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreateSphere<VertexPositionNormalTexture>());
-	// sphere->SetTexture(texture.Get());
-	sphere->SetPosition(XMFLOAT3(4.0f, 0.0f, 0.0f));
+	sphere->SetTexture(texture.Get());
+	sphere->GetTransform().SetPosition(XMFLOAT3(2.0f, 0.0f, 0.0f));
 
 	// モデルの定数バッファーの作成
 	auto modelConstantBuffer = new ConstantBuffer(device.Get(), sizeof(ModelParameter));
@@ -382,7 +375,6 @@ int Game::Run()
 
 		// 描画
 		box->Draw(deviceContext.Get());
-		box2->Draw(deviceContext.Get());
 		sphere->Draw(deviceContext.Get());
 
 		// 表示
@@ -408,7 +400,6 @@ int Game::Run()
 	pixelShader->Release();
 	inputLayout->Release();
 	box->Release();
-	box2->Release();
 	sphere->Release();
 	return 0;
 }

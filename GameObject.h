@@ -2,9 +2,9 @@
 
 #include <d3d11.h>
 #include <wrl/client.h>
-#include <DirectXMath.h>
-#include "Geometry.h"
 
+#include "Transform.h"
+#include "Geometry.h"
 
 // ゲームオブジェクト
 class GameObject 
@@ -13,6 +13,8 @@ public:
 	// 頂点バッファーとインデックスバッファーの設定
 	template<class VertexType>
 	void SetBuffer(ID3D11Device* device, ID3D11DeviceContext* immediateContext, Geometry::Meshdata<VertexType> meshdata);
+	// トランスフォームの取得
+	Transform& GetTransform();
 	// テクスチャの設定
 	void SetTexture(ID3D11ShaderResourceView* texture);
 	// 座標の設定
@@ -21,6 +23,7 @@ public:
 	void Draw(ID3D11DeviceContext* immediateContext);
 	// リソースの解放
 	void Release();
+
 private:
 	template<class T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
@@ -30,6 +33,9 @@ private:
 		DirectX::XMFLOAT4X4 world;
 	};
 
+	Transform transform = {};
+
+	// TODO : Transformでの実装
 	// 座標
 	DirectX::XMFLOAT3 position;
 	// 頂点バッファー

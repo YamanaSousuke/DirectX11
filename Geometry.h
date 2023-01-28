@@ -53,7 +53,7 @@ namespace Geometry {
 
     // ‹…‚Ìì¬
     template<class VertexType = VertexPositionNormalTexture>
-    Meshdata<VertexType> CreateSphere(float radius = 1.0f, UINT levels = 20, UINT slices = 20);
+    Meshdata<VertexType> CreateSphere(float radius = 1.25f, UINT levels = 20, UINT slices = 20);
 
 	// ƒLƒ…[ƒu‚Ìì¬
     template<class VertexType>
