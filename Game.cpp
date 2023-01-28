@@ -3,8 +3,7 @@
 #include "Geometry.h"
 #include "Vertex.h"
 #include "GameObject.h"
-
-#include "DirectXTK/Inc/DDSTextureLoader.h"
+#include "DDSTextureLoader.h"
 
 using namespace Microsoft::WRL;
 using namespace DirectX;

@@ -16,9 +16,6 @@
     <Filter Include="ソース ファイル\DirectXTK">
       <UniqueIdentifier>{db439d85-60e3-4e3f-9ef8-248d74a075ce}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\DirectXTK">
-      <UniqueIdentifier>{a7b02900-c4ea-4cbf-a7bf-31678754f331}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp">
@@ -48,7 +45,7 @@
     <ClCompile Include="GameObject.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Users\sssos\DirectXTK\Src\DDSTextureLoader.cpp">
+    <ClCompile Include="DirectXTK\Src\DDSTextureLoader.cpp">
       <Filter>ソース ファイル\DirectXTK</Filter>
     </ClCompile>
   </ItemGroup>
@@ -67,9 +64,6 @@
     </ClInclude>
     <ClInclude Include="GameObject.h">
       <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\Users\sssos\DirectXTK\Src\DDSTextureLoader.h">
-      <Filter>ヘッダー ファイル\DirectXTK</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
