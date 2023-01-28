@@ -223,14 +223,14 @@ int Game::Run()
 
 	HRESULT hr = S_OK;
 
-	auto box = Geometry::CreateBox<VertexPosition>();
-	auto vertexBuffer = new VertexBuffer(device.Get(), (UINT)box.vertices.size() * sizeof(VertexPosition));
+	auto box = Geometry::CreateBox<VertexPositionNormalTexture>();
+	auto vertexBuffer = new VertexBuffer(device.Get(), (UINT)box.vertices.size() * sizeof(VertexPositionNormalTexture));
 	if (vertexBuffer == nullptr) {
 		OutputDebugStringA("頂点バッファーの作成に失敗\n");
 		return -1;
 	}
 	// 頂点バッファーにデータを転送
-	vertexBuffer->SetData(box.position.data());
+	vertexBuffer->SetData(box.vertices.data());
 
 	// インデックスバッファーの作成
 	auto indexBuffer = new IndexBuffer(device.Get(), (UINT)box.indices.size());
@@ -287,8 +287,8 @@ int Game::Run()
 	}
 
 	// 入力レイアウトの作成
-	auto inputLayout = new InputLayout(device.Get(), VertexPosition::inputLayout,
-		ARRAYSIZE(VertexPosition::inputLayout), vertexShader->GetBytecode(), vertexShader->GetBytecodeLength());
+	auto inputLayout = new InputLayout(device.Get(), VertexPositionNormalTexture::inputLayout,
+		ARRAYSIZE(VertexPositionNormalTexture::inputLayout), vertexShader->GetBytecode(), vertexShader->GetBytecodeLength());
 	if (inputLayout == nullptr) {
 		OutputDebugStringA("入力レイアウトの作成に失敗\n");
 		return -1;
@@ -363,7 +363,7 @@ int Game::Run()
 
 		// 頂点バッファーを設定
 		ID3D11Buffer* vertexBuffers[1] = { vertexBuffer->GetNativePointer() };
-		UINT strides[1] = { sizeof(VertexPosition) };
+		UINT strides[1] = { sizeof(VertexPositionNormalTexture) };
 		UINT offsets[1] = { 0 };
 		deviceContext->IASetVertexBuffers(0, _countof(vertexBuffers), vertexBuffers, strides, offsets);
 

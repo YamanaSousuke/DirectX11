@@ -29,8 +29,8 @@ struct VSInput
 {
 	float4 position : POSITION;
 	float4 worldPosition : POSITION;
-    // float3 normal : NORMAL;
-    // float2 texCoord : TEXCOORD;
+    float3 normal : NORMAL;
+    float2 texCoord : TEXCOORD;
 };
 
 // 頂点シェーダーからの出力
@@ -38,8 +38,8 @@ struct VSOutput
 {
 	float4 position : SV_POSITION;
 	float4 worldPosition : POSITION;
-	// float3 normal : NORMAL;
-	// float2 texCoord : TEXCOORD;
+	float3 normal : NORMAL;
+	float2 texCoord : TEXCOORD;
 };
 
 // ジオメトリシェーダーへの入力
@@ -50,8 +50,8 @@ struct GSOutput
 {
 	float4 position : SV_POSITION;
 	float4 worldPosition : POSITION;
-	// float3 normal : NORMAL;
-	// float2 texCoord : TEXCOORD;
+	float3 normal : NORMAL;
+	float2 texCoord : TEXCOORD;
 };
 
 // ピクセルシェーダーへの入力

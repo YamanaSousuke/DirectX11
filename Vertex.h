@@ -1,6 +1,7 @@
 #pragma once
 
 #include <d3d11.h>
+#include <Windows.h>
 #include <DirectXMath.h>
 
 // 頂点構造およびインプットレイアウト
@@ -9,6 +10,13 @@
 struct VertexPosition {
 	DirectX::XMFLOAT3 position;
 	static const D3D11_INPUT_ELEMENT_DESC inputLayout[1];
+};
+
+// 頂点、テクスチャー
+struct VertexPositionTexture {
+	DirectX::XMFLOAT3 position;
+	DirectX::XMFLOAT2 texCoord;
+	static const D3D11_INPUT_ELEMENT_DESC inputLayout[2];
 };
 
 // 頂点、法線、テクスチャー

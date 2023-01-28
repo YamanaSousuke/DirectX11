@@ -1,85 +1,128 @@
 #pragma once
 
 #include <vector>
+#include <map>
+#include <string>
+
+#include <functional>
+
 #include <DirectXMath.h>
+#include "Vertex.h"
+
+namespace Geometry {
+    template<class VertexType = VertexPositionTexture>
+    struct Meshdata {
+        std::vector<VertexType> vertices;
+        std::vector<uint16_t> indices;
+    };
+
+    // キューブの作成
+    template<class VertexType = VertexPositionTexture>
+    Meshdata<VertexType> CreateBox(float width = 2.0f, float height = 2.0f, float depth = 2.0f);
+}
+
 
 // 球やキューブなどの形状データ
 namespace Geometry {
+    namespace Internal {
+        // 頂点データ
+        struct VertexData {
+            DirectX::XMFLOAT3 position;
+            DirectX::XMFLOAT3 normal;
+            DirectX::XMFLOAT2 texCoord;
+        };
 
-	template<class VertexType>
-	struct Meshdata {
-		std::vector<VertexType> vertices;
-		std::vector<uint16_t> indices;
+        // 頂点配列に要素を設定する
+        template<class VertexType>
+        void InsertVertexElement(VertexType& vertexDst, const VertexData& vertexSrc)
+        {
+            static std::string semanticName;
+            static const std::map<std::string, std::pair<size_t, size_t>> semanticSizeMap = {
+                {"POSITION", std::pair<size_t, size_t>(0, 12)},
+                {"NORMAL", std::pair<size_t, size_t>(12, 24)},
+                {"TEXCOORD", std::pair<size_t, size_t>(24, 32)}
+            };
 
-        std::vector<DirectX::XMFLOAT3> position;
-        std::vector<DirectX::XMFLOAT3> normal;
-        std::vector<DirectX::XMFLOAT2> texCoord;
-	};
+            // 対応するセマンティクス名から要素をセットする
+            for (size_t i = 0; i < ARRAYSIZE(VertexType::inputLayout); i++)
+            {
+                semanticName = VertexType::inputLayout[i].SemanticName;
+                const auto& range = semanticSizeMap.at(semanticName);
+                memcpy_s(reinterpret_cast<char*>(&vertexDst) + VertexType::inputLayout[i].AlignedByteOffset, range.second - range.first,
+                    reinterpret_cast<const char*>(&vertexSrc) + range.first, range.second - range.first);
+            }
+        }
+    }
+
 
 	// キューブの作成
-	template<class VertexType>
-	Meshdata<VertexType> CreateBox(float width = 2.0f, float height = 2.0f, float depth = 2.0f)
+    template<class VertexType>
+    inline Meshdata<VertexType> CreateBox(float width, float height, float depth)
 	{
 		using namespace DirectX;
 
 		Meshdata<VertexType> meshData = {};
 		meshData.vertices.resize(24);
-        meshData.position.resize(24);
-        meshData.normal.resize(24);
-        meshData.texCoord.resize(24);
+        
+        Internal::VertexData vertexData[24] = {};
         float halfWidth = width / 2.0f, halfHeight = height / 2.0f, halfDepth = depth / 2.0f;
         
         // 右面
-        meshData.position[0]  = XMFLOAT3( halfWidth, -halfHeight, -halfDepth);
-        meshData.position[1]  = XMFLOAT3( halfWidth,  halfHeight, -halfDepth);
-        meshData.position[2]  = XMFLOAT3( halfWidth,  halfHeight,  halfDepth);
-        meshData.position[3]  = XMFLOAT3( halfWidth, -halfHeight,  halfDepth);
+        vertexData[0].position = XMFLOAT3(halfWidth, -halfHeight, -halfDepth);
+        vertexData[1].position = XMFLOAT3(halfWidth, halfHeight, -halfDepth);
+        vertexData[2].position = XMFLOAT3(halfWidth, halfHeight, halfDepth);
+        vertexData[3].position  = XMFLOAT3( halfWidth, -halfHeight,  halfDepth);
         // 左面
-        meshData.position[4]  = XMFLOAT3(-halfWidth, -halfHeight,  halfDepth);
-        meshData.position[5]  = XMFLOAT3(-halfWidth,  halfHeight,  halfDepth);
-        meshData.position[6]  = XMFLOAT3(-halfWidth,  halfHeight, -halfDepth);
-        meshData.position[7]  = XMFLOAT3(-halfWidth, -halfHeight, -halfDepth);
+        vertexData[4].position = XMFLOAT3(-halfWidth, -halfHeight, halfDepth);
+        vertexData[5].position = XMFLOAT3(-halfWidth, halfHeight, halfDepth);
+        vertexData[6].position = XMFLOAT3(-halfWidth, halfHeight, -halfDepth);
+        vertexData[7].position  = XMFLOAT3(-halfWidth, -halfHeight, -halfDepth);
         // 上面
-        meshData.position[8]  = XMFLOAT3(-halfWidth,  halfHeight, -halfDepth);
-        meshData.position[9]  = XMFLOAT3(-halfWidth,  halfHeight,  halfDepth);
-        meshData.position[10] = XMFLOAT3( halfWidth,  halfHeight,  halfDepth);
-        meshData.position[11] = XMFLOAT3( halfWidth,  halfHeight, -halfDepth);
+        vertexData[8].position = XMFLOAT3(-halfWidth, halfHeight, -halfDepth);
+        vertexData[9].position = XMFLOAT3(-halfWidth, halfHeight, halfDepth);
+        vertexData[10].position = XMFLOAT3(halfWidth, halfHeight, halfDepth);
+        vertexData[11].position = XMFLOAT3( halfWidth,  halfHeight, -halfDepth);
         // 底面
-        meshData.position[12] = XMFLOAT3( halfWidth, -halfHeight, -halfDepth);
-        meshData.position[13] = XMFLOAT3( halfWidth, -halfHeight,  halfDepth);
-        meshData.position[14] = XMFLOAT3(-halfWidth, -halfHeight,  halfDepth);
-        meshData.position[15] = XMFLOAT3(-halfWidth, -halfHeight, -halfDepth);
+        vertexData[12].position = XMFLOAT3(halfWidth, -halfHeight, -halfDepth);
+        vertexData[13].position = XMFLOAT3(halfWidth, -halfHeight, halfDepth);
+        vertexData[14].position = XMFLOAT3(-halfWidth, -halfHeight, halfDepth);
+        vertexData[15].position = XMFLOAT3(-halfWidth, -halfHeight, -halfDepth);
         // 奥面
-        meshData.position[16] = XMFLOAT3( halfWidth, -halfHeight,  halfDepth);
-        meshData.position[17] = XMFLOAT3( halfWidth,  halfHeight,  halfDepth);
-        meshData.position[18] = XMFLOAT3(-halfWidth,  halfHeight,  halfDepth);
-        meshData.position[19] = XMFLOAT3(-halfWidth, -halfHeight,  halfDepth);
+        vertexData[16].position = XMFLOAT3(halfWidth, -halfHeight, halfDepth);
+        vertexData[17].position = XMFLOAT3(halfWidth, halfHeight, halfDepth);
+        vertexData[18].position = XMFLOAT3(-halfWidth, halfHeight, halfDepth);
+        vertexData[19].position = XMFLOAT3(-halfWidth, -halfHeight,  halfDepth);
         // 正面
-        meshData.position[20] = XMFLOAT3(-halfWidth, -halfHeight, -halfDepth);
-        meshData.position[21] = XMFLOAT3(-halfWidth,  halfHeight, -halfDepth);
-        meshData.position[22] = XMFLOAT3( halfWidth,  halfHeight, -halfDepth);
-        meshData.position[23] = XMFLOAT3( halfWidth, -halfHeight, -halfDepth);
+        vertexData[20].position = XMFLOAT3(-halfWidth, -halfHeight, -halfDepth);
+        vertexData[21].position = XMFLOAT3(-halfWidth, halfHeight, -halfDepth);
+        vertexData[22].position = XMFLOAT3(halfWidth, halfHeight, -halfDepth);
+        vertexData[23].position = XMFLOAT3( halfWidth, -halfHeight, -halfDepth);
 
-        for (UINT i = 0; i < 4; i++) {
-            // 右面
-            meshData.normal[i] = XMFLOAT3(1.0f, 0.0f, 0.0f);
-            // 左面
-            meshData.normal[i + 4] = XMFLOAT3(-1.0f, 0.0f, 0.0f);
-            // 上面
-            meshData.normal[i + 8] = XMFLOAT3(0.0f, 1.0f, 0.0f);
-            // 底面
-            meshData.normal[i + 12] = XMFLOAT3(0.0f, -1.0f, 0.0f);
-            // 奥面
-            meshData.normal[i + 16] = XMFLOAT3(0.0f, 0.0f, 1.0f);
-            // 正面
-            meshData.normal[i + 20] = XMFLOAT3(0.0f, 0.0f, -1.0f);
-        }
+         for (UINT i = 0; i < 4; i++) {
+             // 右面
+             vertexData[i + 0].normal = XMFLOAT3(1.0f, 0.0f, 0.0f);
+             // 左面
+             vertexData[i + 4].normal = XMFLOAT3(-1.0f, 0.0f, 0.0f);
+             // 上面
+             vertexData[i + 8].normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
+             // 底面
+             vertexData[i + 12].normal = XMFLOAT3(0.0f, -1.0f, 0.0f);
+             // 奥面
+             vertexData[i + 16].normal = XMFLOAT3(0.0f, 0.0f, 1.0f);
+             // 正面
+             vertexData[i + 20].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
+         }
 
         for (int i = 0; i < 6; i++) {
-            meshData.texCoord[i * 4 + 0] = XMFLOAT2(0.0f, 1.0f);
-            meshData.texCoord[i * 4 + 1] = XMFLOAT2(0.0f, 0.0f);
-            meshData.texCoord[i * 4 + 2] = XMFLOAT2(1.0f, 0.0f);
-            meshData.texCoord[i * 4 + 3] = XMFLOAT2(1.0f, 1.0f);
+            vertexData[i * 4 + 0].texCoord = XMFLOAT2(0.0f, 1.0f);
+            vertexData[i * 4 + 1].texCoord = XMFLOAT2(0.0f, 0.0f);
+            vertexData[i * 4 + 2].texCoord = XMFLOAT2(1.0f, 0.0f);
+            vertexData[i * 4 + 3].texCoord = XMFLOAT2(1.0f, 1.0f);
+        }
+
+        for (int i = 0; i < 24; i++)
+        {
+            Internal::InsertVertexElement(meshData.vertices[i], vertexData[i]);
         }
 
         meshData.indices = {
