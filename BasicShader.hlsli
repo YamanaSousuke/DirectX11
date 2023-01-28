@@ -2,14 +2,14 @@
 // ディレクショナルライトの個数
 static const int numDirectionalLight = 4;
 
+cbuffer ModelParameter : register(b1) {
+	matrix modelWorld;
+};
+
 // 定数バッファー
-cbuffer ConstantBuffer
-{
-	matrix world;					// ワールド行列
-	matrix view;					// ビュー行列
-	matrix projection;				// プロジェクション行列
-	matrix worldViewProjection;		// WVP行列
-	float time;
+cbuffer ConstantBuffer : register(b0) {
+	matrix view;
+	matrix projection;
 };
 
 // ディレクショナルライト

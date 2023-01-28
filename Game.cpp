@@ -2,6 +2,7 @@
 #include "Game.h"
 #include "Geometry.h"
 #include "Vertex.h"
+#include "GameObject.h"
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
@@ -223,33 +224,27 @@ int Game::Run()
 
 	HRESULT hr = S_OK;
 
-	auto box = Geometry::CreateBox<VertexPositionNormalTexture>();
-	auto vertexBuffer = new VertexBuffer(device.Get(), (UINT)box.vertices.size() * sizeof(VertexPositionNormalTexture));
-	if (vertexBuffer == nullptr) {
-		OutputDebugStringA("頂点バッファーの作成に失敗\n");
-		return -1;
-	}
-	// 頂点バッファーにデータを転送
-	vertexBuffer->SetData(box.vertices.data());
+	// 箱の描画
+	auto box = new GameObject();
+	box->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreateBox());
 
-	// インデックスバッファーの作成
-	auto indexBuffer = new IndexBuffer(device.Get(), (UINT)box.indices.size());
-	if (indexBuffer == nullptr) {
-		OutputDebugStringA("インデックスバッファーの作成に失敗\n");
-		return -1;
-	}
-	// インデックスバッファーにデータを転送
-	indexBuffer->SetData(box.indices.data());
-
+	// モデル情報
+	struct ModelParameter {
+		XMFLOAT4X4 world;
+	};
 
 	// 定数バッファーでシェーダーに毎フレーム送るデータ
 	struct SceneParameter {
-		XMFLOAT4X4 world;					// ワールド行列
 		XMFLOAT4X4 view;					// ビュー行列
 		XMFLOAT4X4 projection;				// プロジェクション行列
-		XMFLOAT4X4 worldViewProjection;		// WVP行列
-		float time = 0.0f;				    // 時間
 	};
+
+	// モデルの定数バッファーの作成
+	auto modelConstantBuffer = new ConstantBuffer(device.Get(), sizeof(ModelParameter));
+	if (modelConstantBuffer == nullptr) {
+		OutputDebugStringA("モデルの定数バッファーの作成に失敗\n");
+		return -1;
+	}
 	
 	// 定数バッファーの作成
 	auto constantBuffer = new ConstantBuffer(device.Get(), sizeof(SceneParameter));
@@ -258,16 +253,16 @@ int Game::Run()
 		return -1;
 	}
 
-	// 定数バッファーの作成
+	// ライトの定数バッファーの作成
 	auto lightConstantBuffer = new ConstantBuffer(device.Get(), sizeof(LightParameter));
 	if (lightConstantBuffer == nullptr) {
-		OutputDebugStringA("定数バッファーの作成に失敗\n");
+		OutputDebugStringA("ライトの定数バッファー作成に失敗\n");
 		return -1;
 	}
 
 	// 頂点シェーダーの作成
 	auto vertexShader = new VertexShader(device.Get());
-	if (vertexBuffer == nullptr) {
+	if (vertexShader == nullptr) {
 		OutputDebugStringA("頂点シェーダーの作成に失敗\n");
 		return -1;
 	}
@@ -315,12 +310,6 @@ int Game::Run()
 	while (true) {
 		time += 0.01666f;
 
-		// ワールド行列
-		XMMATRIX world = XMMatrixIdentity();
-		// 回転
-		XMVECTOR axis = XMVectorSet(1.0f, 1.0f, 0.0f, 0.0f);
-		world *= XMMatrixRotationAxis(axis, time);
-
 		// ビュー行列
 		XMVECTOR eyePosition = XMVectorSet(0.0f, 1.0f, -10.0f, 1.0f);
 		XMVECTOR focusPosition = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
@@ -335,11 +324,8 @@ int Game::Run()
 
 		// 用意した定数バッファの構造体に値を設定する
 		SceneParameter matricesPerFrame = {};
-		XMStoreFloat4x4(&matricesPerFrame.world, XMMatrixTranspose(world));
 		XMStoreFloat4x4(&matricesPerFrame.view, XMMatrixTranspose(view));
 		XMStoreFloat4x4(&matricesPerFrame.projection, XMMatrixTranspose(projection));
-		XMStoreFloat4x4(&matricesPerFrame.worldViewProjection, XMMatrixTranspose(world * view * projection));
-		matricesPerFrame.time = time;
 		constantBuffer->SetData(&matricesPerFrame);
 
 		// ライト
@@ -357,15 +343,7 @@ int Game::Run()
 		// 画面のクリア
 		deviceContext->ClearRenderTargetView(renderTargetView[0].Get(), clearColor);
 		deviceContext->ClearDepthStencilView(depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-
-		// ビューポートの設定
 		deviceContext->RSSetViewports(_countof(viewports), viewports);
-
-		// 頂点バッファーを設定
-		ID3D11Buffer* vertexBuffers[1] = { vertexBuffer->GetNativePointer() };
-		UINT strides[1] = { sizeof(VertexPositionNormalTexture) };
-		UINT offsets[1] = { 0 };
-		deviceContext->IASetVertexBuffers(0, _countof(vertexBuffers), vertexBuffers, strides, offsets);
 
 		// シェーダーを設定
 		deviceContext->VSSetShader(vertexShader->GetNativePointer(), NULL, 0);
@@ -373,24 +351,19 @@ int Game::Run()
 		deviceContext->PSSetShader(pixelShader->GetNativePointer(), NULL, 0);
 
 		// ジオメトリシェーダーに定数バッファーを設定
-		ID3D11Buffer* constantBuffers[1] = { constantBuffer->GetNativePointer() };
-		deviceContext->GSSetConstantBuffers(0, _countof(constantBuffers), constantBuffers);
+		ID3D11Buffer* gsConstantBuffers[2] = { constantBuffer->GetNativePointer(), modelConstantBuffer->GetNativePointer()};
+		deviceContext->GSSetConstantBuffers(0, 2, gsConstantBuffers);
 
 		// ピクセルシェーダーに定数バッファーを設定
-		ID3D11Buffer* psConstantBuffers[1] = { lightConstantBuffer->GetNativePointer() };
-		deviceContext->PSSetConstantBuffers(0, _countof(psConstantBuffers), psConstantBuffers);
+		ID3D11Buffer* psConstantBuffers[1] = { lightConstantBuffer->GetNativePointer()};
+		deviceContext->PSSetConstantBuffers(0, 1, psConstantBuffers);
 
-		// インプットレイアウトの設定
 		deviceContext->IASetInputLayout(inputLayout->GetNativePointer());
-		// ラスタライザステートの設定
 		deviceContext->RSSetState(rasterizerState->GetNativePointer());
-
-		// トライアングル
 		deviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		// インデックスバッファーの設定
-		deviceContext->IASetIndexBuffer(indexBuffer->GetNativePointer(), DXGI_FORMAT_R16_UINT, 0);
+
 		// 描画
-		deviceContext->DrawIndexed((UINT)box.indices.size(), 0, 0);
+		box->Draw(deviceContext.Get(), XMFLOAT3(-3.0f, 0.0f, 0.0f));
 
 		// 表示
 		swapchain->Present(1, 0);
@@ -407,9 +380,8 @@ int Game::Run()
 	}
 
 	// リソースの解放
-	indexBuffer->Release();
-	vertexBuffer->Release();
 	constantBuffer->Release();
+	modelConstantBuffer->Release();
 	lightConstantBuffer->Release();
 	vertexShader->Release();
 	geometryShader->Release();
@@ -417,5 +389,6 @@ int Game::Run()
 	inputLayout->Release();
 	rasterizerState->Release();
 	blendState->Release();
+	box->Release();
 	return 0;
 }

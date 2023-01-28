@@ -52,7 +52,6 @@ private:
 	// ビューポート
 	D3D11_VIEWPORT viewports[1] = {};
 
-
 	// ウィンドウの作成
 	bool InitWindow();
 	// グラフィックデバイスの作成
@@ -145,6 +144,8 @@ class ConstantBuffer
 	//  リソース
 	Microsoft::WRL::ComPtr<ID3D11Buffer> buffer = nullptr;
 public:
+
+
 	// このクラスの新しいインスタンスの作成
 	ConstantBuffer(ID3D11Device* device, UINT byteWidth);
 	// バッファーにデータを設定する
