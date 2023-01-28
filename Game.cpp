@@ -231,17 +231,21 @@ int Game::Run()
 	DirectX::CreateDDSTextureFromFile(device.Get(), L"Texture/Wood.dds", nullptr, texture.GetAddressOf());
 	box->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreateBox<VertexPositionNormalTexture>());
 	box->SetTexture(texture.Get());
+	box->SetPosition(XMFLOAT3(-4.0f, 0.0f, 0.0f));
 
-	// モデル情報
-	struct ModelParameter {
-		XMFLOAT4X4 world;
-	};
+	// 木箱2の描画の準備
+	auto box2 = new GameObject();
+	DirectX::CreateDDSTextureFromFile(device.Get(), L"Texture/Wood.dds", nullptr, texture.ReleaseAndGetAddressOf());
+	box2->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreateBox<VertexPositionNormalTexture>());
+	box2->SetTexture(texture.Get());
+	box2->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
 
-	// 定数バッファーでシェーダーに毎フレーム送るデータ
-	struct SceneParameter {
-		XMFLOAT4X4 view;					// ビュー行列
-		XMFLOAT4X4 projection;				// プロジェクション行列
-	};
+	// 球の描画の準備
+	auto sphere = new GameObject();
+	// DirectX::CreateDDSTextureFromFile(device.Get(), L"Texture/Wood.dds", nullptr, texture.ReleaseAndGetAddressOf());
+	sphere->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreateSphere<VertexPositionNormalTexture>());
+	// sphere->SetTexture(texture.Get());
+	sphere->SetPosition(XMFLOAT3(4.0f, 0.0f, 0.0f));
 
 	// モデルの定数バッファーの作成
 	auto modelConstantBuffer = new ConstantBuffer(device.Get(), sizeof(ModelParameter));
@@ -290,20 +294,6 @@ int Game::Run()
 		ARRAYSIZE(VertexPositionNormalTexture::inputLayout), vertexShader->GetBytecode(), vertexShader->GetBytecodeLength());
 	if (inputLayout == nullptr) {
 		OutputDebugStringA("入力レイアウトの作成に失敗\n");
-		return -1;
-	}
-
-	// ラスタライザステートの作成
-	auto rasterizerState = RasterizerState::Create(device.Get());
-	if (rasterizerState == nullptr) {
-		OutputDebugStringA("ラスタライザステートの作成に失敗\n");
-		return -1;
-	}
-
-	// ブレンドステートの作成
-	auto blendState = BlendState::Create(device.Get());
-	if (blendState == nullptr) {
-		OutputDebugStringA("ブレンドステートの作成に失敗\n");
 		return -1;
 	}
 
@@ -378,21 +368,22 @@ int Game::Run()
 
 		// ジオメトリシェーダーに定数バッファーを設定
 		ID3D11Buffer* gsConstantBuffers[2] = { constantBuffer->GetNativePointer(), modelConstantBuffer->GetNativePointer()};
-		deviceContext->GSSetConstantBuffers(0, 2, gsConstantBuffers);
+		deviceContext->GSSetConstantBuffers(0, ARRAYSIZE(gsConstantBuffers), gsConstantBuffers);
 
 		// ピクセルシェーダーに定数バッファーを設定
 		ID3D11Buffer* psConstantBuffers[1] = { lightConstantBuffer->GetNativePointer()};
-		deviceContext->PSSetConstantBuffers(0, 1, psConstantBuffers);
+		deviceContext->PSSetConstantBuffers(0, ARRAYSIZE(psConstantBuffers), psConstantBuffers);
 
 		deviceContext->IASetInputLayout(inputLayout->GetNativePointer());
-		deviceContext->RSSetState(rasterizerState->GetNativePointer());
 		deviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		ID3D11SamplerState* samplerStates[1] = { samplerState.Get() };
 		deviceContext->PSSetSamplers(0, 1, samplerStates);
 
 		// 描画
-		box->Draw(deviceContext.Get(), XMFLOAT3(-3.0f, 0.0f, 0.0f));
+		box->Draw(deviceContext.Get());
+		box2->Draw(deviceContext.Get());
+		sphere->Draw(deviceContext.Get());
 
 		// 表示
 		swapchain->Present(1, 0);
@@ -416,8 +407,8 @@ int Game::Run()
 	geometryShader->Release();
 	pixelShader->Release();
 	inputLayout->Release();
-	rasterizerState->Release();
-	blendState->Release();
 	box->Release();
+	box2->Release();
+	sphere->Release();
 	return 0;
 }

@@ -15,8 +15,10 @@ public:
 	void SetBuffer(ID3D11Device* device, ID3D11DeviceContext* immediateContext, Geometry::Meshdata<VertexType> meshdata);
 	// テクスチャの設定
 	void SetTexture(ID3D11ShaderResourceView* texture);
+	// 座標の設定
+	void SetPosition(const DirectX::XMFLOAT3& position);
 	// 描画
-	void Draw(ID3D11DeviceContext* immediateContext, const DirectX::XMFLOAT3& position);
+	void Draw(ID3D11DeviceContext* immediateContext);
 	// リソースの解放
 	void Release();
 private:
@@ -28,6 +30,8 @@ private:
 		DirectX::XMFLOAT4X4 world;
 	};
 
+	// 座標
+	DirectX::XMFLOAT3 position;
 	// 頂点バッファー
 	ComPtr<ID3D11Buffer> vertexBuffer = nullptr;
 	// インデックスバッファー
@@ -41,7 +45,7 @@ private:
 };
 
 template<class VertexType>
-inline void GameObject::SetBuffer(ID3D11Device* device, ID3D11DeviceContext* immediateContext, Geometry::Meshdata<VertexType> meshdata)
+void GameObject::SetBuffer(ID3D11Device* device, ID3D11DeviceContext* immediateContext, Geometry::Meshdata<VertexType> meshdata)
 {
 	vertexStride = sizeof(VertexType);
 	indexCount = (UINT)meshdata.indices.size();

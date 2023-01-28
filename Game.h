@@ -23,6 +23,17 @@ private:
 		DirectX::XMFLOAT4 eyePosition;
 	};
 
+	// モデル情報
+	struct ModelParameter {
+		DirectX::XMFLOAT4X4 world;
+	};
+
+	// 定数バッファーでシェーダーに毎フレーム送るデータ
+	struct SceneParameter {
+		DirectX::XMFLOAT4X4 view;
+		DirectX::XMFLOAT4X4 projection;
+	};
+
 	// ウィンドウのタイトル
 	LPCWSTR title = L"Title";
 	// ウィンドウの幅
