@@ -24,12 +24,6 @@ void GameObject::SetMaterial(const Material& material)
 	this->material = material;
 }
 
-// 座標の設定
-void GameObject::SetPosition(const XMFLOAT3& position)
-{
-	this->position = position;
-}
-
 // 描画
 void GameObject::Draw(ID3D11DeviceContext* immediateContext)
 {
@@ -42,21 +36,28 @@ void GameObject::Draw(ID3D11DeviceContext* immediateContext)
 	time += 0.01666f;
 
 	// 頂点バッファーとインデックスバッファーの設定
-	ID3D11Buffer* vertexBuffers[1] = { vertexBuffer.Get()};
+	ID3D11Buffer* vertexBuffers[1] = { vertexBuffer.Get() };
 	UINT strides[1] = { vertexStride };
 	UINT offsets[1] = { 0 };
 	immediateContext->IASetVertexBuffers(0, ARRAYSIZE(vertexBuffers), vertexBuffers, strides, offsets);
 	immediateContext->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
 
 	// ワールド行列
-	XMMATRIX world = transform.GetWorldMatrix();
+	// XMMATRIX world = transform.GetWorldMatrix();
 	ModelParameter modelParameter = {};
-	XMStoreFloat4x4(&modelParameter.world, XMMatrixTranspose(world));
-	modelParameter.material = material;
+    // XMStoreFloat4x4(&modelParameter.world, XMMatrixTranspose(world));
+	
+	effect.SetWorldMatrix(transform.GetWorldMatrix());
+	effect.SetMaterial(material);
+
+
+	// modelParameter.material = material;
+
 
 	// 定数バッファーを取得して、データの転送を行う
 	ComPtr<ID3D11Buffer> constnatBuffer = nullptr;
 	immediateContext->GSGetConstantBuffers(1, 1, constnatBuffer.GetAddressOf());
+	// effect.UpdateModelParameter(immediateContext);
 	immediateContext->UpdateSubresource(constnatBuffer.Get(), 0, nullptr, &modelParameter, 0, 0);
 
 	// テクスチャの設定

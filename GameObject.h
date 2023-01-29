@@ -6,6 +6,7 @@
 #include "Transform.h"
 #include "Geometry.h"
 #include "Lightings.h"
+#include "Effect.h"
 
 // ゲームオブジェクト
 class GameObject 
@@ -20,8 +21,6 @@ public:
 	void SetTexture(ID3D11ShaderResourceView* texture);
 	// マテリアルの設定
 	void SetMaterial(const Material& material);
-	// 座標の設定
-	void SetPosition(const DirectX::XMFLOAT3& position);
 	// 描画
 	void Draw(ID3D11DeviceContext* immediateContext);
 	// モデル情報のサイズの取得
@@ -39,11 +38,8 @@ private:
 		Material material = {};
 	};
 
+	// トランスフォーム
 	Transform transform = {};
-
-	// TODO : Transformでの実装
-	// 座標
-	DirectX::XMFLOAT3 position;
 	// 頂点バッファー
 	ComPtr<ID3D11Buffer> vertexBuffer = nullptr;
 	// インデックスバッファー
@@ -56,6 +52,8 @@ private:
 	UINT vertexStride = 0;
 	// インデックスの個数
 	UINT indexCount = 0;
+	// エフェクト
+	Effect effect = {};
 };
 
 template<class VertexType>
@@ -72,7 +70,7 @@ void GameObject::SetBuffer(ID3D11Device* device, ID3D11DeviceContext* immediateC
 	vertexBufferDesc.CPUAccessFlags = 0;
 	vertexBufferDesc.MiscFlags = 0;
 	vertexBufferDesc.StructureByteStride = 0;
-	auto hr = device->CreateBuffer(&vertexBufferDesc, NULL, vertexBuffer.GetAddressOf());
+	auto hr = device->CreateBuffer(&vertexBufferDesc, nullptr, vertexBuffer.GetAddressOf());
 	if (FAILED(hr)) {
 		OutputDebugString(L"頂点バッファーの作成に失敗\n");
 	}
@@ -86,7 +84,7 @@ void GameObject::SetBuffer(ID3D11Device* device, ID3D11DeviceContext* immediateC
 	indexBufferDesc.CPUAccessFlags = 0;
 	indexBufferDesc.MiscFlags = 0;
 	indexBufferDesc.StructureByteStride = 0;
-	hr = device->CreateBuffer(&indexBufferDesc, NULL, &indexBuffer);
+	hr = device->CreateBuffer(&indexBufferDesc, nullptr, &indexBuffer);
 	if (FAILED(hr)) {
 		OutputDebugString(L"インデックスバッファーの作成に失敗\n");
 	}

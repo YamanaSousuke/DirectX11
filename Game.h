@@ -6,6 +6,7 @@
 #include <wrl/client.h>
 
 #include "Lightings.h"
+#include "Effect.h"
 
 // アプリケーション全体を表す
 class Game
@@ -58,6 +59,10 @@ private:
 	const FLOAT clearColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
 	// ビューポート
 	D3D11_VIEWPORT viewports[1] = {};
+
+	// エフェクト
+	Effect effect = {};
+
 
 	// ウィンドウの作成
 	bool InitWindow();

@@ -260,7 +260,7 @@ int Game::Run()
 	DirectX::CreateDDSTextureFromFile(device.Get(), L"Texture/Wood.dds", nullptr, texture.GetAddressOf());
 	box->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreateBox<VertexPositionNormalTexture>());
 	box->SetTexture(texture.Get());
-	box->GetTransform().SetPosition(XMFLOAT3(-0.0f, -1.0f, 0.0f));
+	box->GetTransform().SetPosition(-0.0f, -1.0f, 0.0f);
 	box->SetMaterial(material);
 
 	// 球の描画の準備
@@ -268,7 +268,7 @@ int Game::Run()
 	DirectX::CreateDDSTextureFromFile(device.Get(), L"Texture/Uranus.dds", nullptr, texture.ReleaseAndGetAddressOf());
 	sphere->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreateSphere<VertexPositionNormalTexture>());
 	sphere->SetTexture(texture.Get());
-	sphere->GetTransform().SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
+	sphere->GetTransform().SetPosition(0.0f, 0.0f, 0.0f);
 	sphere->SetMaterial(material);
 
 	// 地面の描画の準備
@@ -276,9 +276,8 @@ int Game::Run()
 	DirectX::CreateDDSTextureFromFile(device.Get(), L"Texture/Ground.dds", nullptr, texture.ReleaseAndGetAddressOf());
 	ground->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreatePlane<VertexPositionNormalTexture>(XMFLOAT2(20.0f, 20.0f)));
 	ground->SetTexture(texture.Get());
-	ground->GetTransform().SetPosition(XMFLOAT3(0.0f, -3.0f, 5.0f));
+	ground->GetTransform().SetPosition(0.0f, -3.0f, 5.0f);
 	ground->SetMaterial(material);
-
 
 	// TODO : サイズの取得を別の手段で実装したい
 	// モデルの定数バッファーの作成
@@ -370,12 +369,17 @@ int Game::Run()
 		XMVECTOR focusPosition = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
 		XMVECTOR upDirection = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 		XMMATRIX view = XMMatrixLookAtLH(eyePosition, focusPosition, upDirection);
+
+		// effect.SetViewMatrix(eyePosition, focusPosition, upDirection);
+
 		// プロジェクション行列
 		auto fovAngleY = 60.0f;
 		auto aspectRatio = (float)(width) / (float)(height);
 		auto nearZ = 0.3f;
 		auto farZ = 1000.0f;
 		XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(fovAngleY), aspectRatio, nearZ, farZ);
+
+		effect.SetProjectionMatrix(XMConvertToRadians(fovAngleY), aspectRatio, nearZ, farZ);
 
 		// 用意した定数バッファの構造体に値を設定する
 		SceneParameter matricesPerFrame = {};
