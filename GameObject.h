@@ -5,6 +5,7 @@
 
 #include "Transform.h"
 #include "Geometry.h"
+#include "Lightings.h"
 
 // ゲームオブジェクト
 class GameObject 
@@ -17,6 +18,8 @@ public:
 	Transform& GetTransform();
 	// テクスチャの設定
 	void SetTexture(ID3D11ShaderResourceView* texture);
+	// マテリアルの設定
+	void SetMaterial(const Material& material);
 	// 座標の設定
 	void SetPosition(const DirectX::XMFLOAT3& position);
 	// 描画
@@ -31,6 +34,7 @@ private:
 	// モデル情報
 	struct ModelParameter {
 		DirectX::XMFLOAT4X4 world;
+		Material material = {};
 	};
 
 	Transform transform = {};
@@ -44,6 +48,8 @@ private:
 	ComPtr<ID3D11Buffer> indexBuffer = nullptr;
 	// テクスチャー
 	ComPtr<ID3D11ShaderResourceView> texture = nullptr;
+	// マテリアル
+	Material material = {};
 	// 1頂点のサイズ
 	UINT vertexStride = 0;
 	// インデックスの個数

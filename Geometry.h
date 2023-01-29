@@ -53,11 +53,15 @@ namespace Geometry {
 
     // 球の作成
     template<class VertexType = VertexPositionNormalTexture>
-    Meshdata<VertexType> CreateSphere(float radius = 1.25f, UINT levels = 20, UINT slices = 20);
+    Meshdata<VertexType> CreateSphere(float radius = 1.0f, UINT levels = 20, UINT slices = 20);
+
+    // プレーンの作成
+    template<class VertexType = VertexPositionNormalTexture>
+    Meshdata<VertexType> CreatePlane(const DirectX::XMFLOAT2& size = DirectX::XMFLOAT2(10.0f, 10.0f));
 
 	// キューブの作成
     template<class VertexType>
-    inline Meshdata<VertexType> CreateBox(float width, float height, float depth)
+    Meshdata<VertexType> CreateBox(float width, float height, float depth)
 	{
 		using namespace DirectX;
 
@@ -137,7 +141,7 @@ namespace Geometry {
 
     // 球の作成
     template<class VertexType>
-    inline Meshdata<VertexType> CreateSphere(float radius, UINT levels, UINT slices)
+    Meshdata<VertexType> CreateSphere(float radius, UINT levels, UINT slices)
     {
         using namespace DirectX;
         
@@ -216,6 +220,37 @@ namespace Geometry {
             }
         }
 
+        return meshData;
+    }
+
+    // プレーンの作成
+    template<class VertexType>
+    Meshdata<VertexType> CreatePlane(const DirectX::XMFLOAT2& size)
+    {
+        using namespace DirectX;
+
+        // 初期化
+        Meshdata<VertexType> meshData = {};
+        meshData.vertices.resize(4);
+        VertexData vertexData = {};
+        UINT vIndex = 0;
+        XMFLOAT3 normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
+
+        // 左下
+        vertexData = { XMFLOAT3(-size.x / 2.0f, 0.0f, -size.y / 2.0f), normal, XMFLOAT2(0.0f, 1.0f) };
+        InsertVertexElement(meshData.vertices[vIndex++], vertexData);
+        // 左上
+        vertexData = { XMFLOAT3(-size.x / 2.0f, 0.0f, size.y / 2.0f), normal, XMFLOAT2(0.0f, 0.0f) };
+        InsertVertexElement(meshData.vertices[vIndex++], vertexData);
+        // 右上
+        vertexData = { XMFLOAT3(size.x / 2.0f, 0.0f, size.y / 2.0f), normal, XMFLOAT2(1.0f, 0.0f) };
+        InsertVertexElement(meshData.vertices[vIndex++], vertexData);
+        // 右下
+        vertexData = { XMFLOAT3(size.x / 2.0f, 0.0f, -size.y / 2.0f), normal, XMFLOAT2(1.0f, 1.0f) };
+        InsertVertexElement(meshData.vertices[vIndex++], vertexData);
+
+        // インデックス
+        meshData.indices = { 0, 1, 2, 2, 3, 0 };
         return meshData;
     }
 }

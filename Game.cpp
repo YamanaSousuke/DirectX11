@@ -225,13 +225,20 @@ int Game::Run()
 
 	HRESULT hr = S_OK;
 
+	// テクスチャとマテリアル
+	ComPtr<ID3D11ShaderResourceView> texture = nullptr;
+	Material material = {};
+	material.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	material.smooth = 0.0f;
+	material.metallic = 0.0f;
+
 	// 木箱の描画の準備
 	auto box = new GameObject();
-	ComPtr<ID3D11ShaderResourceView> texture = nullptr;
 	DirectX::CreateDDSTextureFromFile(device.Get(), L"Texture/Wood.dds", nullptr, texture.GetAddressOf());
 	box->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreateBox<VertexPositionNormalTexture>());
 	box->SetTexture(texture.Get());
 	box->GetTransform().SetPosition(XMFLOAT3(-2.0f, 0.0f, 0.0f));
+	box->SetMaterial(material);
 
 	// 球の描画の準備
 	auto sphere = new GameObject();
@@ -239,6 +246,14 @@ int Game::Run()
 	sphere->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreateSphere<VertexPositionNormalTexture>());
 	sphere->SetTexture(texture.Get());
 	sphere->GetTransform().SetPosition(XMFLOAT3(2.0f, 0.0f, 0.0f));
+
+
+	// 地面の描画の準備
+	auto ground = new GameObject();
+	DirectX::CreateDDSTextureFromFile(device.Get(), L"Texture/Ground.dds", nullptr, texture.ReleaseAndGetAddressOf());
+	ground->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreatePlane<VertexPositionNormalTexture>(XMFLOAT2(20.0f, 20.0f)));
+	ground->SetTexture(texture.Get());
+	ground->GetTransform().SetPosition(XMFLOAT3(0.0f, -1.0f, 5.0f));
 
 	// モデルの定数バッファーの作成
 	auto modelConstantBuffer = new ConstantBuffer(device.Get(), sizeof(ModelParameter));
@@ -340,9 +355,9 @@ int Game::Run()
 		// ライト
 		LightParameter lightParameter = {};
 		lightParameter.directionalLight[0].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		lightParameter.directionalLight[0].direction = XMFLOAT4(1.0f, 2.0f, -2.0f, 0.0f);
+		lightParameter.directionalLight[0].direction = XMFLOAT4(1.0f, 3.0f, -2.0f, 0.0f);
 		lightParameter.directionalLight[1].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		lightParameter.directionalLight[1].direction = XMFLOAT4(1.0f, 2.0f, -2.0f, 0.0f);
+		lightParameter.directionalLight[1].direction = XMFLOAT4(1.0f, 0.0f, -2.0f, 0.0f);
 		lightParameter.eyePosition = XMFLOAT4(0.0f, 1.0f, -10.0f, 1.0f);
 		lightConstantBuffer->SetData(&lightParameter);
 
@@ -360,11 +375,11 @@ int Game::Run()
 		deviceContext->PSSetShader(pixelShader->GetNativePointer(), NULL, 0);
 
 		// ジオメトリシェーダーに定数バッファーを設定
-		ID3D11Buffer* gsConstantBuffers[2] = { constantBuffer->GetNativePointer(), modelConstantBuffer->GetNativePointer()};
+		ID3D11Buffer* gsConstantBuffers[2] = { constantBuffer->GetNativePointer(), modelConstantBuffer->GetNativePointer() };
 		deviceContext->GSSetConstantBuffers(0, ARRAYSIZE(gsConstantBuffers), gsConstantBuffers);
 
 		// ピクセルシェーダーに定数バッファーを設定
-		ID3D11Buffer* psConstantBuffers[1] = { lightConstantBuffer->GetNativePointer()};
+		ID3D11Buffer* psConstantBuffers[2] = { lightConstantBuffer->GetNativePointer(), modelConstantBuffer->GetNativePointer() };
 		deviceContext->PSSetConstantBuffers(0, ARRAYSIZE(psConstantBuffers), psConstantBuffers);
 
 		deviceContext->IASetInputLayout(inputLayout->GetNativePointer());
@@ -375,7 +390,8 @@ int Game::Run()
 
 		// 描画
 		box->Draw(deviceContext.Get());
-		sphere->Draw(deviceContext.Get());
+		// sphere->Draw(deviceContext.Get());
+		// ground->Draw(deviceContext.Get());
 
 		// 表示
 		swapchain->Present(1, 0);
@@ -401,5 +417,6 @@ int Game::Run()
 	inputLayout->Release();
 	box->Release();
 	sphere->Release();
+	ground->Release();
 	return 0;
 }

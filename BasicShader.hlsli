@@ -1,12 +1,28 @@
 
-// ディレクショナルライトの個数
-static const int numDirectionalLight = 4;
-
 Texture2D diffuseTexture;
 SamplerState diffuseSampler;
 
+// ディレクショナルライトの個数
+static const int numDirectionalLight = 4;
+// π
+static const float PI = 3.1415926f;
+
+// ディレクショナルライト
+struct DirectionalLight {
+	float4 lightColor;
+	float4 lightDirection;
+};
+
+// マテリアル
+struct Material {
+	float4 materialDiffuse;
+	float smooth;
+	float metallic;
+};
+
 cbuffer ModelParameter : register(b1) {
-	matrix modelWorld;
+	matrix world;
+	Material material;
 };
 
 // 定数バッファー
@@ -15,16 +31,10 @@ cbuffer ConstantBuffer : register(b0) {
 	matrix projection;
 };
 
-// ディレクショナルライト
-struct DirectionalLight {
-	float4 lightColor;
-	float4 lightDirection;
-};
-
 // ライト
-cbuffer LightParameter {
+cbuffer LightParameter : register(b0) {
 	DirectionalLight directionalLight[4];
-	float4 eyePosition;				// 視点
+	float4 eyePosition;
 };
 
 // 頂点シェーダーへの入力

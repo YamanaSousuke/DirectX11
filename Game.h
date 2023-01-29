@@ -23,9 +23,11 @@ private:
 		DirectX::XMFLOAT4 eyePosition;
 	};
 
+	// TODO : ModelParameterを一つにまとめる
 	// モデル情報
 	struct ModelParameter {
 		DirectX::XMFLOAT4X4 world;
+		Material material = {};
 	};
 
 	// 定数バッファーでシェーダーに毎フレーム送るデータ
@@ -59,7 +61,7 @@ private:
 	// 深度ステンシルのフォーマット
 	const DXGI_FORMAT depthStencilFormat = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
 	// 画面をクリアするときに使用するカラー
-	const FLOAT clearColor[4] = { 0.2f, 0.2f, 0.2f, 1.0f };
+	const FLOAT clearColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
 	// ビューポート
 	D3D11_VIEWPORT viewports[1] = {};
 
@@ -117,46 +119,12 @@ public:
 	void Release();
 };
 
-// 頂点バッファー
-class VertexBuffer
-{
-	//  リソース
-	Microsoft::WRL::ComPtr<ID3D11Buffer> buffer = nullptr;
-public:
-	// このクラスの新しいインスタンスの作成
-	VertexBuffer(ID3D11Device* device, UINT byteWidth);
-	// バッファーにデータを設定する
-	void SetData(void* data);
-	// ネイティブポインターの取得
-	ID3D11Buffer* GetNativePointer();
-	// リソースの解放
-	void Release();
-};
-
-// インデックスバッファー
-class IndexBuffer
-{
-	//  リソース
-	Microsoft::WRL::ComPtr<ID3D11Buffer> buffer = nullptr;
-public:
-	// このクラスの新しいインスタンスの作成
-	IndexBuffer(ID3D11Device* device, UINT indexCount);
-	// バッファーにデータを設定する
-	void SetData(UINT16* data);
-	// ネイティブポインターの取得
-	ID3D11Buffer* GetNativePointer();
-	// リソースの解放
-	void Release();
-};
-
 // 定数バッファー
 class ConstantBuffer
 {
 	//  リソース
 	Microsoft::WRL::ComPtr<ID3D11Buffer> buffer = nullptr;
 public:
-
-
 	// このクラスの新しいインスタンスの作成
 	ConstantBuffer(ID3D11Device* device, UINT byteWidth);
 	// バッファーにデータを設定する

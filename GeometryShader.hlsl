@@ -24,12 +24,12 @@ void main(
 	for (uint i = 0; i < 3; i++)
 	{
 		GSOutput element;
-		element.position = mul(input[i].position, modelWorld);
-		element.worldPosition = mul(input[i].position, modelWorld);
+		element.position = mul(input[i].position, world);
+		element.worldPosition = mul(input[i].position, world);
 		element.position = mul(element.position, view);
 		element.position = mul(element.position, projection);
 
-		element.normal = normalize(mul(input[i].normal, (float3x3)modelWorld));
+		element.normal = normalize(mul(input[i].normal, (float3x3)world));
 		element.texCoord = input[i].texCoord;
 		output.Append(element);
 	}

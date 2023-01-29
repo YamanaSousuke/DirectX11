@@ -1,13 +1,5 @@
 #include "BasicShader.hlsli"
 
-// π
-static const float PI = 3.1415926f;
-// マテリアルの表面カラー
-static const float4 diffuseColor = float4(1.0f, 1.0f, 0.0f, 1.0f);
-
-static const float testSmooth = 0.0f;
-static const float testMetallic = 0.0f;
-
 // フレネル反射を考慮した拡散反射率の計算
 float CalcDiffuse(float3 normal, float3 light, float3 view)
 {
@@ -72,32 +64,31 @@ float CookTrranceSpecular(float3 light, float view, float3 normal, float metalli
 // ピクセルシェーダー
 float4 main(PSInput input) : SV_TARGET
 {
+	float4 albedoColor = diffuseTexture.Sample(diffuseSampler, input.texCoord);
 	// 視線ベクトル
-	//float3 toEye = normalize(eyePosition - input.worldPosition);
-	//
-	//float3 light = 0.0f;
-	//[unroll]
-	//for (int i = 0; i < numDirectionalLight; i++)
-	//{
-	//	// BRDF拡散反射
-	//	float4 lightVector = normalize(directionalLight[i].lightDirection);
-	//	float diffuseFresnel = CalcDiffuse(input.normal, lightVector, toEye);
+	float3 toEye = normalize(eyePosition - input.worldPosition);
+	
+	float3 light = 0.0f;
+	[unroll]
+	for (int i = 0; i < numDirectionalLight; i++)
+	{
+		// BRDF拡散反射
+		float4 lightVector = normalize(directionalLight[i].lightDirection);
+		float diffuseFresnel = CalcDiffuse(input.normal, lightVector, toEye);
 
-	//	// 正規化ランバート反射
-	//	float dotNL = saturate(dot(lightVector.xyz, input.normal));
-	//	float3 lambertDiffuse = directionalLight[i].lightColor.xyz * dotNL / PI;
-	//	float3 diffuse = diffuseColor.xyz * lambertDiffuse * diffuseFresnel;
+		// 正規化ランバート反射
+		float dotNL = saturate(dot(lightVector.xyz, input.normal));
+		float3 lambertDiffuse = directionalLight[i].lightColor.xyz * dotNL / PI;
+		float3 diffuse = material.materialDiffuse.xyz * lambertDiffuse * diffuseFresnel * albedoColor;
 
-	//	// BRDF鏡面反射
-	//	float specular = CookTrranceSpecular(lightVector, toEye, input.normal, testSmooth) * directionalLight[i].lightColor.xyz;
+		// BRDF鏡面反射
+		float specular = CookTrranceSpecular(lightVector, toEye, input.normal, material.smooth) * directionalLight[i].lightColor.xyz;
 
-	//	// 金属度が高ければスぺキュラ反射には色が付く、低ければ白
-	//	specular *= lerp(float3(1.0f, 1.0f, 1.0f), float3(0.0f, 0.0f, 0.0f), testMetallic);
-	//	// 拡散反射と鏡面反射の合成
-	//	light += diffuse * (1.0f - testSmooth) + specular;
-	//}
+		// 金属度が高ければスぺキュラ反射には色が付く、低ければ白
+		specular *= lerp(float3(1.0f, 1.0f, 1.0f), float3(0.0f, 0.0f, 0.0f), material.metallic);
+		// 拡散反射と鏡面反射の合成
+		light += diffuse * (1.0f - material.smooth) + specular;
+	}
 
-	// return float4(light.xyz, 1.0f);
-	return diffuseTexture.Sample(diffuseSampler, input.texCoord);
-	// return float4(1.0f, 0.0f, 0.0f, 1.0f);
+	return float4(light.xyz, 1.0f);
 }

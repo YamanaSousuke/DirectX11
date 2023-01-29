@@ -14,6 +14,12 @@ void GameObject::SetTexture(ID3D11ShaderResourceView* texture)
 	this->texture = texture;
 }
 
+// マテリアルの設定
+void GameObject::SetMaterial(const Material& material)
+{
+	this->material = material;
+}
+
 // 座標の設定
 void GameObject::SetPosition(const XMFLOAT3& position)
 {
@@ -36,12 +42,12 @@ void GameObject::Draw(ID3D11DeviceContext* immediateContext)
 
 	// ワールド行列
 	XMMATRIX world = XMMatrixIdentity();
-	XMVECTOR axis = XMVectorSet(1.0f, 1.0f, 0.0f, 0.0f);
-	world *= XMMatrixRotationAxis(axis, time * 0.5f);
-
 	auto position = transform.GetPosition();
+	XMVECTOR axis = XMVectorSet(1, 1, 0, 0);
+	world *= XMMatrixRotationAxis(axis, time);
 	world *= XMMatrixTranslation(position.x, position.y, position.z);
 	XMStoreFloat4x4(&modelParameter.world, XMMatrixTranspose(world));
+	modelParameter.material = material;
 
 	// 定数バッファーを取得して、データの転送を行う
 	ComPtr<ID3D11Buffer> constnatBuffer = nullptr;
