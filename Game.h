@@ -21,6 +21,7 @@ private:
 	struct LightParameter {
 		DirectionalLight directionalLight[4] = {};
 		DirectX::XMFLOAT4 eyePosition;
+		float ambient = 0.0f;
 	};
 
 	// TODO : ModelParameterを一つにまとめる
@@ -69,6 +70,8 @@ private:
 	bool InitWindow();
 	// グラフィックデバイスの作成
 	bool InitGraphicsDevice();
+	// GUIの初期化
+	bool InitGUI();
 };
 
 // 頂点シェーダー

@@ -1,11 +1,28 @@
 #include "BasicShader.hlsli"
 
+static const float roughness = 0.5f;
+
 // フレネル反射を考慮した拡散反射率の計算
 float CalcDiffuse(float3 normal, float3 light, float3 view)
 {
+	float halfVector = (light + view);
+
+	float energyBias = lerp(0.0f, 0.5f, roughness);
+	float energyFactor = lerp(1.0f, 1.0f / 1.51f, roughness);
+
+	float dotLH = saturate(dot(light, halfVector));
+
+	// 光が平行に入射したときの拡散反射率
+	float fd90 = energyBias + 2.0f * dotLH * dotLH * roughness;
+
+	// 法線と光源に向かうベクトルの拡散反射率
 	float dotNL = saturate(dot(normal, light));
+	float fl = (1 + (fd90 - 1) * pow(1 - dotNL, 5));
+
+	// 法線と視線に向かうベクトルの拡散反射率
 	float dotNV = saturate(dot(normal, view));
-	return dotNL * dotNV;
+	float fv = (1 + (fd90 - 1) * pow(1 - dotNV, 5));
+	return (fl * fv * energyFactor);
 }
 
 // ベックマン分布(マイクロファセット法線の分布)
@@ -65,6 +82,8 @@ float CookTrranceSpecular(float3 light, float view, float3 normal, float metalli
 float4 main(PSInput input) : SV_TARGET
 {
 	float4 albedoColor = diffuseTexture.Sample(diffuseSampler, input.texCoord);
+
+	float3 specularColor = albedoColor;
 	// 視線ベクトル
 	float3 toEye = normalize(eyePosition - input.worldPosition);
 	
@@ -85,10 +104,11 @@ float4 main(PSInput input) : SV_TARGET
 		float specular = CookTrranceSpecular(lightVector, toEye, input.normal, material.smooth) * directionalLight[i].lightColor.xyz;
 
 		// 金属度が高ければスぺキュラ反射には色が付く、低ければ白
-		specular *= lerp(float3(1.0f, 1.0f, 1.0f), float3(0.0f, 0.0f, 0.0f), material.metallic);
+		specular *= lerp(float3(1.0f, 1.0f, 1.0f), specularColor, material.metallic);
 		// 拡散反射と鏡面反射の合成
 		light += diffuse * (1.0f - material.smooth) + specular;
 	}
 
+	light += ambient * albedoColor;
 	return float4(light.xyz, 1.0f);
 }

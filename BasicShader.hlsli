@@ -33,8 +33,9 @@ cbuffer ConstantBuffer : register(b0) {
 
 // ライト
 cbuffer LightParameter : register(b0) {
-	DirectionalLight directionalLight[4];
+	DirectionalLight directionalLight[numDirectionalLight];
 	float4 eyePosition;
+	float ambient;
 };
 
 // 頂点シェーダーへの入力

@@ -5,14 +5,22 @@
 #include "GameObject.h"
 #include "DDSTextureLoader.h"
 
+#include "ImGui/imgui.h"
+#include "ImGui/imgui_impl_dx11.h"
+#include "ImGui/imgui_impl_win32.h"
+
 using namespace Microsoft::WRL;
 using namespace DirectX;
 
+extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 // 受信したメッセージに応じた処理
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	switch (uMsg)
-	{
+	if (ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam)) {
+		return true;
+	}
+
+	switch (uMsg) {
 	case WM_DESTROY:
 		// 終了処理
 		PostQuitMessage(0);
@@ -210,17 +218,39 @@ bool Game::InitGraphicsDevice()
 	return true;
 }
 
+// GUIの初期化
+bool Game::InitGUI()
+{
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+
+	// キーボードによる操作を可能にする
+	// io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	// // ヘッダーのドラッグのみ可能
+	// io.ConfigWindowsMoveFromTitleBarOnly = true;
+
+	ImGui::StyleColorsDark();
+	ImGui_ImplWin32_Init(hWnd);
+	ImGui_ImplDX11_Init(device.Get(), deviceContext.Get());
+	return true;
+}
+
 // メッセージループの実行
 int Game::Run()
 {
 	// ウィンドウの作成
 	if (!InitWindow()) {
-		return-1;
+		return -1;
 	}
 
 	// グラフィックデバイスの作成
 	if (!InitGraphicsDevice()) {
-		return-1;
+		return -1;
+	}
+
+	if (!InitGUI()) {
+		return -1;
 	}
 
 	HRESULT hr = S_OK;
@@ -334,6 +364,17 @@ int Game::Run()
 	while (true) {
 		time += 0.01666f;
 
+		// ImGuiの更新処理
+		ImGui_ImplDX11_NewFrame();
+		ImGui_ImplWin32_NewFrame();
+		ImGui::NewFrame();
+
+		if (ImGui::Begin("Debug")) {
+
+		}
+
+		ImGui::End();
+
 		// ビュー行列
 		XMVECTOR eyePosition = XMVectorSet(0.0f, 1.0f, -10.0f, 1.0f);
 		XMVECTOR focusPosition = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
@@ -355,10 +396,11 @@ int Game::Run()
 		// ライト
 		LightParameter lightParameter = {};
 		lightParameter.directionalLight[0].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		lightParameter.directionalLight[0].direction = XMFLOAT4(1.0f, 3.0f, -2.0f, 0.0f);
+		lightParameter.directionalLight[0].direction = XMFLOAT4(1.0f, 4.0f, -2.0f, 0.0f);
 		lightParameter.directionalLight[1].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		lightParameter.directionalLight[1].direction = XMFLOAT4(1.0f, 0.0f, -2.0f, 0.0f);
+		lightParameter.directionalLight[1].direction = XMFLOAT4(1.0f, 2.0f, -2.0f, 0.0f);
 		lightParameter.eyePosition = XMFLOAT4(0.0f, 1.0f, -10.0f, 1.0f);
+		lightParameter.ambient = 0.2f;
 		lightConstantBuffer->SetData(&lightParameter);
 
 		// レンダーターゲットを設定
@@ -393,6 +435,10 @@ int Game::Run()
 		// sphere->Draw(deviceContext.Get());
 		// ground->Draw(deviceContext.Get());
 
+
+		// GUIの描画
+		ImGui::Render();
+		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 		// 表示
 		swapchain->Present(1, 0);
 
@@ -418,5 +464,10 @@ int Game::Run()
 	box->Release();
 	sphere->Release();
 	ground->Release();
+
+	// GUIの開放
+	ImGui_ImplDX11_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
 	return 0;
 }
