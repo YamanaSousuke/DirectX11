@@ -224,12 +224,6 @@ bool Game::InitGUI()
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
-
-	// キーボードによる操作を可能にする
-	// io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-	// // ヘッダーのドラッグのみ可能
-	// io.ConfigWindowsMoveFromTitleBarOnly = true;
-
 	ImGui::StyleColorsDark();
 	ImGui_ImplWin32_Init(hWnd);
 	ImGui_ImplDX11_Init(device.Get(), deviceContext.Get());
@@ -249,6 +243,7 @@ int Game::Run()
 		return -1;
 	}
 
+	// GUIの初期化
 	if (!InitGUI()) {
 		return -1;
 	}
@@ -259,15 +254,13 @@ int Game::Run()
 	ComPtr<ID3D11ShaderResourceView> texture = nullptr;
 	Material material = {};
 	material.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-	material.smooth = 0.0f;
-	material.metallic = 0.0f;
 
 	// 木箱の描画の準備
 	auto box = new GameObject();
 	DirectX::CreateDDSTextureFromFile(device.Get(), L"Texture/Wood.dds", nullptr, texture.GetAddressOf());
 	box->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreateBox<VertexPositionNormalTexture>());
 	box->SetTexture(texture.Get());
-	box->GetTransform().SetPosition(XMFLOAT3(-2.0f, 0.0f, 0.0f));
+	box->GetTransform().SetPosition(XMFLOAT3(-0.0f, -1.0f, 0.0f));
 	box->SetMaterial(material);
 
 	// 球の描画の準備
@@ -275,18 +268,21 @@ int Game::Run()
 	DirectX::CreateDDSTextureFromFile(device.Get(), L"Texture/Uranus.dds", nullptr, texture.ReleaseAndGetAddressOf());
 	sphere->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreateSphere<VertexPositionNormalTexture>());
 	sphere->SetTexture(texture.Get());
-	sphere->GetTransform().SetPosition(XMFLOAT3(2.0f, 0.0f, 0.0f));
-
+	sphere->GetTransform().SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
+	sphere->SetMaterial(material);
 
 	// 地面の描画の準備
 	auto ground = new GameObject();
 	DirectX::CreateDDSTextureFromFile(device.Get(), L"Texture/Ground.dds", nullptr, texture.ReleaseAndGetAddressOf());
 	ground->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreatePlane<VertexPositionNormalTexture>(XMFLOAT2(20.0f, 20.0f)));
 	ground->SetTexture(texture.Get());
-	ground->GetTransform().SetPosition(XMFLOAT3(0.0f, -1.0f, 5.0f));
+	ground->GetTransform().SetPosition(XMFLOAT3(0.0f, -3.0f, 5.0f));
+	ground->SetMaterial(material);
 
+
+	// TODO : サイズの取得を別の手段で実装したい
 	// モデルの定数バッファーの作成
-	auto modelConstantBuffer = new ConstantBuffer(device.Get(), sizeof(ModelParameter));
+	auto modelConstantBuffer = new ConstantBuffer(device.Get(), (UINT)box->GetModelParameterSize());
 	if (modelConstantBuffer == nullptr) {
 		OutputDebugStringA("モデルの定数バッファーの作成に失敗\n");
 		return -1;
@@ -369,15 +365,9 @@ int Game::Run()
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
 
-		if (ImGui::Begin("Debug")) {
-
-		}
-
-		ImGui::End();
-
 		// ビュー行列
-		XMVECTOR eyePosition = XMVectorSet(0.0f, 1.0f, -10.0f, 1.0f);
-		XMVECTOR focusPosition = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+		XMVECTOR eyePosition = XMVectorSet(0.0f, 0.0f, -10.0f, 1.0f);
+		XMVECTOR focusPosition = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
 		XMVECTOR upDirection = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 		XMMATRIX view = XMMatrixLookAtLH(eyePosition, focusPosition, upDirection);
 		// プロジェクション行列
@@ -396,10 +386,10 @@ int Game::Run()
 		// ライト
 		LightParameter lightParameter = {};
 		lightParameter.directionalLight[0].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		lightParameter.directionalLight[0].direction = XMFLOAT4(1.0f, 4.0f, -2.0f, 0.0f);
-		lightParameter.directionalLight[1].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		lightParameter.directionalLight[1].direction = XMFLOAT4(1.0f, 2.0f, -2.0f, 0.0f);
-		lightParameter.eyePosition = XMFLOAT4(0.0f, 1.0f, -10.0f, 1.0f);
+		lightParameter.directionalLight[0].direction = XMFLOAT4(1.0f, 2.0f, -1.0f, 0.0f);
+		// lightParameter.directionalLight[1].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		// lightParameter.directionalLight[1].direction = XMFLOAT4(0.0f, 0.0f, -1.0f, 0.0f);
+		lightParameter.eyePosition = XMFLOAT4(0.0f, 0.0f, -10.0f, 1.0f);
 		lightParameter.ambient = 0.2f;
 		lightConstantBuffer->SetData(&lightParameter);
 

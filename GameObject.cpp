@@ -1,6 +1,10 @@
 #include "GameObject.h"
+#include "ImGui/imgui.h"
+#include "ImGui/imgui_impl_dx11.h"
+#include "ImGui/imgui_impl_win32.h"
 
 using namespace DirectX;
+
 
 // トランスフォームの取得
 Transform& GameObject::GetTransform()
@@ -29,6 +33,14 @@ void GameObject::SetPosition(const XMFLOAT3& position)
 // 描画
 void GameObject::Draw(ID3D11DeviceContext* immediateContext)
 {
+	ImGui::Begin("Debug");
+	ImGui::SliderFloat("Smoothness", &material.smooth, 0.0f, 1.0f);
+	ImGui::SliderFloat("Metallic", &material.metallic, 0.0f, 1.0f);
+	ImGui::End();
+
+	static float time = 0.0f;
+	time += 0.01666f;
+
 	// 頂点バッファーとインデックスバッファーの設定
 	ID3D11Buffer* vertexBuffers[1] = { vertexBuffer.Get()};
 	UINT strides[1] = { vertexStride };
@@ -36,16 +48,9 @@ void GameObject::Draw(ID3D11DeviceContext* immediateContext)
 	immediateContext->IASetVertexBuffers(0, ARRAYSIZE(vertexBuffers), vertexBuffers, strides, offsets);
 	immediateContext->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
 
-	ModelParameter modelParameter = {};
-	static float time = 0.0f;
-	time += 0.01666f;
-
 	// ワールド行列
-	XMMATRIX world = XMMatrixIdentity();
-	auto position = transform.GetPosition();
-	XMVECTOR axis = XMVectorSet(1, 1, 0, 0);
-	world *= XMMatrixRotationAxis(axis, time);
-	world *= XMMatrixTranslation(position.x, position.y, position.z);
+	XMMATRIX world = transform.GetWorldMatrix();
+	ModelParameter modelParameter = {};
 	XMStoreFloat4x4(&modelParameter.world, XMMatrixTranspose(world));
 	modelParameter.material = material;
 
@@ -58,6 +63,12 @@ void GameObject::Draw(ID3D11DeviceContext* immediateContext)
 	ID3D11ShaderResourceView* textureViews[1] = { texture.Get() };
 	immediateContext->PSSetShaderResources(0, 1, textureViews);
 	immediateContext->DrawIndexed(indexCount, 0, 0);
+}
+
+// モデル情報のサイズの取得
+size_t GameObject::GetModelParameterSize() const
+{
+	return sizeof(ModelParameter);
 }
 
 // リソースの解放

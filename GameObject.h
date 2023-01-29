@@ -24,6 +24,8 @@ public:
 	void SetPosition(const DirectX::XMFLOAT3& position);
 	// 描画
 	void Draw(ID3D11DeviceContext* immediateContext);
+	// モデル情報のサイズの取得
+	size_t GetModelParameterSize() const;
 	// リソースの解放
 	void Release();
 

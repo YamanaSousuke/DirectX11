@@ -2,6 +2,8 @@
 
 static const float roughness = 0.5f;
 
+static const float microfacet = 0.2f;
+
 // フレネル反射を考慮した拡散反射率の計算
 float CalcDiffuse(float3 normal, float3 light, float3 view)
 {
@@ -26,11 +28,11 @@ float CalcDiffuse(float3 normal, float3 light, float3 view)
 }
 
 // ベックマン分布(マイクロファセット法線の分布)
-float Beckmann(float microfacet, float cos)
+float Beckmann(float m, float cos)
 {
 	float cos2 = cos * cos;
 	float cos4 = cos * cos * cos * cos;
-	float microfacet2 = microfacet * microfacet;
+	float microfacet2 = m * m;
 	float d = 1.0f / (4.0f * microfacet2 * cos4);
 	// cosからtanに変換する
 	d *= exp((-1.0f / microfacet2) * (1.0f - cos2) / cos2);
@@ -40,7 +42,7 @@ float Beckmann(float microfacet, float cos)
 // フレネルの計算(Schlick近似)
 float Fresnel(float f0, float dotVH)
 {
-	return f0 + (1 - f0) * pow(1 - dotVH, 5.0f);
+	return f0 + (1 - f0) * pow(1 - dotVH, 5);
 }
 
 // 幾何減衰(シャドウイングとマスキングを考慮)
@@ -50,30 +52,25 @@ float GeometricDamping(float dotNH, float dotNV, float dotVH, float dotNL)
 }
 
 // Cook-Trranceモデルの鏡面反射
-float CookTrranceSpecular(float3 light, float view, float3 normal, float metallic)
+float CookTrranceSpecular(float3 light, float3 view, float3 normal, float metallic)
 {
-	float microfacet = 0.76f;
-
 	float halfVector = normalize(light + view);
+	float f0 = metallic;
 
 	// 内積の計算
 	float dotNH = saturate(dot(normal, halfVector));
 	float dotVH = saturate(dot(view, halfVector));
-
 	float dotNL = saturate(dot(normal, light));
 	float dotNV = saturate(dot(normal, view));
 
 	// D項
 	float d = Beckmann(microfacet, dotNH);
-
 	// F項
-	float f = Fresnel(metallic, dotVH);
-
+	float f = Fresnel(f0, dotVH);
 	// G項
 	float g = GeometricDamping(dotNH, dotNV, dotVH, dotNL);
-
 	// m項
-	float m = dotNV * dotNL * PI;
+	float m = dotNV * dotNH * PI;
 	return max(f * d * g / m, 0.0f);
 
 }
@@ -101,7 +98,7 @@ float4 main(PSInput input) : SV_TARGET
 		float3 diffuse = material.materialDiffuse.xyz * lambertDiffuse * diffuseFresnel * albedoColor;
 
 		// BRDF鏡面反射
-		float specular = CookTrranceSpecular(lightVector, toEye, input.normal, material.smooth) * directionalLight[i].lightColor.xyz;
+		float3 specular = CookTrranceSpecular(lightVector, toEye, input.normal, material.smooth) * directionalLight[i].lightColor.xyz;
 
 		// 金属度が高ければスぺキュラ反射には色が付く、低ければ白
 		specular *= lerp(float3(1.0f, 1.0f, 1.0f), specularColor, material.metallic);
@@ -111,4 +108,6 @@ float4 main(PSInput input) : SV_TARGET
 
 	light += ambient * albedoColor;
 	return float4(light.xyz, 1.0f);
+	// return float4(testSpecular, testSpecular, testSpecular, 1.0f);
+
 }

@@ -14,10 +14,25 @@ void Transform::SetPosition(float x, float y, float z)
 }
 
 // âÒì]ÇÃê›íË
-void Transform::SetRotation(const DirectX::XMFLOAT3 eulerAngles)
+void Transform::SetRotation(const XMFLOAT3& eulerAngles)
 {
-	auto quaternion = XMQuaternionRotationRollPitchYawFromVector(XMLoadFloat3(&eulerAngles));
-	return XMStoreFloat3(&rotation, quaternion);
+	rotation = eulerAngles;
+}
+
+void Transform::SetRotation(float x, float y, float z)
+{
+	rotation = XMFLOAT3(x, y, z);
+}
+
+// ägëÂèkè¨ÇÃê›íË
+void Transform::SetScale(const DirectX::XMFLOAT3& scale)
+{
+	this->scale = scale;
+}
+
+void Transform::SetScale(float x, float y, float z)
+{
+	scale = XMFLOAT3(x, y, z);
 }
 
 // ç¿ïWÇÃéÊìæ
@@ -37,9 +52,9 @@ XMMATRIX Transform::GetWorldMatrix() const
 	auto scaleVecrtor = XMLoadFloat3(&scale);
 	auto rotationVector = XMLoadFloat3(&rotation);
 	auto positionVector = XMLoadFloat3(&position);
-	return XMMatrixScaling(scale.x, scale.y, scale.z) 
-		* XMMatrixRotationRollPitchYaw(rotation.x, rotation.y, rotation.z)
-		* XMMatrixTranslation(position.x, position.y, position.z);
+	return XMMatrixScalingFromVector(scaleVecrtor)
+		* XMMatrixRotationRollPitchYawFromVector(rotationVector)
+		* XMMatrixTranslationFromVector(positionVector);
 }
 
 

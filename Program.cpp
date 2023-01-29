@@ -5,7 +5,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _
 {
 	Game game;
 	// 初期化
-	game.Initialize(L"DirectX11", 640, 480);
+	game.Initialize(L"DirectX11", 928, 522);
 	// メッセージループの実行
 	return game.Run();
 }

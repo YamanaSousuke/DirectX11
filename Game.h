@@ -24,13 +24,6 @@ private:
 		float ambient = 0.0f;
 	};
 
-	// TODO : ModelParameterを一つにまとめる
-	// モデル情報
-	struct ModelParameter {
-		DirectX::XMFLOAT4X4 world;
-		Material material = {};
-	};
-
 	// 定数バッファーでシェーダーに毎フレーム送るデータ
 	struct SceneParameter {
 		DirectX::XMFLOAT4X4 view;

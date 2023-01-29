@@ -10,7 +10,12 @@ public:
 	void SetPosition(float x, float y, float z);
 
 	// ‰ñ“]‚Ìİ’è
-	void SetRotation(const DirectX::XMFLOAT3 eulerAngles);
+	void SetRotation(const DirectX::XMFLOAT3& eulerAngles);
+	void SetRotation(float x, float y, float z);
+
+	// Šg‘åk¬‚Ìİ’è
+	void SetScale(const DirectX::XMFLOAT3& scale);
+	void SetScale(float x, float y, float z);
 
 	// À•W‚Ìæ“¾
 	DirectX::XMFLOAT3 GetPosition() const;
@@ -24,5 +29,5 @@ private:
 	// ‰ñ“]
 	DirectX::XMFLOAT3 rotation = {};
 	// Šg‘åk¬
-	DirectX::XMFLOAT3 scale = {};
+	DirectX::XMFLOAT3 scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
 };
