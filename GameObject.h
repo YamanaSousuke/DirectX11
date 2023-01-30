@@ -23,20 +23,12 @@ public:
 	void SetMaterial(const Material& material);
 	// 描画
 	void Draw(ID3D11DeviceContext* immediateContext, Effect& effect);
-	// モデル情報のサイズの取得
-	size_t GetModelParameterSize() const;
 	// リソースの解放
 	void Release();
 
 private:
 	template<class T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
-
-	// モデル情報
-	struct ModelParameter {
-		DirectX::XMFLOAT4X4 world;
-		Material material = {};
-	};
 
 	// トランスフォーム
 	Transform transform = {};

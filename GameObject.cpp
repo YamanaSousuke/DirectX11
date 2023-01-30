@@ -1,7 +1,4 @@
 #include "GameObject.h"
-#include "ImGui/imgui.h"
-#include "ImGui/imgui_impl_dx11.h"
-#include "ImGui/imgui_impl_win32.h"
 
 using namespace DirectX;
 
@@ -27,11 +24,6 @@ void GameObject::SetMaterial(const Material& material)
 // 描画
 void GameObject::Draw(ID3D11DeviceContext* immediateContext, Effect& effect)
 {
-	ImGui::Begin("Debug");
-	ImGui::SliderFloat("Smoothness", &material.smooth, 0.0f, 1.0f);
-	ImGui::SliderFloat("Metallic", &material.metallic, 0.0f, 1.0f);
-	ImGui::End();
-
 	static float time = 0.0f;
 	time += 0.01666f;
 
@@ -41,35 +33,15 @@ void GameObject::Draw(ID3D11DeviceContext* immediateContext, Effect& effect)
 	UINT offsets[1] = { 0 };
 	immediateContext->IASetVertexBuffers(0, ARRAYSIZE(vertexBuffers), vertexBuffers, strides, offsets);
 	immediateContext->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
-
-	// ワールド行列
-	// XMMATRIX world = transform.GetWorldMatrix();
-	ModelParameter modelParameter = {};
-    // XMStoreFloat4x4(&modelParameter.world, XMMatrixTranspose(world));
 	
 	effect.SetWorldMatrix(transform.GetWorldMatrix());
 	effect.SetMaterial(material);
 	effect.Apply(immediateContext);
 
-	// modelParameter.material = material;
-
-
-	// 定数バッファーを取得して、データの転送を行う
-	// ComPtr<ID3D11Buffer> constnatBuffer = nullptr;
-	// immediateContext->GSGetConstantBuffers(1, 1, constnatBuffer.GetAddressOf());
-	// // effect.UpdateModelParameter(immediateContext);
-	// immediateContext->UpdateSubresource(constnatBuffer.Get(), 0, nullptr, &modelParameter, 0, 0);
-
 	// テクスチャの設定
 	ID3D11ShaderResourceView* textureViews[1] = { texture.Get() };
 	immediateContext->PSSetShaderResources(0, 1, textureViews);
 	immediateContext->DrawIndexed(indexCount, 0, 0);
-}
-
-// モデル情報のサイズの取得
-size_t GameObject::GetModelParameterSize() const
-{
-	return sizeof(ModelParameter);
 }
 
 // リソースの解放

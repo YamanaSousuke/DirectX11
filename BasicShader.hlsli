@@ -4,6 +4,8 @@ SamplerState diffuseSampler;
 
 // ディレクショナルライトの個数
 static const int numDirectionalLight = 4;
+// 環境光
+static const float ambient = 0.2f;
 // π
 static const float PI = 3.1415926f;
 
@@ -20,22 +22,22 @@ struct Material {
 	float metallic;
 };
 
+// シーン情報
+cbuffer SceneParameter : register(b0) {
+	matrix view;
+	matrix projection;
+};
+
+// モデル情報
 cbuffer ModelParameter : register(b1) {
 	matrix world;
 	Material material;
 };
 
-// 定数バッファー
-cbuffer ConstantBuffer : register(b0) {
-	matrix view;
-	matrix projection;
-};
-
 // ライト
-cbuffer LightParameter : register(b0) {
+cbuffer LightParameter : register(b2) {
 	DirectionalLight directionalLight[numDirectionalLight];
-	float4 eyePosition;
-	float ambient;
+	float3 eyePosition;
 };
 
 // 頂点シェーダーへの入力

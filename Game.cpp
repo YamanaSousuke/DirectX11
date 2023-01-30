@@ -260,7 +260,8 @@ int Game::Run()
 	DirectX::CreateDDSTextureFromFile(device.Get(), L"Texture/Wood.dds", nullptr, texture.GetAddressOf());
 	box->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreateBox<VertexPositionNormalTexture>());
 	box->SetTexture(texture.Get());
-	box->GetTransform().SetPosition(-0.0f, -1.0f, 0.0f);
+	box->GetTransform().SetPosition(0.0f, -1.0f, 0.0f);
+	box->GetTransform().SetRotation(0.0f, XMConvertToRadians(0.0f), 0.0f);
 	box->SetMaterial(material);
 
 	// 球の描画の準備
@@ -283,13 +284,6 @@ int Game::Run()
 		OutputDebugString(L"エフェクトの初期化に失敗");
 		return -1;
 	}
-
-	// ライトの定数バッファーの作成
-	// auto lightConstantBuffer = new ConstantBuffer(device.Get(), sizeof(LightParameter));
-	// if (lightConstantBuffer == nullptr) {
-	// 	OutputDebugStringA("ライトの定数バッファー作成に失敗\n");
-	// 	return -1;
-	// }
 
 	// 頂点シェーダーの作成
 	auto vertexShader = new VertexShader(device.Get());
@@ -354,6 +348,11 @@ int Game::Run()
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
 
+		ImGui::Begin("Debug");
+		ImGui::SliderFloat("Smoothness", &material.smooth, 0.0f, 1.0f);
+		ImGui::SliderFloat("Metallic", &material.metallic, 0.0f, 1.0f);
+		ImGui::End();
+
 		// ビュー行列
 		XMVECTOR eyePosition = XMVectorSet(0.0f, 0.0f, -10.0f, 1.0f);
 		XMVECTOR focusPosition = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
@@ -370,16 +369,18 @@ int Game::Run()
 		XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(fovAngleY), aspectRatio, nearZ, farZ);
 
 		effect.SetProjectionMatrix(XMConvertToRadians(fovAngleY), aspectRatio, nearZ, farZ);
-		effect.Apply(deviceContext.Get());
 		// ライト
-		// LightParameter lightParameter = {};
-		// lightParameter.directionalLight[0].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		// lightParameter.directionalLight[0].direction = XMFLOAT4(1.0f, 2.0f, -1.0f, 0.0f);
-		// // lightParameter.directionalLight[1].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		// // lightParameter.directionalLight[1].direction = XMFLOAT4(0.0f, 0.0f, -1.0f, 0.0f);
-		// lightParameter.eyePosition = XMFLOAT4(0.0f, 0.0f, -10.0f, 1.0f);
-		// lightParameter.ambient = 0.2f;
-		// lightConstantBuffer->SetData(&lightParameter);
+		DirectionalLight directionalLight[4] = {};
+		directionalLight[0].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		directionalLight[0].direction = XMFLOAT4(1.0f, 2.0f, -1.0f, 0.0f);
+		directionalLight[1].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		directionalLight[1].direction = XMFLOAT4(0.0f, 0.0f, -1.0f, 0.0f);
+		for (UINT i = 0; i < ARRAYSIZE(directionalLight); i++) {
+			effect.SetDirectionalLight(i, directionalLight[i]);
+		}
+		// 視点
+		XMFLOAT3 eyePositionFloat3 = XMFLOAT3(0.0f, 0.0f, -10.0f);
+		effect.SetEyePosition(eyePositionFloat3);
 
 		// レンダーターゲットを設定
 		deviceContext->OMSetRenderTargets(_countof(renderTargetView), renderTargetView->GetAddressOf(), depthStencilView.Get());
@@ -401,9 +402,9 @@ int Game::Run()
 		deviceContext->PSSetSamplers(0, 1, samplerStates);
 
 		// 描画
+		effect.Apply(deviceContext.Get());
 		box->Draw(deviceContext.Get(), effect);
 
-		effect.Apply(deviceContext.Get());
 		// sphere->Draw(deviceContext.Get());
 		// ground->Draw(deviceContext.Get());
 

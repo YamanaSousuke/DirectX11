@@ -6,7 +6,7 @@ using namespace DirectX;
 // リソースの初期化
 bool Effect::InitAll(ID3D11Device* device)
 {
-	constantBuffers.assign({ &sceneParameter, &modelParameter, });
+	constantBuffers.assign({ &sceneParameter, &modelParameter, &lightParameter});
 
 	for (auto& constantBuffer : constantBuffers) {
 		constantBuffer->CreateBuffer(device);
@@ -45,6 +45,18 @@ void Effect::SetMaterial(const Material& material)
 	model.data.material = material;
 }
 
+// ディレクショナルライトの設定
+void Effect::SetDirectionalLight(UINT index, const DirectionalLight& directionalLight)
+{
+	lightParameter.data.directionalLight[index]= directionalLight;
+}
+
+// 視点の設定
+void Effect::SetEyePosition(const DirectX::XMFLOAT3& position)
+{
+	lightParameter.data.eyePosition = position;
+}
+
 // 定数バッファーとテクスチャ情報の適応
 void Effect::Apply(ID3D11DeviceContext* immediateContext)
 {
@@ -52,6 +64,7 @@ void Effect::Apply(ID3D11DeviceContext* immediateContext)
 	constantBuffer[static_cast<int>(Data::Scene)]->BindGS(immediateContext);
 	constantBuffer[static_cast<int>(Data::Model)]->BindGS(immediateContext);
 	constantBuffer[static_cast<int>(Data::Model)]->BindPS(immediateContext);
+	constantBuffer[static_cast<int>(Data::Light)]->BindPS(immediateContext);
 
 	for (auto& buffer : constantBuffers) {
 		buffer->UpdateBuffer(immediateContext);

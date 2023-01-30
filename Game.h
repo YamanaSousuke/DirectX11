@@ -18,13 +18,6 @@ public:
 	int Run();
 
 private:
-	// ライト
-	struct LightParameter {
-		DirectionalLight directionalLight[4] = {};
-		DirectX::XMFLOAT4 eyePosition;
-		float ambient = 0.0f;
-	};
-
 	// ウィンドウのタイトル
 	LPCWSTR title = L"Title";
 	// ウィンドウの幅

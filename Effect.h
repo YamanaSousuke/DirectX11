@@ -6,7 +6,7 @@
 #include "ConstantBuffer.h"
 #include "Lightings.h"
 
-// ポリゴンに対してエフェクトをする
+// 定数バッファーを介してエフェクトを行う
 class Effect
 {
 public:
@@ -21,7 +21,10 @@ public:
 	void SetWorldMatrix(const DirectX::XMMATRIX& matrix);
 	// マテリアルの設定
 	void SetMaterial(const Material& material);
-
+	// ディレクショナルライトの設定
+	void SetDirectionalLight(UINT index, const DirectionalLight& directionalLight);
+	// 視点の設定
+	void SetEyePosition(const DirectX::XMFLOAT3& position);
 	// 定数バッファーとテクスチャ情報の適応
 	void Apply(ID3D11DeviceContext* immediateContext);
 
@@ -39,14 +42,22 @@ private:
 		Material material = {};
 	};
 
+	// ライト情報
+	struct LightParameter {
+		DirectionalLight directionalLight[4] = {};
+		DirectX::XMFLOAT3 eyePosition;
+	};
+
 	enum class Data
 	{
 		Scene,
 		Model,
+		Light,
 	};
 
 	ConstantBufferObject<0, SceneParameter> sceneParameter = {};
 	ConstantBufferObject<1, ModelParameter> modelParameter = {};
+	ConstantBufferObject<2, LightParameter> lightParameter = {};
 
 	// 定数バッファーをまとめて管理する
 	std::vector<ConstantBufferBase*> constantBuffers = { nullptr };
