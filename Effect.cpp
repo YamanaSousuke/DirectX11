@@ -6,7 +6,6 @@ using namespace DirectX;
 // リソースの初期化
 bool Effect::InitAll(ID3D11Device* device)
 {
-
 	constantBuffers.assign({ &sceneParameter, &modelParameter, });
 
 	for (auto& constantBuffer : constantBuffers) {
@@ -46,14 +45,15 @@ void Effect::SetMaterial(const Material& material)
 	model.data.material = material;
 }
 
-// シーン情報の転送
-void Effect::UpdateSceneParameter(ID3D11DeviceContext* immediateContext)
+// 定数バッファーとテクスチャ情報の適応
+void Effect::Apply(ID3D11DeviceContext* immediateContext)
 {
-	immediateContext->UpdateSubresource(sceneParameter.GetConstantBuffer(), 0, nullptr, &sceneParameter.data, 0, 0);
-}
+	auto& constantBuffer = constantBuffers;
+	constantBuffer[static_cast<int>(Data::Scene)]->BindGS(immediateContext);
+	constantBuffer[static_cast<int>(Data::Model)]->BindGS(immediateContext);
+	constantBuffer[static_cast<int>(Data::Model)]->BindPS(immediateContext);
 
-// モデル情報の転送
-void Effect::UpdateModelParameter(ID3D11DeviceContext* immediateContext)
-{
-	immediateContext->UpdateSubresource(modelParameter.GetConstantBuffer(), 0, nullptr, &modelParameter.data, 0, 0);
+	for (auto& buffer : constantBuffers) {
+		buffer->UpdateBuffer(immediateContext);
+	}
 }

@@ -22,7 +22,7 @@ public:
 	// マテリアルの設定
 	void SetMaterial(const Material& material);
 	// 描画
-	void Draw(ID3D11DeviceContext* immediateContext);
+	void Draw(ID3D11DeviceContext* immediateContext, Effect& effect);
 	// モデル情報のサイズの取得
 	size_t GetModelParameterSize() const;
 	// リソースの解放
@@ -52,8 +52,6 @@ private:
 	UINT vertexStride = 0;
 	// インデックスの個数
 	UINT indexCount = 0;
-	// エフェクト
-	Effect effect = {};
 };
 
 template<class VertexType>

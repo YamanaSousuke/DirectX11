@@ -25,7 +25,7 @@ void GameObject::SetMaterial(const Material& material)
 }
 
 // 描画
-void GameObject::Draw(ID3D11DeviceContext* immediateContext)
+void GameObject::Draw(ID3D11DeviceContext* immediateContext, Effect& effect)
 {
 	ImGui::Begin("Debug");
 	ImGui::SliderFloat("Smoothness", &material.smooth, 0.0f, 1.0f);
@@ -49,16 +49,16 @@ void GameObject::Draw(ID3D11DeviceContext* immediateContext)
 	
 	effect.SetWorldMatrix(transform.GetWorldMatrix());
 	effect.SetMaterial(material);
-
+	effect.Apply(immediateContext);
 
 	// modelParameter.material = material;
 
 
 	// 定数バッファーを取得して、データの転送を行う
-	ComPtr<ID3D11Buffer> constnatBuffer = nullptr;
-	immediateContext->GSGetConstantBuffers(1, 1, constnatBuffer.GetAddressOf());
-	// effect.UpdateModelParameter(immediateContext);
-	immediateContext->UpdateSubresource(constnatBuffer.Get(), 0, nullptr, &modelParameter, 0, 0);
+	// ComPtr<ID3D11Buffer> constnatBuffer = nullptr;
+	// immediateContext->GSGetConstantBuffers(1, 1, constnatBuffer.GetAddressOf());
+	// // effect.UpdateModelParameter(immediateContext);
+	// immediateContext->UpdateSubresource(constnatBuffer.Get(), 0, nullptr, &modelParameter, 0, 0);
 
 	// テクスチャの設定
 	ID3D11ShaderResourceView* textureViews[1] = { texture.Get() };

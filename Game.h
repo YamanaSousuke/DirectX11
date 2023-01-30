@@ -25,12 +25,6 @@ private:
 		float ambient = 0.0f;
 	};
 
-	// 定数バッファーでシェーダーに毎フレーム送るデータ
-	struct SceneParameter {
-		DirectX::XMFLOAT4X4 view;
-		DirectX::XMFLOAT4X4 projection;
-	};
-
 	// ウィンドウのタイトル
 	LPCWSTR title = L"Title";
 	// ウィンドウの幅
@@ -116,22 +110,6 @@ public:
 	PixelShader(ID3D11Device* device);
 	// ネイティブポインターの取得
 	ID3D11PixelShader* GetNativePointer();
-	// リソースの解放
-	void Release();
-};
-
-// 定数バッファー
-class ConstantBuffer
-{
-	//  リソース
-	Microsoft::WRL::ComPtr<ID3D11Buffer> buffer = nullptr;
-public:
-	// このクラスの新しいインスタンスの作成
-	ConstantBuffer(ID3D11Device* device, UINT byteWidth);
-	// バッファーにデータを設定する
-	void SetData(void* data);
-	// ネイティブポインターの取得
-	ID3D11Buffer* GetNativePointer();
 	// リソースの解放
 	void Release();
 };

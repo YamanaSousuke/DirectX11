@@ -33,9 +33,6 @@
     <ClCompile Include="Shader.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Buffer.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="InputLayout.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>

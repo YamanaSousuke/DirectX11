@@ -279,27 +279,17 @@ int Game::Run()
 	ground->GetTransform().SetPosition(0.0f, -3.0f, 5.0f);
 	ground->SetMaterial(material);
 
-	// TODO : サイズの取得を別の手段で実装したい
-	// モデルの定数バッファーの作成
-	auto modelConstantBuffer = new ConstantBuffer(device.Get(), (UINT)box->GetModelParameterSize());
-	if (modelConstantBuffer == nullptr) {
-		OutputDebugStringA("モデルの定数バッファーの作成に失敗\n");
-		return -1;
-	}
-	
-	// 定数バッファーの作成
-	auto constantBuffer = new ConstantBuffer(device.Get(), sizeof(SceneParameter));
-	if (constantBuffer == nullptr) {
-		OutputDebugStringA("定数バッファーの作成に失敗\n");
+	if (!effect.InitAll(device.Get())) {
+		OutputDebugString(L"エフェクトの初期化に失敗");
 		return -1;
 	}
 
 	// ライトの定数バッファーの作成
-	auto lightConstantBuffer = new ConstantBuffer(device.Get(), sizeof(LightParameter));
-	if (lightConstantBuffer == nullptr) {
-		OutputDebugStringA("ライトの定数バッファー作成に失敗\n");
-		return -1;
-	}
+	// auto lightConstantBuffer = new ConstantBuffer(device.Get(), sizeof(LightParameter));
+	// if (lightConstantBuffer == nullptr) {
+	// 	OutputDebugStringA("ライトの定数バッファー作成に失敗\n");
+	// 	return -1;
+	// }
 
 	// 頂点シェーダーの作成
 	auto vertexShader = new VertexShader(device.Get());
@@ -370,7 +360,7 @@ int Game::Run()
 		XMVECTOR upDirection = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 		XMMATRIX view = XMMatrixLookAtLH(eyePosition, focusPosition, upDirection);
 
-		// effect.SetViewMatrix(eyePosition, focusPosition, upDirection);
+		effect.SetViewMatrix(eyePosition, focusPosition, upDirection);
 
 		// プロジェクション行列
 		auto fovAngleY = 60.0f;
@@ -380,22 +370,16 @@ int Game::Run()
 		XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(fovAngleY), aspectRatio, nearZ, farZ);
 
 		effect.SetProjectionMatrix(XMConvertToRadians(fovAngleY), aspectRatio, nearZ, farZ);
-
-		// 用意した定数バッファの構造体に値を設定する
-		SceneParameter matricesPerFrame = {};
-		XMStoreFloat4x4(&matricesPerFrame.view, XMMatrixTranspose(view));
-		XMStoreFloat4x4(&matricesPerFrame.projection, XMMatrixTranspose(projection));
-		constantBuffer->SetData(&matricesPerFrame);
-
+		effect.Apply(deviceContext.Get());
 		// ライト
-		LightParameter lightParameter = {};
-		lightParameter.directionalLight[0].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		lightParameter.directionalLight[0].direction = XMFLOAT4(1.0f, 2.0f, -1.0f, 0.0f);
-		// lightParameter.directionalLight[1].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		// lightParameter.directionalLight[1].direction = XMFLOAT4(0.0f, 0.0f, -1.0f, 0.0f);
-		lightParameter.eyePosition = XMFLOAT4(0.0f, 0.0f, -10.0f, 1.0f);
-		lightParameter.ambient = 0.2f;
-		lightConstantBuffer->SetData(&lightParameter);
+		// LightParameter lightParameter = {};
+		// lightParameter.directionalLight[0].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		// lightParameter.directionalLight[0].direction = XMFLOAT4(1.0f, 2.0f, -1.0f, 0.0f);
+		// // lightParameter.directionalLight[1].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		// // lightParameter.directionalLight[1].direction = XMFLOAT4(0.0f, 0.0f, -1.0f, 0.0f);
+		// lightParameter.eyePosition = XMFLOAT4(0.0f, 0.0f, -10.0f, 1.0f);
+		// lightParameter.ambient = 0.2f;
+		// lightConstantBuffer->SetData(&lightParameter);
 
 		// レンダーターゲットを設定
 		deviceContext->OMSetRenderTargets(_countof(renderTargetView), renderTargetView->GetAddressOf(), depthStencilView.Get());
@@ -410,14 +394,6 @@ int Game::Run()
 		deviceContext->GSSetShader(geometryShader->GetNativePointer(), NULL, 0);
 		deviceContext->PSSetShader(pixelShader->GetNativePointer(), NULL, 0);
 
-		// ジオメトリシェーダーに定数バッファーを設定
-		ID3D11Buffer* gsConstantBuffers[2] = { constantBuffer->GetNativePointer(), modelConstantBuffer->GetNativePointer() };
-		deviceContext->GSSetConstantBuffers(0, ARRAYSIZE(gsConstantBuffers), gsConstantBuffers);
-
-		// ピクセルシェーダーに定数バッファーを設定
-		ID3D11Buffer* psConstantBuffers[2] = { lightConstantBuffer->GetNativePointer(), modelConstantBuffer->GetNativePointer() };
-		deviceContext->PSSetConstantBuffers(0, ARRAYSIZE(psConstantBuffers), psConstantBuffers);
-
 		deviceContext->IASetInputLayout(inputLayout->GetNativePointer());
 		deviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -425,7 +401,9 @@ int Game::Run()
 		deviceContext->PSSetSamplers(0, 1, samplerStates);
 
 		// 描画
-		box->Draw(deviceContext.Get());
+		box->Draw(deviceContext.Get(), effect);
+
+		effect.Apply(deviceContext.Get());
 		// sphere->Draw(deviceContext.Get());
 		// ground->Draw(deviceContext.Get());
 
@@ -448,9 +426,7 @@ int Game::Run()
 	}
 
 	// リソースの解放
-	constantBuffer->Release();
-	modelConstantBuffer->Release();
-	lightConstantBuffer->Release();
+	// lightConstantBuffer->Release();
 	vertexShader->Release();
 	geometryShader->Release();
 	pixelShader->Release();

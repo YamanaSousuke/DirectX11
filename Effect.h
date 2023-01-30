@@ -22,12 +22,10 @@ public:
 	// マテリアルの設定
 	void SetMaterial(const Material& material);
 
-	// シーン情報の転送
-	void UpdateSceneParameter(ID3D11DeviceContext* immediateContext);
-	// モデル情報の転送
-	void UpdateModelParameter(ID3D11DeviceContext* immediateContext);
-	// 定数バッファーを各シェーダーにバインドする
-	void BindShader();
+	// 定数バッファーとテクスチャ情報の適応
+	void Apply(ID3D11DeviceContext* immediateContext);
+
+
 private:
 	// シーン情報
 	struct SceneParameter {
@@ -39,6 +37,12 @@ private:
 	struct ModelParameter {
 		DirectX::XMFLOAT4X4 world;
 		Material material = {};
+	};
+
+	enum class Data
+	{
+		Scene,
+		Model,
 	};
 
 	ConstantBufferObject<0, SceneParameter> sceneParameter = {};
