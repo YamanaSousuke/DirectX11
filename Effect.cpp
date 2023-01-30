@@ -1,15 +1,44 @@
 #include "Effect.h"
 #include "Vertex.h"
 
+#include "VertexShader.h"
+#include "GeometryShader.h"
+#include "PixelShader.h"
+
 using namespace DirectX;
 
 // リソースの初期化
 bool Effect::InitAll(ID3D11Device* device)
 {
+	// 定数バッファーの作成
 	constantBuffers.assign({ &sceneParameter, &modelParameter, &lightParameter});
-
 	for (auto& constantBuffer : constantBuffers) {
 		constantBuffer->CreateBuffer(device);
+	}
+
+	// 各シェーダーの作成
+	auto hr = device->CreateVertexShader(g_VertexShader, ARRAYSIZE(g_VertexShader), nullptr, vertexShader.GetAddressOf());
+	if (FAILED(hr)) {
+		OutputDebugString(L"頂点シェーダーの作成に失敗\n");
+		return false;
+	}
+	hr = device->CreateGeometryShader(g_GeometryShader, ARRAYSIZE(g_GeometryShader), nullptr, geometryShader.GetAddressOf());
+	if (FAILED(hr)) {
+		OutputDebugString(L"ジオメトリシェーダーの作成に失敗\n");
+		return false;
+	}
+	hr = device->CreatePixelShader(g_PixelShader, ARRAYSIZE(g_PixelShader), nullptr, pixelShader.GetAddressOf());
+	if (FAILED(hr)) {
+		OutputDebugString(L"ピクセルシェーダーの作成に失敗\n");
+		return false;
+	}
+
+	// インプットレイアウトの作成
+	hr = device->CreateInputLayout(VertexPositionNormalTexture::inputLayout, ARRAYSIZE(VertexPositionNormalTexture::inputLayout),
+		g_VertexShader, ARRAYSIZE(g_VertexShader), inputLayout.GetAddressOf());
+	if (FAILED(hr)) {
+		OutputDebugString(L"インプットレイアウトの作成に失敗\n");
+		return false;
 	}
 
 	return true;
@@ -69,4 +98,14 @@ void Effect::Apply(ID3D11DeviceContext* immediateContext)
 	for (auto& buffer : constantBuffers) {
 		buffer->UpdateBuffer(immediateContext);
 	}
+}
+
+// デフォルトの描画
+void Effect::RenderDefault(ID3D11DeviceContext* immediateContext)
+{
+	immediateContext->VSSetShader(vertexShader.Get(), nullptr, 0);
+	immediateContext->GSSetShader(geometryShader.Get(), nullptr, 0);
+	immediateContext->PSSetShader(pixelShader.Get(), nullptr, 0);
+	immediateContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	immediateContext->IASetInputLayout(inputLayout.Get());
 }

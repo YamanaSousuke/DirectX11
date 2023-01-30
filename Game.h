@@ -59,69 +59,6 @@ private:
 	bool InitGUI();
 };
 
-// 頂点シェーダー
-class VertexShader
-{
-private:
-	//  リソース
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> shader = nullptr;
-public:
-	// このクラスの新しいインスタンスの作成
-	VertexShader(ID3D11Device* device);
-	// バイトコードの取得
-	const BYTE* GetBytecode();
-	// バイトコードのサイズの取得
-	SIZE_T GetBytecodeLength();
-	// ネイティブポインターの取得
-	ID3D11VertexShader* GetNativePointer();
-	// リソースの解放
-	void Release();
-};
-
-// ジオメトリシェーダー
-class GeometryShader
-{
-private:
-	//  リソース
-	Microsoft::WRL::ComPtr<ID3D11GeometryShader> shader = nullptr;
-public:
-	// このクラスの新しいインスタンスの作成
-	GeometryShader(ID3D11Device* device);
-	// ネイティブポインターの取得
-	ID3D11GeometryShader* GetNativePointer();
-	// リソースの解放
-	void Release();
-};
-
-// ピクセルシェーダー
-class PixelShader {
-private:
-	//  リソース
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> shader = nullptr;
-public:
-	// このクラスの新しいインスタンスの作成
-	PixelShader(ID3D11Device* device);
-	// ネイティブポインターの取得
-	ID3D11PixelShader* GetNativePointer();
-	// リソースの解放
-	void Release();
-};
-
-// インプットレイアウト
-class InputLayout
-{
-	// リソース
-	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout = nullptr;
-public:
-	// このクラスの新しいインスタンスの作成
-	InputLayout(ID3D11Device* device, const D3D11_INPUT_ELEMENT_DESC* descs, UINT numElements,
-		const void* shaderBytecode, SIZE_T bytecodeLength);
-	// ネイティブポインターの取得
-	ID3D11InputLayout* GetNativePointer();
-	// リソースの解放
-	void Release();
-};
-
 // 2Dテクスチャー
 class Texture2D
 {

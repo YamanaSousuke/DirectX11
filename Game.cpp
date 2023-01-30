@@ -285,35 +285,6 @@ int Game::Run()
 		return -1;
 	}
 
-	// 頂点シェーダーの作成
-	auto vertexShader = new VertexShader(device.Get());
-	if (vertexShader == nullptr) {
-		OutputDebugStringA("頂点シェーダーの作成に失敗\n");
-		return -1;
-	}
-
-	// ジオメトリシェーダーの作成
-	auto geometryShader = new GeometryShader(device.Get());
-	if (geometryShader == nullptr) {
-		OutputDebugStringA("ジオメトリシェーダーの作成に失敗\n");
-		return -1;
-	}
-
-	// ピクセルシェーダーの作成
-	auto pixelShader = new PixelShader(device.Get());
-	if (pixelShader == nullptr) {
-		OutputDebugStringA("ピクセルシェーダーの作成に失敗\n");
-		return -1;
-	}
-
-	// 入力レイアウトの作成
-	auto inputLayout = new InputLayout(device.Get(), VertexPositionNormalTexture::inputLayout,
-		ARRAYSIZE(VertexPositionNormalTexture::inputLayout), vertexShader->GetBytecode(), vertexShader->GetBytecodeLength());
-	if (inputLayout == nullptr) {
-		OutputDebugStringA("入力レイアウトの作成に失敗\n");
-		return -1;
-	}
-
 	// サンプラーの作成
 	D3D11_SAMPLER_DESC samplerDesc = {};
 	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -390,14 +361,8 @@ int Game::Run()
 		deviceContext->ClearDepthStencilView(depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 		deviceContext->RSSetViewports(_countof(viewports), viewports);
 
-		// シェーダーを設定
-		deviceContext->VSSetShader(vertexShader->GetNativePointer(), NULL, 0);
-		deviceContext->GSSetShader(geometryShader->GetNativePointer(), NULL, 0);
-		deviceContext->PSSetShader(pixelShader->GetNativePointer(), NULL, 0);
-
-		deviceContext->IASetInputLayout(inputLayout->GetNativePointer());
-		deviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
+		// デフォルトの描画
+		effect.RenderDefault(deviceContext.Get());
 		ID3D11SamplerState* samplerStates[1] = { samplerState.Get() };
 		deviceContext->PSSetSamplers(0, 1, samplerStates);
 
@@ -427,11 +392,6 @@ int Game::Run()
 	}
 
 	// リソースの解放
-	// lightConstantBuffer->Release();
-	vertexShader->Release();
-	geometryShader->Release();
-	pixelShader->Release();
-	inputLayout->Release();
 	box->Release();
 	sphere->Release();
 	ground->Release();

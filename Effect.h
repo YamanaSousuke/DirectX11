@@ -28,8 +28,12 @@ public:
 	// 定数バッファーとテクスチャ情報の適応
 	void Apply(ID3D11DeviceContext* immediateContext);
 
-
+	// デフォルトの描画
+	void RenderDefault(ID3D11DeviceContext* immediateContext);
 private:
+	template<class T>
+	using ComPtr = Microsoft::WRL::ComPtr<T>;
+
 	// シーン情報
 	struct SceneParameter {
 		DirectX::XMFLOAT4X4 view;
@@ -61,4 +65,13 @@ private:
 
 	// 定数バッファーをまとめて管理する
 	std::vector<ConstantBufferBase*> constantBuffers = { nullptr };
+
+	// 頂点シェーダー
+	ComPtr<ID3D11VertexShader> vertexShader = nullptr;
+	// ジオメトリシェーダー
+	ComPtr<ID3D11GeometryShader> geometryShader = nullptr;
+	// ピクセルシェーダー
+	ComPtr<ID3D11PixelShader> pixelShader = nullptr;
+	// インプットレイアウト
+	ComPtr<ID3D11InputLayout> inputLayout = nullptr;
 };
