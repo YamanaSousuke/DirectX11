@@ -57,4 +57,10 @@ XMMATRIX Transform::GetWorldMatrix() const
 		* XMMatrixTranslationFromVector(positionVector);
 }
 
+// ƒ[ƒ‹ƒh•ÏŠ·‹ts—ñ‚Ìæ“¾
+XMMATRIX Transform::GetWorldInverseMatrix() const
+{
+	return XMMatrixInverse(nullptr, GetWorldMatrix());
+}
+
 

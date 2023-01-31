@@ -23,6 +23,8 @@ public:
 
 	// ワールド変換行列の取得
 	DirectX::XMMATRIX GetWorldMatrix() const;
+	// ワールド変換逆行列の取得
+	DirectX::XMMATRIX GetWorldInverseMatrix() const;
 private:
 	// 座標
 	DirectX::XMFLOAT3 position = {};

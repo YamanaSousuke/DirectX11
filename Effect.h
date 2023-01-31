@@ -6,13 +6,13 @@
 #include "ConstantBuffer.h"
 #include "Lightings.h"
 
-// 定数バッファーを介してエフェクトを行う
 class Effect
 {
 public:
 	// リソースの初期化
 	bool InitAll(ID3D11Device* device);
 	// ビュー行列の設定
+	void SetViewMatrix(const DirectX::XMMATRIX& matrix);
 	void SetViewMatrix(const DirectX::XMVECTOR& eye, const DirectX::XMVECTOR& focus, const DirectX::XMVECTOR& up);
 	// プロジェクション行列の設定
 	void SetProjectionMatrix(float fov, float aspect, float nearZ, float farZ);
@@ -28,7 +28,7 @@ public:
 	void Apply(ID3D11DeviceContext* immediateContext);
 
 	// フォグについての設定
-	void SetFogColor(const DirectX::XMFLOAT4 color);
+	void SetFogColor(const DirectX::XMFLOAT3& color);
 	void SetFogState(bool enable);
 	void SetFogStart(float start);
 	void SetFogRange(float range);
@@ -59,7 +59,7 @@ private:
 
 	// フォグ
 	struct FogParameter {
-		DirectX::XMFLOAT4 fogColor;
+		DirectX::XMFLOAT3 fogColor;
 		int fogEnable;
 		float fogStart;
 		float fogRange;

@@ -101,7 +101,7 @@ void Effect::Apply(ID3D11DeviceContext* immediateContext)
 	}
 }
 
-void Effect::SetFogColor(const DirectX::XMFLOAT4 color)
+void Effect::SetFogColor(const XMFLOAT3& color)
 {
 	auto& fogParameter = this->fogParameter;
 	fogParameter.data.fogColor = color;

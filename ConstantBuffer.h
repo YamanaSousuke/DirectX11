@@ -3,6 +3,8 @@
 #include <wrl/client.h>
 #include <d3d11.h>
 
+// TODO : クラスに変更して、継承を止める
+
 struct ConstantBufferBase {
 	template<class T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;

@@ -42,7 +42,7 @@ cbuffer LightParameter : register(b2) {
 
 // ÉtÉHÉO
 cbuffer FogParameter : register(b3) {
-	float4 fogColor;
+	float3 fogColor;
 	int fogEnable;
 	float fogStart;
 	float fogRange;

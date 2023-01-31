@@ -262,24 +262,7 @@ int Game::Run()
 	box->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreateBox<VertexPositionNormalTexture>());
 	box->SetTexture(texture.Get());
 	box->GetTransform().SetPosition(0.0f, -1.0f, 0.0f);
-	box->GetTransform().SetRotation(0.0f, XMConvertToRadians(0.0f), 0.0f);
 	box->SetMaterial(material);
-
-	// 球の描画の準備
-	auto sphere = new GameObject();
-	DirectX::CreateDDSTextureFromFile(device.Get(), L"Texture/Uranus.dds", nullptr, texture.ReleaseAndGetAddressOf());
-	sphere->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreateSphere<VertexPositionNormalTexture>());
-	sphere->SetTexture(texture.Get());
-	sphere->GetTransform().SetPosition(0.0f, 0.0f, 0.0f);
-	sphere->SetMaterial(material);
-
-	// 地面の描画の準備
-	auto ground = new GameObject();
-	DirectX::CreateDDSTextureFromFile(device.Get(), L"Texture/Ground.dds", nullptr, texture.ReleaseAndGetAddressOf());
-	ground->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreatePlane<VertexPositionNormalTexture>(XMFLOAT2(20.0f, 20.0f)));
-	ground->SetTexture(texture.Get());
-	ground->GetTransform().SetPosition(0.0f, -3.0f, 5.0f);
-	ground->SetMaterial(material);
 
 	if (!effect.InitAll(device.Get())) {
 		OutputDebugString(L"エフェクトの初期化に失敗");
@@ -307,14 +290,12 @@ int Game::Run()
 		OutputDebugString(L"サンプラーの作成に失敗\n");
 	}
 
-
 	float time = 0.0f;
-
 	// メッセージループ
 	MSG msg = {};
 	while (true) {
 		time += 0.01666f;
-		// ImGuiの更新処理
+		// GUIの更新処理
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
@@ -322,6 +303,7 @@ int Game::Run()
 		// フォグについての説明
 		ImGui::Begin("Fog");
 		ImGui::Checkbox("Enable Fog", &fogEnable);
+		ImGui::ColorEdit3("Color", &fogColor.x);
 		ImGui::DragFloat("Fog Start", &fogStart, 0.05f, 0.0f, 0.0f, "%.1f");
 		ImGui::DragFloat("Fog End", &fogEnd, 0.05f, 0.0f, 0.0f, "%.1f");
 		ImGui::End();
@@ -356,7 +338,7 @@ int Game::Run()
 		effect.SetEyePosition(eyePositionFloat3);
 
 		// フォグについての設定
-		effect.SetFogColor(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
+		effect.SetFogColor(fogColor);
 		effect.SetFogState(fogEnable);
 		effect.SetFogStart(fogStart);
 		effect.SetFogRange(abs(fogEnd - fogStart));
@@ -380,7 +362,6 @@ int Game::Run()
 		// sphere->Draw(deviceContext.Get());
 		// ground->Draw(deviceContext.Get());
 
-
 		// GUIの描画
 		ImGui::Render();
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
@@ -400,8 +381,6 @@ int Game::Run()
 
 	// リソースの解放
 	box->Release();
-	sphere->Release();
-	ground->Release();
 
 	// GUIの開放
 	ImGui_ImplDX11_Shutdown();
