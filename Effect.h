@@ -12,7 +12,6 @@ class Effect
 public:
 	// リソースの初期化
 	bool InitAll(ID3D11Device* device);
-
 	// ビュー行列の設定
 	void SetViewMatrix(const DirectX::XMVECTOR& eye, const DirectX::XMVECTOR& focus, const DirectX::XMVECTOR& up);
 	// プロジェクション行列の設定
@@ -27,6 +26,12 @@ public:
 	void SetEyePosition(const DirectX::XMFLOAT3& position);
 	// 定数バッファーとテクスチャ情報の適応
 	void Apply(ID3D11DeviceContext* immediateContext);
+
+	// フォグについての設定
+	void SetFogColor(const DirectX::XMFLOAT4 color);
+	void SetFogState(bool enable);
+	void SetFogStart(float start);
+	void SetFogRange(float range);
 
 	// デフォルトの描画
 	void RenderDefault(ID3D11DeviceContext* immediateContext);
@@ -52,16 +57,26 @@ private:
 		DirectX::XMFLOAT3 eyePosition;
 	};
 
+	// フォグ
+	struct FogParameter {
+		DirectX::XMFLOAT4 fogColor;
+		int fogEnable;
+		float fogStart;
+		float fogRange;
+	};
+
 	enum class Data
 	{
 		Scene,
 		Model,
 		Light,
+		Fog
 	};
 
 	ConstantBufferObject<0, SceneParameter> sceneParameter = {};
 	ConstantBufferObject<1, ModelParameter> modelParameter = {};
 	ConstantBufferObject<2, LightParameter> lightParameter = {};
+	ConstantBufferObject<3, FogParameter> fogParameter = {};
 
 	// 定数バッファーをまとめて管理する
 	std::vector<ConstantBufferBase*> constantBuffers = { nullptr };

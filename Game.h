@@ -42,14 +42,19 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> depthStencilResourceView = nullptr;
 	// 深度ステンシルのフォーマット
 	const DXGI_FORMAT depthStencilFormat = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
-	// 画面をクリアするときに使用するカラー
-	const FLOAT clearColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
 	// ビューポート
 	D3D11_VIEWPORT viewports[1] = {};
 
 	// エフェクト
 	Effect effect = {};
-
+	// フォグを有効にするか
+	bool fogEnable = false;
+	// フォグの開始
+	float fogStart = 0.0f;
+	// フォグの終了
+	float fogEnd = 0.0f;
+	// フォグの範囲
+	float fogRange = 75.0f;
 
 	// ウィンドウの作成
 	bool InitWindow();

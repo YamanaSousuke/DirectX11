@@ -40,6 +40,14 @@ cbuffer LightParameter : register(b2) {
 	float3 eyePosition;
 };
 
+// フォグ
+cbuffer FogParameter : register(b3) {
+	float4 fogColor;
+	int fogEnable;
+	float fogStart;
+	float fogRange;
+}
+
 // 頂点シェーダーへの入力
 struct VSInput {
 	float4 position : POSITION;

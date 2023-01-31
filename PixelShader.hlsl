@@ -79,15 +79,15 @@ float CookTrranceSpecular(float3 light, float3 view, float3 normal, float metall
 float4 main(PSInput input) : SV_TARGET
 {
 	float4 albedoColor = diffuseTexture.Sample(diffuseSampler, input.texCoord);
-
 	float3 specularColor = albedoColor;
-	// 視線ベクトル
+
+	// 視線ベクトルと視線までの距離
 	float3 toEye = normalize(eyePosition - input.worldPosition);
+	float distanceToEye = distance(eyePosition, input.worldPosition);
 	
 	float3 light = 0.0f;
 	[unroll]
-	for (int i = 0; i < numDirectionalLight; i++)
-	{
+	for (int i = 0; i < numDirectionalLight; i++) {
 		// BRDF拡散反射
 		float4 lightVector = normalize(directionalLight[i].lightDirection);
 		float diffuseFresnel = CalcDiffuse(input.normal, lightVector, toEye);
@@ -107,7 +107,19 @@ float4 main(PSInput input) : SV_TARGET
 	}
 
 	light += ambient * albedoColor;
+
+	// フォグ
+	[flatten]
+	if (fogEnable) {
+		float fogLerp = saturate((distanceToEye - fogStart) / fogRange);
+		light = lerp(light, fogColor, fogLerp);
+	}
+
+
+
+
 	return float4(light.xyz, 1.0f);
-	// return float4(testSpecular, testSpecular, testSpecular, 1.0f);
+	// return float4(fogRange, 0.0f, 0.0f, 1.0f);
+	// return float4(fogColor);
 
 }

@@ -4,6 +4,7 @@
 #include "Vertex.h"
 #include "GameObject.h"
 #include "DDSTextureLoader.h"
+#include <DirectXColors.h>
 
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_dx11.h"
@@ -313,15 +314,16 @@ int Game::Run()
 	MSG msg = {};
 	while (true) {
 		time += 0.01666f;
-
 		// ImGuiの更新処理
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
 
-		ImGui::Begin("Debug");
-		ImGui::SliderFloat("Smoothness", &material.smooth, 0.0f, 1.0f);
-		ImGui::SliderFloat("Metallic", &material.metallic, 0.0f, 1.0f);
+		// フォグについての説明
+		ImGui::Begin("Fog");
+		ImGui::Checkbox("Enable Fog", &fogEnable);
+		ImGui::DragFloat("Fog Start", &fogStart, 0.05f, 0.0f, 0.0f, "%.1f");
+		ImGui::DragFloat("Fog End", &fogEnd, 0.05f, 0.0f, 0.0f, "%.1f");
 		ImGui::End();
 
 		// ビュー行列
@@ -338,8 +340,8 @@ int Game::Run()
 		auto nearZ = 0.3f;
 		auto farZ = 1000.0f;
 		XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(fovAngleY), aspectRatio, nearZ, farZ);
-
 		effect.SetProjectionMatrix(XMConvertToRadians(fovAngleY), aspectRatio, nearZ, farZ);
+
 		// ライト
 		DirectionalLight directionalLight[4] = {};
 		directionalLight[0].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -353,11 +355,16 @@ int Game::Run()
 		XMFLOAT3 eyePositionFloat3 = XMFLOAT3(0.0f, 0.0f, -10.0f);
 		effect.SetEyePosition(eyePositionFloat3);
 
+		// フォグについての設定
+		effect.SetFogColor(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
+		effect.SetFogState(fogEnable);
+		effect.SetFogStart(fogStart);
+		effect.SetFogRange(abs(fogEnd - fogStart));
+
 		// レンダーターゲットを設定
 		deviceContext->OMSetRenderTargets(_countof(renderTargetView), renderTargetView->GetAddressOf(), depthStencilView.Get());
-
 		// 画面のクリア
-		deviceContext->ClearRenderTargetView(renderTargetView[0].Get(), clearColor);
+		deviceContext->ClearRenderTargetView(renderTargetView[0].Get(), reinterpret_cast<const float*>(&Colors::Silver));
 		deviceContext->ClearDepthStencilView(depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 		deviceContext->RSSetViewports(_countof(viewports), viewports);
 
