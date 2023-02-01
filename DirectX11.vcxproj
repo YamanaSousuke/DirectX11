@@ -173,6 +173,7 @@
     <ClInclude Include="ImGui\imstb_textedit.h" />
     <ClInclude Include="ImGui\imstb_truetype.h" />
     <ClInclude Include="Lightings.h" />
+    <ClInclude Include="ModelManager.h" />
     <ClInclude Include="Transform.h" />
     <ClInclude Include="Vertex.h" />
   </ItemGroup>

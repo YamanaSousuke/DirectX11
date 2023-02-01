@@ -4,6 +4,7 @@
 #include "Vertex.h"
 #include "GameObject.h"
 #include "DDSTextureLoader.h"
+#include "ModelManager.h"
 #include <DirectXColors.h>
 
 #include "ImGui/imgui.h"
@@ -248,6 +249,8 @@ int Game::Run()
 	if (!InitGUI()) {
 		return -1;
 	}
+
+	// Model model(6);
 
 	HRESULT hr = S_OK;
 
