@@ -11,7 +11,7 @@ using namespace DirectX;
 bool Effect::InitAll(ID3D11Device* device)
 {
 	// 定数バッファーの作成
-	constantBuffers.assign({ &sceneParameter, &modelParameter, &lightParameter, &fogParameter });
+	constantBuffers.assign({ &sceneParameter, /*&modelParameter, &lightParameter, &fogParameter*/});
 	for (auto& constantBuffer : constantBuffers) {
 		constantBuffer->CreateBuffer(device);
 	}
@@ -34,7 +34,7 @@ bool Effect::InitAll(ID3D11Device* device)
 	}
 
 	// インプットレイアウトの作成
-	hr = device->CreateInputLayout(VertexPositionNormalTexture::inputLayout, ARRAYSIZE(VertexPositionNormalTexture::inputLayout),
+	hr = device->CreateInputLayout(VertexPosition::inputLayout, ARRAYSIZE(VertexPosition::inputLayout),
 		g_VertexShader, ARRAYSIZE(g_VertexShader), inputLayout.GetAddressOf());
 	if (FAILED(hr)) {
 		OutputDebugString(L"インプットレイアウトの作成に失敗\n");
@@ -91,10 +91,10 @@ void Effect::Apply(ID3D11DeviceContext* immediateContext)
 {
 	auto& constantBuffer = constantBuffers;
 	constantBuffer[static_cast<int>(Data::Scene)]->BindGS(immediateContext);
-	constantBuffer[static_cast<int>(Data::Model)]->BindGS(immediateContext);
-	constantBuffer[static_cast<int>(Data::Model)]->BindPS(immediateContext);
-	constantBuffer[static_cast<int>(Data::Light)]->BindPS(immediateContext);
-	constantBuffer[static_cast<int>(Data::Fog)]->BindPS(immediateContext);
+	// constantBuffer[static_cast<int>(Data::Model)]->BindGS(immediateContext);
+	// constantBuffer[static_cast<int>(Data::Model)]->BindPS(immediateContext);
+	// constantBuffer[static_cast<int>(Data::Light)]->BindPS(immediateContext);
+	// constantBuffer[static_cast<int>(Data::Fog)]->BindPS(immediateContext);
 
 	for (auto& buffer : constantBuffers) {
 		buffer->UpdateBuffer(immediateContext);

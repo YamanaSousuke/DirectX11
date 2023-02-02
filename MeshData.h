@@ -2,6 +2,8 @@
 
 #include <d3d11.h>
 #include <wrl/client.h>
+#include <vector>
+#include "Vertex.h"
 
 // メッシュデータ
 struct MeshData
@@ -16,6 +18,8 @@ struct MeshData
 
 	// 頂点数
 	UINT vertexCount = 0;
-	// インデックス数
-	UINT indexCount = 0;
+	// 頂点配列
+	std::vector<VertexPosition> vertices = {};
+	// インデックス配列
+	std::vector<UINT> indices = {};
 };

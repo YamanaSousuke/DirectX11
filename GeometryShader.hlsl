@@ -29,8 +29,8 @@ void main(
 		element.position = mul(element.position, view);
 		element.position = mul(element.position, projection);
 
-		element.normal = normalize(mul(input[i].normal, (float3x3)world));
-		element.texCoord = input[i].texCoord;
+		// element.normal = normalize(mul(input[i].normal, (float3x3)world));
+		// element.texCoord = input[i].texCoord;
 		output.Append(element);
 	}
 }

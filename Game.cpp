@@ -249,9 +249,6 @@ int Game::Run()
 	if (!InitGUI()) {
 		return -1;
 	}
-
-	// Model model(6);
-
 	HRESULT hr = S_OK;
 
 	// テクスチャとマテリアル
@@ -260,13 +257,13 @@ int Game::Run()
 	material.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	// 木箱の描画の準備
-	auto box = new GameObject();
-	DirectX::CreateDDSTextureFromFile(device.Get(), L"Texture/Wood.dds", nullptr, texture.GetAddressOf());
-	box->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreateBox<VertexPositionNormalTexture>());
-	box->SetTexture(texture.Get());
-	box->GetTransform().SetPosition(0.0f, -1.0f, 0.0f);
-	box->SetMaterial(material);
-
+	// auto box = new GameObject();
+	// DirectX::CreateDDSTextureFromFile(device.Get(), L"Texture/Wood.dds", nullptr, texture.GetAddressOf());
+	// box->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreateBox<VertexPositionNormalTexture>());
+	// box->SetTexture(texture.Get());
+	// box->GetTransform().SetPosition(0.0f, -1.0f, 0.0f);
+	// box->SetMaterial(material);
+	// 
 	if (!effect.InitAll(device.Get())) {
 		OutputDebugString(L"エフェクトの初期化に失敗");
 		return -1;
@@ -293,7 +290,9 @@ int Game::Run()
 		OutputDebugString(L"サンプラーの作成に失敗\n");
 	}
 
-	fbxMeshfile.GenerateMeshFromFile("MaterialBox.fbx");
+	if (!fbxMeshfile.Load("MaterialBox.fbx", device.Get(), deviceContext.Get())) {
+		return false;
+	}
 
 	float time = 0.0f;
 	// メッセージループ
@@ -311,11 +310,7 @@ int Game::Run()
 		ImGui::ColorEdit3("Color", &fogColor.x);
 		ImGui::DragFloat("Fog Start", &fogStart, 0.05f, 0.0f, 0.0f, "%.1f");
 		ImGui::DragFloat("Fog End", &fogEnd, 0.05f, 0.0f, 0.0f, "%.1f");
-
-
 		// ImGui::Begin("FBX");
-		ImGui::Text("NumMesh : %d", fbxMeshfile.GetNumMesh());
-		ImGui::Text("NumPolygon : %d", fbxMeshfile.GetNumPolegon());
 		ImGui::End();
 
 		// ビュー行列
@@ -335,17 +330,17 @@ int Game::Run()
 		effect.SetProjectionMatrix(XMConvertToRadians(fovAngleY), aspectRatio, nearZ, farZ);
 
 		// ライト
-		DirectionalLight directionalLight[4] = {};
-		directionalLight[0].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		directionalLight[0].direction = XMFLOAT4(1.0f, 2.0f, -1.0f, 0.0f);
-		directionalLight[1].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		directionalLight[1].direction = XMFLOAT4(0.0f, 0.0f, -1.0f, 0.0f);
-		for (UINT i = 0; i < ARRAYSIZE(directionalLight); i++) {
-			effect.SetDirectionalLight(i, directionalLight[i]);
-		}
+		// DirectionalLight directionalLight[4] = {};
+		// directionalLight[0].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		// directionalLight[0].direction = XMFLOAT4(1.0f, 2.0f, -1.0f, 0.0f);
+		// directionalLight[1].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		// directionalLight[1].direction = XMFLOAT4(0.0f, 0.0f, -1.0f, 0.0f);
+		// for (UINT i = 0; i < ARRAYSIZE(directionalLight); i++) {
+		// 	effect.SetDirectionalLight(i, directionalLight[i]);
+		// }
 		// 視点
-		XMFLOAT3 eyePositionFloat3 = XMFLOAT3(0.0f, 0.0f, -10.0f);
-		effect.SetEyePosition(eyePositionFloat3);
+		// XMFLOAT3 eyePositionFloat3 = XMFLOAT3(0.0f, 0.0f, -10.0f);
+		// effect.SetEyePosition(eyePositionFloat3);
 
 		// フォグについての設定
 		effect.SetFogColor(fogColor);
@@ -356,7 +351,7 @@ int Game::Run()
 		// レンダーターゲットを設定
 		deviceContext->OMSetRenderTargets(_countof(renderTargetView), renderTargetView->GetAddressOf(), depthStencilView.Get());
 		// 画面のクリア
-		deviceContext->ClearRenderTargetView(renderTargetView[0].Get(), reinterpret_cast<const float*>(&Colors::Silver));
+		deviceContext->ClearRenderTargetView(renderTargetView[0].Get(), reinterpret_cast<const float*>(&Colors::Black));
 		deviceContext->ClearDepthStencilView(depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 		deviceContext->RSSetViewports(_countof(viewports), viewports);
 
@@ -367,10 +362,10 @@ int Game::Run()
 
 		// 描画
 		effect.Apply(deviceContext.Get());
-		box->Draw(deviceContext.Get(), effect);
-
+		// box->Draw(deviceContext.Get(), effect);
 		// sphere->Draw(deviceContext.Get());
 		// ground->Draw(deviceContext.Get());
+		fbxMeshfile.Draw(deviceContext.Get());
 
 		// GUIの描画
 		ImGui::Render();
@@ -390,7 +385,7 @@ int Game::Run()
 	}
 
 	// リソースの解放
-	box->Release();
+	// box->Release();
 
 	// GUIの開放
 	ImGui_ImplDX11_Shutdown();
