@@ -293,6 +293,8 @@ int Game::Run()
 		OutputDebugString(L"サンプラーの作成に失敗\n");
 	}
 
+	fbxMeshfile.GenerateMeshFromFile("MaterialBox.fbx");
+
 	float time = 0.0f;
 	// メッセージループ
 	MSG msg = {};
@@ -309,6 +311,11 @@ int Game::Run()
 		ImGui::ColorEdit3("Color", &fogColor.x);
 		ImGui::DragFloat("Fog Start", &fogStart, 0.05f, 0.0f, 0.0f, "%.1f");
 		ImGui::DragFloat("Fog End", &fogEnd, 0.05f, 0.0f, 0.0f, "%.1f");
+
+
+		// ImGui::Begin("FBX");
+		ImGui::Text("NumMesh : %d", fbxMeshfile.GetNumMesh());
+		ImGui::Text("NumPolygon : %d", fbxMeshfile.GetNumPolegon());
 		ImGui::End();
 
 		// ビュー行列

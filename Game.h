@@ -4,6 +4,7 @@
 #include <d3d11.h>
 #include <DirectXMath.h>
 #include <wrl/client.h>
+#include "FBXMeshFile.h"
 
 #include "Lightings.h"
 #include "Effect.h"
@@ -47,6 +48,9 @@ private:
 
 	// エフェクト
 	Effect effect = {};
+	// FBX
+	FbxMeshFile fbxMeshfile = {};
+
 
 	// フォグについての設定
 	bool fogEnable = false;
