@@ -290,7 +290,7 @@ int Game::Run()
 		OutputDebugString(L"ƒTƒ“ƒvƒ‰[‚Ìì¬‚É¸”s\n");
 	}
 
-	if (!fbxMeshfile.Load("MaterialBox.fbx", device.Get(), deviceContext.Get())) {
+	if (!fbxMeshfile.Load("House1.fbx", device.Get(), deviceContext.Get())) {
 		return false;
 	}
 

@@ -1,10 +1,15 @@
 #include "FBXMeshFile.h"
+#include "WICTextureLoader.h"
+
+#include <codecvt> 
 
 using namespace DirectX;
 
 // ファイルの読み込み
 bool FbxMeshFile::Load(const char* filename, ID3D11Device* device, ID3D11DeviceContext* immediateContext)
 {
+	this->device = device;
+
 	if (!GenerateMeshFromFile(filename)) {
 		return false;
 	}
@@ -141,15 +146,25 @@ void FbxMeshFile::LoadMaterial(FbxSurfaceMaterial* material)
 	// アンビエントカラーの設定
 	FbxDouble3 color = colors[(int)Material::Ambient];
 	FbxDouble factor = factors[(int)Material::Ambient];
-	printf("ambient r : %lf, g : %lf, b : %lf\n", (float)color[0], (float)color[1], (float)color[2]);
 	objectMaterial.ambient = XMFLOAT4((float)color[0], (float)color[1], (float)color[2], (float)factor);
 
 	// ディフューズカラーの設定
 	color = colors[(int)Material::Diffuse];
 	factor = factors[(int)Material::Diffuse];
-	printf("diffuse r : %lf, g : %lf, b : %lf\n", (float)color[0], (float)color[1], (float)color[2]);
 	objectMaterial.diffuse = XMFLOAT4((float)color[0], (float)color[1], (float)color[2], (float)factor);
 	materials[material->GetName()] = objectMaterial;
+
+	// ディフューズマテリアルからテクスチャー情報の取得
+	FbxProperty diffuseProperty = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
+	int numTextures = diffuseProperty.GetSrcObjectCount<FbxFileTexture>();
+	FbxFileTexture* texture = nullptr;
+	std::string keyword;
+	if (numTextures) {
+		texture = diffuseProperty.GetSrcObject<FbxFileTexture>();		
+	}
+
+	LoadTexture(texture, keyword);
+
 }
 
 // メッシュデータの作成
@@ -184,7 +199,7 @@ void FbxMeshFile::LoadVertices(MeshData& meshData, FbxMesh* mesh)
 	// インデックスバッファーの作成
 	int* indices = mesh->GetPolygonVertices();
 	// 頂点座標数の取得
-	UINT vertexCount = mesh->GetPolygonVertexCount();
+	int vertexCount = mesh->GetPolygonVertexCount();
 
 	for (int i = 0; i < vertexCount; i++) {
 		VertexPositionNormalColor vertex = {};
@@ -268,6 +283,68 @@ void FbxMeshFile::LoadNormal(MeshData& meshData, FbxMesh* mesh)
 	}
 }
 
+// テクスチャー情報を読み込む
+void FbxMeshFile::LoadTexture(FbxFileTexture* textrue, const std::string& keyword)
+{
+	if (textrue == nullptr) {
+		return;
+	}
+
+	// ファイル名の取得
+	std::string filePath = textrue->GetRelativeFileName();
+	printf("filePath : %s\n", filePath.c_str());
+
+	// ファイルの文字列の長さの取得
+	char buffer[256];
+	memcpy_s(buffer, sizeof(buffer), filePath.c_str(), filePath.size());
+	buffer[sizeof(buffer) - 1] = '\0';
+	int length = (int)strlen(buffer);
+
+	// ファイル名に「\」があれば「/」に置き換える
+	for (int i = 0; i < length; i++) {
+		if (buffer[i] == '\\') {
+			buffer[i] = '/';
+		}
+	}
+
+	// 「/」で分割する
+	std::vector<std::string> splitList;
+	std::string replaceFileName = buffer;
+	int count = 0;
+	int startPoint = 0;
+
+	// 「/」で区切る前半部分の取得
+	while (buffer[count] != '\0') {
+		if (buffer[count] == '/') {
+
+			if (startPoint != count) {
+				char splitChar[256];
+				strncpy_s(splitChar, sizeof(splitChar), &buffer[startPoint], count - startPoint);
+				splitList.emplace_back(splitChar);
+				printf("splitChar : %s\n", splitChar);
+			}
+			else {
+				splitList.emplace_back("");
+			}
+			startPoint = count + 1;
+		}
+		count++;
+	}
+
+	// 「/」で区切る後半部分の取得
+	if (startPoint != count) {
+		char splitChar[256];
+		strncpy_s(splitChar, sizeof(splitChar), &buffer[startPoint], count - startPoint);
+		splitList.emplace_back(splitChar);
+		printf("splitChar : %s\n", splitChar);
+	}
+
+	std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> codecvt;
+	// std::wstring wFileName = codecvt.from_bytes();
+
+	// DirectX::CreateWICTextureFromFile(device.Get(), );
+}
+
 // 頂点バッファーの作成
 bool FbxMeshFile::CreateVertexBuffer(ID3D11Device* device, ID3D11DeviceContext* immediateContext)
 {
@@ -295,7 +372,7 @@ bool FbxMeshFile::CreateIndexBuffer(ID3D11Device* device, ID3D11DeviceContext* i
 {
 	for (auto& mesh : meshList) {
 		D3D11_BUFFER_DESC bufferDesc = {};
-		bufferDesc.ByteWidth = sizeof(UINT) * mesh.indices.size();
+		bufferDesc.ByteWidth = sizeof(UINT) * (UINT)mesh.indices.size();
 		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
 		bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 		bufferDesc.CPUAccessFlags = 0;
@@ -319,7 +396,11 @@ void FbxMeshFile::Draw(ID3D11DeviceContext* immediateContext)
 	for (auto& mesh : meshList) {
 		ModelData modelData = {};
 		XMMATRIX world = XMMatrixIdentity();
-		world *= XMMatrixRotationRollPitchYaw(time, time, time);
+		world *= XMMatrixScaling(0.05f, 0.05f, 0.05f);
+		// world *= XMMatrixRotationRollPitchYaw(XMConvertToRadians(XM_PIDIV2), 0.0f, 0.0f);
+		world *= XMMatrixRotationY(-XM_PIDIV2);
+		// world *= XMMatrixTranslation(0.0f, 0.0f, 5.0f);
+
 		modelData.world = world;
 		modelData.ambient = materials[mesh.materialName].ambient;
 		modelData.diffues = materials[mesh.materialName].diffuse;
@@ -336,5 +417,6 @@ void FbxMeshFile::Draw(ID3D11DeviceContext* immediateContext)
 		immediateContext->IASetVertexBuffers(0, ARRAYSIZE(vertexBuffers), vertexBuffers, strides, offsets);
 		immediateContext->IASetIndexBuffer(mesh.indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 		immediateContext->DrawIndexed((UINT)mesh.indices.size(), 0, 0);
+		// immediateContext->Draw((UINT)mesh.vertices.size(), 0);
 	}
 }

@@ -162,6 +162,7 @@
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="DirectXTK\Src\DDSTextureLoader.cpp" />
+    <ClCompile Include="DirectXTK\Src\WICTextureLoader.cpp" />
     <ClCompile Include="Effect.cpp" />
     <ClCompile Include="FbxMeshFile.cpp" />
     <ClCompile Include="Game.cpp" />

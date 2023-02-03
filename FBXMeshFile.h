@@ -42,6 +42,8 @@ private:
 	void LoadColors(MeshData& meshData, FbxMesh* mesh);
 	// 法線データを読み込む
 	void LoadNormal(MeshData& meshData, FbxMesh* mesh);
+	// テクスチャー情報を読み込む
+	void LoadTexture(FbxFileTexture* textrue, const std::string& keyword);
 
 	// 頂点バッファーの作成
 	bool CreateVertexBuffer(ID3D11Device* device, ID3D11DeviceContext* immediateContext);
@@ -53,6 +55,7 @@ private:
 	// マテリアル
 	std::map<std::string, Material> materials = {};
 
+	Microsoft::WRL::ComPtr<ID3D11Device> device = nullptr;
 	// インプットレイアウト
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout = nullptr;
 	// 定数バッファー
