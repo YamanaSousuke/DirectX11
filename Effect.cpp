@@ -34,7 +34,7 @@ bool Effect::InitAll(ID3D11Device* device)
 	}
 
 	// インプットレイアウトの作成
-	hr = device->CreateInputLayout(VertexPosition::inputLayout, ARRAYSIZE(VertexPosition::inputLayout),
+	hr = device->CreateInputLayout(VertexPositionNormalColor::inputLayout, ARRAYSIZE(VertexPositionNormalColor::inputLayout),
 		g_VertexShader, ARRAYSIZE(g_VertexShader), inputLayout.GetAddressOf());
 	if (FAILED(hr)) {
 		OutputDebugString(L"インプットレイアウトの作成に失敗\n");

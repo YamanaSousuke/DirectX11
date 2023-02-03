@@ -54,7 +54,8 @@ cbuffer FogParameter : register(b3) {
 struct VSInput {
 	float4 position : POSITION;
 	float4 worldPosition : POSITION;
-    // float3 normal : NORMAL;
+	float4 color : COLOR;
+    float3 normal : NORMAL;
     // float2 texCoord : TEXCOORD;
 };
 
@@ -62,7 +63,8 @@ struct VSInput {
 struct VSOutput {
 	float4 position : SV_POSITION;
 	float4 worldPosition : POSITION;
-	// float3 normal : NORMAL;
+	float4 color : COLOR;
+	float3 normal : NORMAL;
 	// float2 texCoord : TEXCOORD;
 };
 
@@ -73,7 +75,8 @@ typedef VSOutput GSInput;
 struct GSOutput {
 	float4 position : SV_POSITION;
 	float4 worldPosition : POSITION;
-	// float3 normal : NORMAL;
+	float4 color : COLOR;
+	float3 normal : NORMAL;
 	// float2 texCoord : TEXCOORD;
 };
 

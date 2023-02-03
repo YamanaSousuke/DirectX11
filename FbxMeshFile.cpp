@@ -159,6 +159,7 @@ void FbxMeshFile::CreateMesh(FbxMesh* mesh)
 	LoadIndices(meshData, mesh);
 	LoadVertices(meshData, mesh);
 	LoadColors(meshData, mesh);
+	LoadNormal(meshData, mesh);
 	SetMaterial(meshData, mesh);
 	meshList.push_back(meshData);
 }
@@ -186,14 +187,14 @@ void FbxMeshFile::LoadVertices(MeshData& meshData, FbxMesh* mesh)
 	UINT vertexCount = mesh->GetPolygonVertexCount();
 
 	for (int i = 0; i < vertexCount; i++) {
-		VertexPosition vertexPosition = {};
+		VertexPositionNormalColor vertex = {};
 		int index = indices[i];
 
 		// 右手座標系から左手座標系に変換するので-x
-		vertexPosition.position.x = (float)-vertices[index][0];
-		vertexPosition.position.y = (float)vertices[index][1];
-		vertexPosition.position.z = (float)vertices[index][2];
-		meshData.vertices.push_back(vertexPosition);
+		vertex.position.x = (float)-vertices[index][0];
+		vertex.position.y = (float)vertices[index][1];
+		vertex.position.z = (float)vertices[index][2];
+		meshData.vertices.push_back(vertex);
 	}
 }
 
@@ -223,11 +224,12 @@ void FbxMeshFile::LoadColors(MeshData& meshData, FbxMesh* mesh)
 {
 	// 頂点カラーデータ数の取得 
 	int count = mesh->GetElementVertexColorCount();
+	printf("colorCount : %d\n", count);
 	if (count == 0) {
 		return;
 	}
 
-	// 頂点カラーデータの取得 
+	// 頂点カラーデータの取得
 	FbxGeometryElementVertexColor* vertexColors = mesh->GetElementVertexColor();
 	if (vertexColors == nullptr) {
 		return;
@@ -235,17 +237,35 @@ void FbxMeshFile::LoadColors(MeshData& meshData, FbxMesh* mesh)
 
 	FbxLayerElement::EMappingMode mappingMode = vertexColors->GetMappingMode();
 	FbxLayerElement::EReferenceMode referenceMode = vertexColors->GetReferenceMode();
+
+	// ポリゴンの頂点ごとにマッピングされている場合
 	if (mappingMode == FbxLayerElement::eByPolygonVertex && referenceMode == FbxLayerElement::eIndexToDirect) {
+		// 要素の取得
 		FbxLayerElementArrayTemplate<FbxColor>& colors = vertexColors->GetDirectArray();
 		FbxLayerElementArrayTemplate<int>& indices = vertexColors->GetIndexArray();
 
+		// 頂点配列に代入
 		for (int i = 0; i < indices.GetCount(); i++) {
 			int id = indices.GetAt(i);
 			FbxColor color = colors.GetAt(id);
-
+			meshData.vertices[i].color.x = (float)color.mRed;
+			meshData.vertices[i].color.y = (float)color.mGreen;
+			meshData.vertices[i].color.z = (float)color.mBlue;
+			meshData.vertices[i].color.w = (float)color.mAlpha;
 		}
 	}
+}
 
+// 法線データを読み込む
+void FbxMeshFile::LoadNormal(MeshData& meshData, FbxMesh* mesh)
+{
+	FbxArray<FbxVector4> normals = {};
+	mesh->GetPolygonVertexNormals(normals);
+	for (int i = 0; i < normals.Size(); i++) {
+		meshData.vertices[i].normal.x = (float)-normals[i][0];
+		meshData.vertices[i].normal.y = (float)normals[i][1];
+		meshData.vertices[i].normal.z = (float)normals[i][2];
+	}
 }
 
 // 頂点バッファーの作成
@@ -253,7 +273,7 @@ bool FbxMeshFile::CreateVertexBuffer(ID3D11Device* device, ID3D11DeviceContext* 
 {
 	for (auto& mesh : meshList) {
 		D3D11_BUFFER_DESC bufferDesc = {};
-		bufferDesc.ByteWidth = sizeof(VertexPosition) * (UINT)mesh.vertices.size();
+		bufferDesc.ByteWidth = sizeof(VertexPositionNormalColor) * (UINT)mesh.vertices.size();
 		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
 		bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 		bufferDesc.CPUAccessFlags = 0;
@@ -311,7 +331,7 @@ void FbxMeshFile::Draw(ID3D11DeviceContext* immediateContext)
 
 		// 頂点バッファーとインデックスバッファーの設定
 		ID3D11Buffer* vertexBuffers[1] = { mesh.vertexBuffer.Get() };
-		UINT strides[1] = { sizeof(VertexPosition) };
+		UINT strides[1] = { sizeof(VertexPositionNormalColor) };
 		UINT offsets[1] = { 0 };
 		immediateContext->IASetVertexBuffers(0, ARRAYSIZE(vertexBuffers), vertexBuffers, strides, offsets);
 		immediateContext->IASetIndexBuffer(mesh.indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);

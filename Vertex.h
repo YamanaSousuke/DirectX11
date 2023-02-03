@@ -12,11 +12,19 @@ struct VertexPosition {
 	static const D3D11_INPUT_ELEMENT_DESC inputLayout[1];
 };
 
-// 頂点情報とカラー情報
+// 頂点、カラー
 struct VertexPositionColor {
 	DirectX::XMFLOAT3 position;
 	DirectX::XMFLOAT4 color;
 	static const D3D11_INPUT_ELEMENT_DESC inputLayout[2];
+};
+
+// 頂点、法線、カラー
+struct VertexPositionNormalColor {
+	DirectX::XMFLOAT3 position;
+	DirectX::XMFLOAT3 normal;
+	DirectX::XMFLOAT4 color;
+	static const D3D11_INPUT_ELEMENT_DESC inputLayout[3];
 };
 
 // 頂点、テクスチャー

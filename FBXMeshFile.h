@@ -40,6 +40,8 @@ private:
 	void SetMaterial(MeshData& meshData, FbxMesh* mesh);
 	// 頂点カラーデータを読み込む
 	void LoadColors(MeshData& meshData, FbxMesh* mesh);
+	// 法線データを読み込む
+	void LoadNormal(MeshData& meshData, FbxMesh* mesh);
 
 	// 頂点バッファーの作成
 	bool CreateVertexBuffer(ID3D11Device* device, ID3D11DeviceContext* immediateContext);
