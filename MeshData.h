@@ -3,6 +3,7 @@
 #include <d3d11.h>
 #include <wrl/client.h>
 #include <vector>
+#include <string>
 #include "Vertex.h"
 
 // メッシュデータ
@@ -22,4 +23,6 @@ struct MeshData
 	std::vector<VertexPosition> vertices = {};
 	// インデックス配列
 	std::vector<UINT> indices = {};
+	// マテリアルの名前
+	std::string materialName = {};
 };

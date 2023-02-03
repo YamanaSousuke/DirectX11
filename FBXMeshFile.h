@@ -8,6 +8,8 @@
 
 #include "VertexShader.h"
 #include "MeshData.h"
+#include "Lightings.h"
+#include <map>
 
 class FbxMeshFile
 {
@@ -19,6 +21,9 @@ public:
 
 	struct ModelData {
 		DirectX::XMMATRIX world;
+		DirectX::XMFLOAT4 ambient;
+		DirectX::XMFLOAT4 diffues;
+		DirectX::XMFLOAT4 specular;
 	};
 private:
 	// ファイルからメッシュの生成を行う
@@ -31,16 +36,21 @@ private:
 	void LoadIndices(MeshData& meshData, FbxMesh* mesh);
 	// 頂点データを読み込む
 	void LoadVertices(MeshData& meshData, FbxMesh* mesh);
+	// マテリアル名の設定
+	void SetMaterial(MeshData& meshData, FbxMesh* mesh);
+	// 頂点カラーデータを読み込む
+	void LoadColors(MeshData& meshData, FbxMesh* mesh);
 
 	// 頂点バッファーの作成
 	bool CreateVertexBuffer(ID3D11Device* device, ID3D11DeviceContext* immediateContext);
 	// インデックスバッファーの作成
 	bool CreateIndexBuffer(ID3D11Device* device, ID3D11DeviceContext* immediateContext);
-	// インプットレイアウトの作成
-	bool CreatrInputLayout(ID3D11Device* device);
 
 	// メッシュデータ
 	std::vector<MeshData> meshList = {};
+	// マテリアル
+	std::map<std::string, Material> materials = {};
+
 	// インプットレイアウト
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout = nullptr;
 	// 定数バッファー

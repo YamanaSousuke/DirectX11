@@ -17,10 +17,6 @@ bool FbxMeshFile::Load(const char* filename, ID3D11Device* device, ID3D11DeviceC
 		return false;
 	}
 
-	// if (!CreatrInputLayout(device)) {
-	// 	return false;
-	// }
-
 	// UINT byteWidth = sizeof(T);
 	// // 16バイトに統一する
 	// if (byteWidth % 16 != 0) {
@@ -39,28 +35,6 @@ bool FbxMeshFile::Load(const char* filename, ID3D11Device* device, ID3D11DeviceC
 		OutputDebugString(L"定数バッファーの作成に失敗");
 		return false;
 	}
-
-	printf("numMesh : %zu\n", meshList.size());
-	int loopCount = 0;
-
-	for (int i = 0; i < meshList.size(); i++) {
-		for (int j = 0; j < meshList[i].vertices.size(); j++) {
-			printf("x : %.2lf, ", (float)meshList[i].vertices[j].position.x);
-			printf("y : %.2lf, ", (float)meshList[i].vertices[j].position.y);
-			printf("z : %.2lf\n", (float)meshList[i].vertices[j].position.z);
-			loopCount++;
-		}
-	}
-	
-	printf("--------------loopCount------------------ : %d\n", loopCount);
-	for (int i = 0; i < meshList.size(); i++) {
-		for (int j = 0; j < meshList[i].indices.size(); j++) {
-			printf("indices : %d : ", meshList[i].indices[j]);
-			loopCount++;
-		}
-	}
-
-
 	return true;
 }
 
@@ -93,9 +67,16 @@ bool FbxMeshFile::GenerateMeshFromFile(const char* filename)
 	fbxImporter->Import(fbxScene);
 
 	// マテリアル単位でメッシュを分割する
-	// FbxGeometryConverter converter(fbxManager);
-	// converter.SplitMeshesPerMaterial(fbxScene, true);
-	// converter.Triangulate(fbxScene, true);
+	FbxGeometryConverter converter(fbxManager);
+	converter.SplitMeshesPerMaterial(fbxScene, true);
+	converter.Triangulate(fbxScene, true);
+
+	// マテリアルの読み込み
+	auto materialNum = fbxScene->GetSrcObjectCount<FbxSurfaceMaterial>();
+	printf("material Count : %d\n", materialNum);
+	for (int i = 0; i < materialNum; i++) {
+		LoadMaterial(fbxScene->GetSrcObject<FbxSurfaceMaterial>(i));
+	}
 
 	// メッシュ数の取得
 	auto numMesh = fbxScene->GetSrcObjectCount<FbxMesh>();
@@ -112,6 +93,8 @@ bool FbxMeshFile::GenerateMeshFromFile(const char* filename)
 // マテリアルデータの読み込み
 void FbxMeshFile::LoadMaterial(FbxSurfaceMaterial* material)
 {
+	Material objectMaterial = {};
+
 	enum class Material {
 		Ambient,
 		Diffuse,
@@ -119,6 +102,7 @@ void FbxMeshFile::LoadMaterial(FbxSurfaceMaterial* material)
 		Max,
 	};
 
+	// 初期化
 	FbxDouble3 colors[(int)Material::Max];
 	FbxDouble factors[(int)Material::Max];
 	FbxProperty property = material->FindProperty(FbxSurfaceMaterial::sAmbient);
@@ -154,10 +138,18 @@ void FbxMeshFile::LoadMaterial(FbxSurfaceMaterial* material)
 		}
 	}
 
-	FbxDouble3 ambientColor = colors[(int)Material::Ambient];
-	FbxDouble ambientFactor = factors[(int)Material::Ambient];
+	// アンビエントカラーの設定
+	FbxDouble3 color = colors[(int)Material::Ambient];
+	FbxDouble factor = factors[(int)Material::Ambient];
+	printf("ambient r : %lf, g : %lf, b : %lf\n", (float)color[0], (float)color[1], (float)color[2]);
+	objectMaterial.ambient = XMFLOAT4((float)color[0], (float)color[1], (float)color[2], (float)factor);
 
-
+	// ディフューズカラーの設定
+	color = colors[(int)Material::Diffuse];
+	factor = factors[(int)Material::Diffuse];
+	printf("diffuse r : %lf, g : %lf, b : %lf\n", (float)color[0], (float)color[1], (float)color[2]);
+	objectMaterial.diffuse = XMFLOAT4((float)color[0], (float)color[1], (float)color[2], (float)factor);
+	materials[material->GetName()] = objectMaterial;
 }
 
 // メッシュデータの作成
@@ -166,6 +158,8 @@ void FbxMeshFile::CreateMesh(FbxMesh* mesh)
 	MeshData meshData = {};
 	LoadIndices(meshData, mesh);
 	LoadVertices(meshData, mesh);
+	LoadColors(meshData, mesh);
+	SetMaterial(meshData, mesh);
 	meshList.push_back(meshData);
 }
 
@@ -201,6 +195,57 @@ void FbxMeshFile::LoadVertices(MeshData& meshData, FbxMesh* mesh)
 		vertexPosition.position.z = (float)vertices[index][2];
 		meshData.vertices.push_back(vertexPosition);
 	}
+}
+
+// マテリアル名の設定
+void FbxMeshFile::SetMaterial(MeshData& meshData, FbxMesh* mesh)
+{
+	// マテリアルが無ければ終わり
+	if (!mesh->GetElementMaterialCount()) {
+		meshData.materialName = "";
+		return;
+	}
+
+	FbxLayerElementMaterial* material = mesh->GetElementMaterial(0);
+	int index = material->GetIndexArray().GetAt(0);
+	FbxSurfaceMaterial* surfaceMaterial = mesh->GetNode()->GetSrcObject<FbxSurfaceMaterial>(index);
+
+	if (surfaceMaterial) {
+		meshData.materialName = surfaceMaterial->GetName();
+	}
+	else {
+		meshData.materialName = "";
+	}
+}
+
+// 頂点カラーデータを読み込む
+void FbxMeshFile::LoadColors(MeshData& meshData, FbxMesh* mesh)
+{
+	// 頂点カラーデータ数の取得 
+	int count = mesh->GetElementVertexColorCount();
+	if (count == 0) {
+		return;
+	}
+
+	// 頂点カラーデータの取得 
+	FbxGeometryElementVertexColor* vertexColors = mesh->GetElementVertexColor();
+	if (vertexColors == nullptr) {
+		return;
+	}
+
+	FbxLayerElement::EMappingMode mappingMode = vertexColors->GetMappingMode();
+	FbxLayerElement::EReferenceMode referenceMode = vertexColors->GetReferenceMode();
+	if (mappingMode == FbxLayerElement::eByPolygonVertex && referenceMode == FbxLayerElement::eIndexToDirect) {
+		FbxLayerElementArrayTemplate<FbxColor>& colors = vertexColors->GetDirectArray();
+		FbxLayerElementArrayTemplate<int>& indices = vertexColors->GetIndexArray();
+
+		for (int i = 0; i < indices.GetCount(); i++) {
+			int id = indices.GetAt(i);
+			FbxColor color = colors.GetAt(id);
+
+		}
+	}
+
 }
 
 // 頂点バッファーの作成
@@ -246,18 +291,6 @@ bool FbxMeshFile::CreateIndexBuffer(ID3D11Device* device, ID3D11DeviceContext* i
 	return true;
 }
 
-// インプットレイアウトの作成
-bool FbxMeshFile::CreatrInputLayout(ID3D11Device* device)
-{
-	const auto hr = device->CreateInputLayout(VertexPosition::inputLayout, ARRAYSIZE(VertexPosition::inputLayout),
-		g_VertexShader, ARRAYSIZE(g_VertexShader), inputLayout.GetAddressOf());
-	if (FAILED(hr)) {
-		OutputDebugString(L"インプットレイアウトの作成に失敗\n");
-		return false;
-	}
-	return true;
-}
-
 // 描画
 void FbxMeshFile::Draw(ID3D11DeviceContext* immediateContext)
 {
@@ -268,8 +301,14 @@ void FbxMeshFile::Draw(ID3D11DeviceContext* immediateContext)
 		XMMATRIX world = XMMatrixIdentity();
 		world *= XMMatrixRotationRollPitchYaw(time, time, time);
 		modelData.world = world;
+		modelData.ambient = materials[mesh.materialName].ambient;
+		modelData.diffues = materials[mesh.materialName].diffuse;
+		modelData.specular = materials[mesh.materialName].specular;
+
 		immediateContext->UpdateSubresource(constantBuffer.Get(), 0, nullptr, &modelData, 0, 0);
 		immediateContext->GSSetConstantBuffers(1, 1, constantBuffer.GetAddressOf());
+		immediateContext->PSSetConstantBuffers(1, 1, constantBuffer.GetAddressOf());
+
 		// 頂点バッファーとインデックスバッファーの設定
 		ID3D11Buffer* vertexBuffers[1] = { mesh.vertexBuffer.Get() };
 		UINT strides[1] = { sizeof(VertexPosition) };

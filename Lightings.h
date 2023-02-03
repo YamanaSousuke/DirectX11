@@ -13,6 +13,8 @@ struct DirectionalLight {
 // ƒ}ƒeƒŠƒAƒ‹
 struct Material {
 	DirectX::XMFLOAT4 diffuse;
+	DirectX::XMFLOAT4 ambient;
+	DirectX::XMFLOAT4 specular;
 	float smooth;
 	float metallic;
 };
