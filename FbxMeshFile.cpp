@@ -1,14 +1,16 @@
 #include "FBXMeshFile.h"
 #include "WICTextureLoader.h"
 
-#include <codecvt> 
-
 using namespace DirectX;
 
 // ファイルの読み込み
-bool FbxMeshFile::Load(const char* filename, ID3D11Device* device, ID3D11DeviceContext* immediateContext)
+bool FbxMeshFile::Load(const std::string& filename, ID3D11Device* device, ID3D11DeviceContext* immediateContext)
 {
 	this->device = device;
+
+	int filePathLength = static_cast<int>(filename.length());
+	auto findSplitPoint = filename.find_last_of('/');
+	string = filename.substr(0, findSplitPoint + 1);
 
 	if (!GenerateMeshFromFile(filename)) {
 		return false;
@@ -21,12 +23,6 @@ bool FbxMeshFile::Load(const char* filename, ID3D11Device* device, ID3D11DeviceC
 	if (!CreateIndexBuffer(device, immediateContext)) {
 		return false;
 	}
-
-	// UINT byteWidth = sizeof(T);
-	// // 16バイトに統一する
-	// if (byteWidth % 16 != 0) {
-	// 	byteWidth = byteWidth + 16 - byteWidth % 16;
-	// }
 
 	D3D11_BUFFER_DESC bufferDesc = { };
 	bufferDesc.ByteWidth = sizeof(ModelData);
@@ -44,7 +40,7 @@ bool FbxMeshFile::Load(const char* filename, ID3D11Device* device, ID3D11DeviceC
 }
 
 // ファイルからメッシュの生成を行う
-bool FbxMeshFile::GenerateMeshFromFile(const char* filename)
+bool FbxMeshFile::GenerateMeshFromFile(const std::string& filename)
 {
 	// FbxManagerの作成
 	FbxManager* fbxManager = FbxManager::Create();
@@ -68,7 +64,7 @@ bool FbxMeshFile::GenerateMeshFromFile(const char* filename)
 	}
 
 	// ファイル名から初期化する
-	fbxImporter->Initialize(filename);
+	fbxImporter->Initialize(filename.c_str());
 	fbxImporter->Import(fbxScene);
 
 	// マテリアル単位でメッシュを分割する
@@ -77,11 +73,8 @@ bool FbxMeshFile::GenerateMeshFromFile(const char* filename)
 	converter.Triangulate(fbxScene, true);
 
 	// マテリアルの読み込み
-	auto materialNum = fbxScene->GetSrcObjectCount<FbxSurfaceMaterial>();
-	materialNum = 1;
-	printf("material Count : %d\n", materialNum);
-	// materialNum = 1;
-	for (int i = 0; i < materialNum; i++) {
+	materialCount =static_cast<UINT>(fbxScene->GetSrcObjectCount<FbxSurfaceMaterial>());
+	for (UINT i = 0; i < materialCount; i++) {
 		LoadMaterial(fbxScene->GetSrcObject<FbxSurfaceMaterial>(i));
 	}
 
@@ -165,8 +158,10 @@ void FbxMeshFile::LoadMaterial(FbxSurfaceMaterial* material)
 		texture = diffuseProperty.GetSrcObject<FbxFileTexture>();		
 	}
 
-	LoadTexture(texture, keyword);
-
+	if (LoadTexture(texture, keyword)) {
+		std::string temp = material->GetName();
+		materialLinks[temp] = this->texture[keyword];
+	}
 }
 
 // メッシュデータの作成
@@ -178,6 +173,7 @@ void FbxMeshFile::CreateMesh(FbxMesh* mesh)
 	LoadColors(meshData, mesh);
 	LoadNormal(meshData, mesh);
 	SetMaterial(meshData, mesh);
+	LoadUV(meshData, mesh);
 	meshList.push_back(meshData);
 }
 
@@ -286,10 +282,10 @@ void FbxMeshFile::LoadNormal(MeshData& meshData, FbxMesh* mesh)
 }
 
 // テクスチャー情報を読み込む
-void FbxMeshFile::LoadTexture(FbxFileTexture* textrue, const std::string& keyword)
+bool FbxMeshFile::LoadTexture(FbxFileTexture* textrue, std::string& keyword)
 {
 	if (textrue == nullptr) {
-		return;
+		return false;
 	}
 
 	// ファイル名の取得
@@ -304,16 +300,36 @@ void FbxMeshFile::LoadTexture(FbxFileTexture* textrue, const std::string& keywor
 	
 	// 相対パスからテクスチャの名前だけ取得
 	auto textureFileName = filePath.substr(findSplitPoint + 1);
-	int filePathLength = static_cast<int>(textureFileName.length());
-	printf("textureFileName : %s\n", textureFileName.c_str());
-
+	
+	
+	auto test = string + textureFileName;
+	int filePathLength = static_cast<int>(test.length());
 	// ワイド文字に変換して、テクスチャの読み込みを行う
 	std::wstring wFileName;
 	wFileName.resize(filePathLength);
-	MultiByteToWideChar(CP_ACP, 0, textureFileName.c_str(), -1, &wFileName[0], filePathLength);
+	MultiByteToWideChar(CP_ACP, 0, test.c_str(), -1, &wFileName[0], filePathLength);
 	const auto hr = DirectX::CreateWICTextureFromFile(device.Get(), wFileName.c_str(), nullptr, texture[textureFileName].GetAddressOf());
 	if (FAILED(hr)) {
 		OutputDebugString(L"テクスチャーの読み込みに失敗\n");
+		return false;
+	}
+
+	keyword = textureFileName;
+	return true;
+}
+
+// UV座標の読み込み
+void FbxMeshFile::LoadUV(MeshData& meshData, FbxMesh* mesh)
+{
+	FbxStringList uvNames;
+	mesh->GetUVSetNames(uvNames);
+
+	FbxArray<FbxVector2> uvBuffer;
+	mesh->GetPolygonVertexUVs(uvNames.GetStringAt(0), uvBuffer);
+	for (int i = 0; i < uvBuffer.Size(); i++) {
+		FbxVector2& uv = uvBuffer[i];
+		meshData.vertices[i].texCoord.x = (float)uv[0];
+		meshData.vertices[i].texCoord.y = (float)(1.0f - uv[1]);
 	}
 }
 
@@ -369,7 +385,7 @@ void FbxMeshFile::Draw(ID3D11DeviceContext* immediateContext)
 		ModelData modelData = {};
 		XMMATRIX world = XMMatrixIdentity();
 		world *= XMMatrixScaling(0.05f, 0.05f, 0.05f);
-		// world *= XMMatrixRotationRollPitchYaw(XMConvertToRadians(XM_PIDIV2), 0.0f, 0.0f);
+		// world *= XMMatrixRotationRollPitchYaw(time, time, time);
 		world *= XMMatrixRotationY(-XM_PIDIV2);
 		// world *= XMMatrixTranslation(0.0f, 0.0f, 5.0f);
 
@@ -388,7 +404,20 @@ void FbxMeshFile::Draw(ID3D11DeviceContext* immediateContext)
 		UINT offsets[1] = { 0 };
 		immediateContext->IASetVertexBuffers(0, ARRAYSIZE(vertexBuffers), vertexBuffers, strides, offsets);
 		immediateContext->IASetIndexBuffer(mesh.indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+
+		if (materialLinks.count(mesh.materialName)) {
+			immediateContext->PSSetShaderResources(0, 1, materialLinks[mesh.materialName].GetAddressOf());
+		}
+		else {
+			immediateContext->PSSetShaderResources(0, 0, nullptr);
+		}
 		immediateContext->DrawIndexed((UINT)mesh.indices.size(), 0, 0);
 		// immediateContext->Draw((UINT)mesh.vertices.size(), 0);
 	}
+}
+
+// パラメーターの取得
+UINT FbxMeshFile::GetMaterialCount() const
+{
+	return materialCount;
 }

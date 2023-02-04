@@ -20,9 +20,12 @@ class FbxMeshFile
 {
 public:
 	// ファイルの読み込み
-	bool Load(const char* filename, ID3D11Device* device, ID3D11DeviceContext* immediateContext);
+	bool Load(const std::string& filename, ID3D11Device* device, ID3D11DeviceContext* immediateContext);
 	// 描画
 	void Draw(ID3D11DeviceContext* immediateContext);
+
+	// パラメーターの取得
+	UINT GetMaterialCount() const;
 
 	struct ModelData {
 		DirectX::XMMATRIX world;
@@ -35,7 +38,7 @@ private:
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 	// ファイルからメッシュの生成を行う
-	bool GenerateMeshFromFile(const char* filename);
+	bool GenerateMeshFromFile(const std::string& filename);
 	// マテリアルデータの読み込み
 	void LoadMaterial(FbxSurfaceMaterial* material);
 	// メッシュデータの作成
@@ -51,7 +54,9 @@ private:
 	// 法線データを読み込む
 	void LoadNormal(MeshData& meshData, FbxMesh* mesh);
 	// テクスチャー情報を読み込む
-	void LoadTexture(FbxFileTexture* textrue, const std::string& keyword);
+	bool LoadTexture(FbxFileTexture* textrue, std::string& keyword);
+	// UV座標の読み込み
+	void LoadUV(MeshData& meshData, FbxMesh* mesh);
 
 	// 頂点バッファーの作成
 	bool CreateVertexBuffer(ID3D11Device* device, ID3D11DeviceContext* immediateContext);
@@ -70,4 +75,10 @@ private:
 	ComPtr<ID3D11Buffer> constantBuffer = nullptr;
 
 	std::map<std::string, ComPtr<ID3D11ShaderResourceView>> texture;
+	std::map<std::string, ComPtr<ID3D11ShaderResourceView>> materialLinks;
+
+	std::string string;
+
+	// FBXモデルのパラメーター
+	UINT materialCount = 0;
 };

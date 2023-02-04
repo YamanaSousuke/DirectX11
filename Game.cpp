@@ -290,15 +290,13 @@ int Game::Run()
 		OutputDebugString(L"サンプラーの作成に失敗\n");
 	}
 
-	if (!fbxMeshfile.Load("House1.fbx", device.Get(), deviceContext.Get())) {
+	if (!fbxMeshfile.Load("Models/House1/House1.fbx", device.Get(), deviceContext.Get())) {
 		return false;
 	}
 
-	float time = 0.0f;
 	// メッセージループ
 	MSG msg = {};
 	while (true) {
-		time += 0.01666f;
 		// GUIの更新処理
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
@@ -310,7 +308,10 @@ int Game::Run()
 		ImGui::ColorEdit3("Color", &fogColor.x);
 		ImGui::DragFloat("Fog Start", &fogStart, 0.05f, 0.0f, 0.0f, "%.1f");
 		ImGui::DragFloat("Fog End", &fogEnd, 0.05f, 0.0f, 0.0f, "%.1f");
-		// ImGui::Begin("FBX");
+		ImGui::End();
+
+		ImGui::Begin("Debug");
+		ImGui::Text("materialCount : %d", fbxMeshfile.GetMaterialCount());
 		ImGui::End();
 
 		// ビュー行列

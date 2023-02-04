@@ -122,10 +122,11 @@ float4 main(PSInput input) : SV_TARGET
 	// return float4(fogRange, 0.0f, 0.0f, 1.0f);
 	// return float4(fogColor);
 
+	float4 texel = diffuseTexture.Sample(diffuseSampler, input.texCoord);
 	float ambientFactor = material.materialAmbient[3];
 	float diffuseFactor = material.materialDiffuse[3];
 
 	float4 ambientColor = material.materialAmbient * ambientFactor;
 	float4 diffuseColor = input.color * material.materialDiffuse * diffuseFactor;
-	return ambientColor + diffuseColor;
+	return texel + ambientColor + diffuseColor;
 }
