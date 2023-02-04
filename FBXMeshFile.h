@@ -1,6 +1,11 @@
 #pragma once
 
+#pragma warning(push)
+#pragma warning(disable : 26451)
+#pragma warning(disable : 26495)
+#pragma warning(disable : 4099)
 #include <fbxsdk.h>
+#pragma warning(pop)
 #include <d3d11.h>
 #include <wrl/client.h>
 #include <vector>
@@ -26,6 +31,9 @@ public:
 		DirectX::XMFLOAT4 specular;
 	};
 private:
+	template<class T>
+	using ComPtr = Microsoft::WRL::ComPtr<T>;
+
 	// ファイルからメッシュの生成を行う
 	bool GenerateMeshFromFile(const char* filename);
 	// マテリアルデータの読み込み
@@ -55,9 +63,11 @@ private:
 	// マテリアル
 	std::map<std::string, Material> materials = {};
 
-	Microsoft::WRL::ComPtr<ID3D11Device> device = nullptr;
+	ComPtr<ID3D11Device> device = nullptr;
 	// インプットレイアウト
-	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout = nullptr;
+	ComPtr<ID3D11InputLayout> inputLayout = nullptr;
 	// 定数バッファー
-	Microsoft::WRL::ComPtr<ID3D11Buffer> constantBuffer = nullptr;
+	ComPtr<ID3D11Buffer> constantBuffer = nullptr;
+
+	std::map<std::string, ComPtr<ID3D11ShaderResourceView>> texture;
 };

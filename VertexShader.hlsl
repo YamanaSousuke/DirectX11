@@ -7,6 +7,6 @@ VSOutput main(VSInput input)
 	output.worldPosition = input.position;
 	output.color = input.color;
 	output.normal = input.normal;
-	// output.texCoord = input.texCoord;
+	output.texCoord = input.texCoord;
 	return output;
 }

@@ -20,7 +20,7 @@ struct MeshData
 	// 頂点数
 	UINT vertexCount = 0;
 	// 頂点配列
-	std::vector<VertexPositionNormalColor> vertices = {};
+	std::vector<VertexPositionNormalTextureColor> vertices = {};
 	// インデックス配列
 	std::vector<UINT> indices = {};
 	// マテリアルの名前

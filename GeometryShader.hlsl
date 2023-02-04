@@ -30,7 +30,7 @@ void main(
 		element.position = mul(element.position, projection);
 		element.color = input[i].color;
 		element.normal = normalize(mul(input[i].normal, (float3x3)world));
-		// element.texCoord = input[i].texCoord;
+		element.texCoord = input[i].texCoord;
 		output.Append(element);
 	}
 }

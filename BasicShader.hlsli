@@ -56,7 +56,7 @@ struct VSInput {
 	float4 worldPosition : POSITION;
 	float4 color : COLOR;
     float3 normal : NORMAL;
-    // float2 texCoord : TEXCOORD;
+    float2 texCoord : TEXCOORD;
 };
 
 // 頂点シェーダーからの出力
@@ -65,7 +65,7 @@ struct VSOutput {
 	float4 worldPosition : POSITION;
 	float4 color : COLOR;
 	float3 normal : NORMAL;
-	// float2 texCoord : TEXCOORD;
+	float2 texCoord : TEXCOORD;
 };
 
 // ジオメトリシェーダーへの入力
@@ -77,7 +77,7 @@ struct GSOutput {
 	float4 worldPosition : POSITION;
 	float4 color : COLOR;
 	float3 normal : NORMAL;
-	// float2 texCoord : TEXCOORD;
+	float2 texCoord : TEXCOORD;
 };
 
 // ピクセルシェーダーへの入力

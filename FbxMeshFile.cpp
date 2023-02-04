@@ -78,7 +78,9 @@ bool FbxMeshFile::GenerateMeshFromFile(const char* filename)
 
 	// マテリアルの読み込み
 	auto materialNum = fbxScene->GetSrcObjectCount<FbxSurfaceMaterial>();
+	materialNum = 1;
 	printf("material Count : %d\n", materialNum);
+	// materialNum = 1;
 	for (int i = 0; i < materialNum; i++) {
 		LoadMaterial(fbxScene->GetSrcObject<FbxSurfaceMaterial>(i));
 	}
@@ -202,7 +204,7 @@ void FbxMeshFile::LoadVertices(MeshData& meshData, FbxMesh* mesh)
 	int vertexCount = mesh->GetPolygonVertexCount();
 
 	for (int i = 0; i < vertexCount; i++) {
-		VertexPositionNormalColor vertex = {};
+		VertexPositionNormalTextureColor vertex = {};
 		int index = indices[i];
 
 		// 右手座標系から左手座標系に変換するので-x
@@ -294,55 +296,25 @@ void FbxMeshFile::LoadTexture(FbxFileTexture* textrue, const std::string& keywor
 	std::string filePath = textrue->GetRelativeFileName();
 	printf("filePath : %s\n", filePath.c_str());
 
-	// ファイルの文字列の長さの取得
-	char buffer[256];
-	memcpy_s(buffer, sizeof(buffer), filePath.c_str(), filePath.size());
-	buffer[sizeof(buffer) - 1] = '\0';
-	int length = (int)strlen(buffer);
-
-	// ファイル名に「\」があれば「/」に置き換える
-	for (int i = 0; i < length; i++) {
-		if (buffer[i] == '\\') {
-			buffer[i] = '/';
-		}
+	// 「/」または「\\」を後ろから見つける
+	auto findSplitPoint = filePath.find_last_of('/');
+	if (findSplitPoint == std::string::npos) {
+		findSplitPoint = filePath.find_last_of('\\');
 	}
+	
+	// 相対パスからテクスチャの名前だけ取得
+	auto textureFileName = filePath.substr(findSplitPoint + 1);
+	int filePathLength = static_cast<int>(textureFileName.length());
+	printf("textureFileName : %s\n", textureFileName.c_str());
 
-	// 「/」で分割する
-	std::vector<std::string> splitList;
-	std::string replaceFileName = buffer;
-	int count = 0;
-	int startPoint = 0;
-
-	// 「/」で区切る前半部分の取得
-	while (buffer[count] != '\0') {
-		if (buffer[count] == '/') {
-
-			if (startPoint != count) {
-				char splitChar[256];
-				strncpy_s(splitChar, sizeof(splitChar), &buffer[startPoint], count - startPoint);
-				splitList.emplace_back(splitChar);
-				printf("splitChar : %s\n", splitChar);
-			}
-			else {
-				splitList.emplace_back("");
-			}
-			startPoint = count + 1;
-		}
-		count++;
+	// ワイド文字に変換して、テクスチャの読み込みを行う
+	std::wstring wFileName;
+	wFileName.resize(filePathLength);
+	MultiByteToWideChar(CP_ACP, 0, textureFileName.c_str(), -1, &wFileName[0], filePathLength);
+	const auto hr = DirectX::CreateWICTextureFromFile(device.Get(), wFileName.c_str(), nullptr, texture[textureFileName].GetAddressOf());
+	if (FAILED(hr)) {
+		OutputDebugString(L"テクスチャーの読み込みに失敗\n");
 	}
-
-	// 「/」で区切る後半部分の取得
-	if (startPoint != count) {
-		char splitChar[256];
-		strncpy_s(splitChar, sizeof(splitChar), &buffer[startPoint], count - startPoint);
-		splitList.emplace_back(splitChar);
-		printf("splitChar : %s\n", splitChar);
-	}
-
-	std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> codecvt;
-	// std::wstring wFileName = codecvt.from_bytes();
-
-	// DirectX::CreateWICTextureFromFile(device.Get(), );
 }
 
 // 頂点バッファーの作成
@@ -350,7 +322,7 @@ bool FbxMeshFile::CreateVertexBuffer(ID3D11Device* device, ID3D11DeviceContext* 
 {
 	for (auto& mesh : meshList) {
 		D3D11_BUFFER_DESC bufferDesc = {};
-		bufferDesc.ByteWidth = sizeof(VertexPositionNormalColor) * (UINT)mesh.vertices.size();
+		bufferDesc.ByteWidth = sizeof(VertexPositionNormalTextureColor) * (UINT)mesh.vertices.size();
 		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
 		bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 		bufferDesc.CPUAccessFlags = 0;
@@ -412,7 +384,7 @@ void FbxMeshFile::Draw(ID3D11DeviceContext* immediateContext)
 
 		// 頂点バッファーとインデックスバッファーの設定
 		ID3D11Buffer* vertexBuffers[1] = { mesh.vertexBuffer.Get() };
-		UINT strides[1] = { sizeof(VertexPositionNormalColor) };
+		UINT strides[1] = { sizeof(VertexPositionNormalTextureColor) };
 		UINT offsets[1] = { 0 };
 		immediateContext->IASetVertexBuffers(0, ARRAYSIZE(vertexBuffers), vertexBuffers, strides, offsets);
 		immediateContext->IASetIndexBuffer(mesh.indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
