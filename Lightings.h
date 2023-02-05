@@ -7,6 +7,7 @@
 // ディレクションライト
 struct DirectionalLight {
 	DirectX::XMFLOAT4 diffuse;
+	DirectX::XMFLOAT4 ambient;
 	DirectX::XMFLOAT4 direction;
 };
 

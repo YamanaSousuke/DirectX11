@@ -136,13 +136,11 @@ void FbxMeshFile::LoadMaterial(MeshData& meshData, FbxMesh* mesh)
 	FbxDouble3 color = colors[(int)Material::Ambient];
 	FbxDouble factor = factors[(int)Material::Ambient];
 	meshData.material.ambient = XMFLOAT4((float)color[0], (float)color[1], (float)color[2], (float)factor);
-	printf("ambient x : %lf y : %lf z : %lf factor : %lf\n", (float)color[0], (float)color[1], (float)color[2], (float)factor);
 
 	// ディフューズカラーの設定
 	color = colors[(int)Material::Diffuse];
 	factor = factors[(int)Material::Diffuse];
 	meshData.material.diffuse = XMFLOAT4((float)color[0], (float)color[1], (float)color[2], (float)factor);
-	printf("diffuse x : %lf y : %lf z : %lf factor : %lf\n", (float)color[0], (float)color[1], (float)color[2], (float)factor);
 
 	// ディフューズマテリアルからテクスチャー情報の取得
 	FbxProperty diffuseProperty = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
@@ -175,8 +173,7 @@ void FbxMeshFile::LoadMaterial(MeshData& meshData, FbxMesh* mesh)
 		}
 
 		// テクスチャー名を登録する
-		// textureNames.emplace_back(textureFileName);
-		meshData.textureName = textureFileName;
+		meshData.SetTextureName(textureFileName);
 	}
 }
 
@@ -324,7 +321,6 @@ bool FbxMeshFile::CreateVertexBuffer(ID3D11DeviceContext* immediateContext)
 		}
 		immediateContext->UpdateSubresource(mesh.vertexBuffer.Get(), 0, nullptr, mesh.vertices.data(), 0, 0);
 	}
-
 	return true;
 }
 
@@ -353,12 +349,6 @@ bool FbxMeshFile::CreateIndexBuffer(ID3D11DeviceContext* immediateContext)
 size_t FbxMeshFile::GetMeshCount() const 
 {
 	return meshList.size();
-}
-
-// メッシュデータの取得
-MeshData FbxMeshFile::GetMeshData(int index) const
-{
-	return meshList.at(index);
 }
 
 std::vector<MeshData> FbxMeshFile::GetMeshData() const

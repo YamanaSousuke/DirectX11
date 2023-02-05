@@ -34,4 +34,15 @@ struct MeshData
 	std::string textureName = {};
 	// テクスチャー
 	ComPtr<ID3D11ShaderResourceView> texture = nullptr;
+
+	// テクスチャー名の設定
+	void SetTextureName(const std::string& name);
+	// テクスチャーの名前の取得
+	std::string GetTextureName() const;
+	// テクスチャーが有効かどうか
+	bool IsValidTexture() const;
+
+private:
+	// テクスチャーが有効かどうか
+	bool isValidTexture = false;
 };

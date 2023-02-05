@@ -11,7 +11,8 @@ static const float PI = 3.1415926f;
 
 // ディレクショナルライト
 struct DirectionalLight {
-	float4 lightColor;
+	float4 lightDiffuse;
+	float4 lightAmbient;
 	float4 lightDirection;
 };
 

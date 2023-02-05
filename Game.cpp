@@ -293,12 +293,26 @@ int Game::Run()
 		ImGui::End();
 
 		// モデルについての説明
+		auto meshList = fbxMeshfile.GetMeshData();
 		ImGui::Begin("Models");
 		ImGui::Text("fileName : %s", fbxMeshfile.GetFbxFileName().c_str());
-		for (UINT i = 0; i < fbxMeshfile.GetMeshCount(); i++) {
-			ImGui::Text("material %d : %s", i, fbxMeshfile.GetMeshData(i).materialName.c_str());
-			// ImGui::Text("texture  %d : %s", i, fbxMeshfile.GetMeshData(i).textureName.c_str());
+		// マテリアルについての説明
+		if (ImGui::TreeNode("Material")) {
+			for (auto& mesh : meshList) {
+				ImGui::Text("material : %s", mesh.materialName.c_str());
+			}
+			ImGui::TreePop();
 		}
+		// テクスチャーについての説明
+		if (ImGui::TreeNode("Texture")) {
+			for (auto& mesh : meshList) {
+				if (mesh.IsValidTexture()) {
+					ImGui::Text("texture : %s", mesh.textureName.c_str());
+				}
+			}
+			ImGui::TreePop();
+		}
+		
 		ImGui::End();
 
 		// ビュー行列
@@ -318,17 +332,18 @@ int Game::Run()
 		effect.SetProjectionMatrix(XMConvertToRadians(fovAngleY), aspectRatio, nearZ, farZ);
 
 		// ライト
-		// DirectionalLight directionalLight[4] = {};
-		// directionalLight[0].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		// directionalLight[0].direction = XMFLOAT4(1.0f, 2.0f, -1.0f, 0.0f);
+		DirectionalLight directionalLight[4] = {};
+		directionalLight[0].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		directionalLight[0].ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+		directionalLight[0].direction = XMFLOAT4(-1.0f, -1.0f, 2.0f, 0.0f);
 		// directionalLight[1].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 		// directionalLight[1].direction = XMFLOAT4(0.0f, 0.0f, -1.0f, 0.0f);
-		// for (UINT i = 0; i < ARRAYSIZE(directionalLight); i++) {
-		// 	effect.SetDirectionalLight(i, directionalLight[i]);
-		// }
+		for (UINT i = 0; i < ARRAYSIZE(directionalLight); i++) {
+			effect.SetDirectionalLight(i, directionalLight[i]);
+		}
 		// 視点
-		// XMFLOAT3 eyePositionFloat3 = XMFLOAT3(0.0f, 0.0f, -10.0f);
-		// effect.SetEyePosition(eyePositionFloat3);
+		XMFLOAT3 eyePositionFloat3 = XMFLOAT3(0.0f, 0.0f, -10.0f);
+		effect.SetEyePosition(eyePositionFloat3);
 
 		// フォグについての設定
 		effect.SetFogColor(fogColor);
@@ -351,7 +366,6 @@ int Game::Run()
 		// 描画
 		effect.Apply(deviceContext.Get());
 		house.Draw(deviceContext.Get(), effect);
-		//fbxMeshfile.Draw(deviceContext.Get());
 
 		// GUIの描画
 		ImGui::Render();

@@ -1,5 +1,4 @@
 #include "BasicShader.hlsli"
-
 //static const float roughness = 0.5f;
 //
 //static const float microfacet = 0.2f;
@@ -122,11 +121,15 @@ float4 main(PSInput input) : SV_TARGET
 	// return float4(fogRange, 0.0f, 0.0f, 1.0f);
 	// return float4(fogColor);
 
+	float3 lightDirection = normalize(-directionalLight[0].lightDirection.xyz);
+	float diffuse = saturate(dot(input.normal, lightDirection));
+
 	float4 texel = diffuseTexture.Sample(diffuseSampler, input.texCoord);
 	float ambientFactor = material.materialAmbient[3];
 	float diffuseFactor = material.materialDiffuse[3];
 
-	float4 ambientColor = material.materialAmbient * ambientFactor;
-	float4 diffuseColor = input.color * material.materialDiffuse * diffuseFactor;
-	return texel /* + ambientColor + diffuseColor*/;
+	float4 ambientColor = material.materialAmbient * ambientFactor * directionalLight[0].lightAmbient;
+	float4 diffuseColor = material.materialDiffuse * diffuseFactor * directionalLight[0].lightDiffuse * diffuse;
+	return texel * (diffuseColor + ambientColor);
+	// return texel;
 }

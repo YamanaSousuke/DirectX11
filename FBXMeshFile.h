@@ -14,6 +14,7 @@
 #include "MeshData.h"
 #include "Lightings.h"
 
+// FBXファイルから読み込みを行う
 class FbxMeshFile
 {
 public:
@@ -24,8 +25,6 @@ public:
 	// メッシュ数の取得
 	size_t GetMeshCount() const;
 	// メッシュデータの取得
-	MeshData GetMeshData(int index) const;
-
 	std::vector<MeshData> GetMeshData() const;
 	// Fbxファイル名の取得
 	std::string GetFbxFileName() const;
@@ -51,7 +50,6 @@ private:
 	void LoadNormal(MeshData& meshData, FbxMesh* mesh);
 	// UV座標の読み込み
 	void LoadUV(MeshData& meshData, FbxMesh* mesh);
-
 	// 頂点バッファーの作成
 	bool CreateVertexBuffer(ID3D11DeviceContext* immediateContext);
 	// インデックスバッファーの作成

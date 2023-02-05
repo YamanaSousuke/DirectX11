@@ -32,10 +32,8 @@ void GameObject::Draw(ID3D11DeviceContext* immediateContext, Effect& effect)
 	static float time = 0.0f;
 	time += 0.01666f;
 
-	auto meshCount = model->GetMeshCount();
-	for (int i = 0; i < meshCount; i++) {
-		auto mesh = model->GetMeshData(i);
-
+	auto meshList = model->GetMeshData();
+	for (auto& mesh : meshList) {
 		// 頂点バッファーとインデックスバッファーの設定
 		ID3D11Buffer* vertexBuffers[1] = { mesh.vertexBuffer.Get() };
 		UINT strides[1] = { sizeof(VertexPositionNormalTextureColor) };
@@ -43,8 +41,9 @@ void GameObject::Draw(ID3D11DeviceContext* immediateContext, Effect& effect)
 		immediateContext->IASetVertexBuffers(0, ARRAYSIZE(vertexBuffers), vertexBuffers, strides, offsets);
 		immediateContext->IASetIndexBuffer(mesh.indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 
-		transform.SetRotation(0.0f, time * 0.2f, 0.0f);
+		transform.SetRotation(0.0f, XM_PIDIV2, 0.0f);
 		transform.SetScale(0.05f, 0.05f, 0.05f);
+		transform.SetPosition(0.0f, 0.0f ,0.0f);
 		effect.SetWorldMatrix(transform.GetWorldMatrix());
 		effect.SetMaterial(mesh.material);
 		effect.Apply(immediateContext);
