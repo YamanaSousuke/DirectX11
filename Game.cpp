@@ -295,9 +295,9 @@ int Game::Run()
 		// ƒ‚ƒfƒ‹‚É‚Â‚¢‚Ä‚Ìà–¾
 		ImGui::Begin("Models");
 		ImGui::Text("fileName : %s", fbxMeshfile.GetFbxFileName().c_str());
-		ImGui::Text("materialCount : %d", fbxMeshfile.GetMaterialCount());
-		for (UINT i = 0; i < fbxMeshfile.GetTextureCount(); i++) {
-			ImGui::Text("texture %d : %s", i, fbxMeshfile.GetTextureName(i).c_str());
+		for (UINT i = 0; i < fbxMeshfile.GetMeshCount(); i++) {
+			ImGui::Text("material %d : %s", i, fbxMeshfile.GetMeshData(i).materialName.c_str());
+			// ImGui::Text("texture  %d : %s", i, fbxMeshfile.GetMeshData(i).textureName.c_str());
 		}
 		ImGui::End();
 

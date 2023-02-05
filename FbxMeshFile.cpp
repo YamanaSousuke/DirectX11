@@ -29,19 +29,6 @@ FbxMeshFile* FbxMeshFile::Load(const std::string& filename, ID3D11DeviceContext*
 	if (!CreateIndexBuffer(immediateContext)) {
 		return nullptr;
 	}
-
-	// D3D11_BUFFER_DESC bufferDesc = { };
-	// bufferDesc.ByteWidth = sizeof(ModelData);
-	// bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	// bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	// bufferDesc.CPUAccessFlags = 0;
-	// bufferDesc.MiscFlags = 0;
-	// bufferDesc.StructureByteStride = 0;
-	// const auto hr = device->CreateBuffer(&bufferDesc, nullptr, constantBuffer.GetAddressOf());
-	// if (FAILED(hr)) {
-	// 	OutputDebugString(L"定数バッファーの作成に失敗");
-	// 	return nullptr;
-	// }
 	return this;
 }
 
@@ -84,12 +71,6 @@ bool FbxMeshFile::GenerateMeshFromFile(const std::string& filename)
 		CreateMesh(fbxScene->GetSrcObject<FbxMesh>(i));
 	}
 
-	// マテリアルの読み込み
-	materialCount =static_cast<UINT>(fbxScene->GetSrcObjectCount<FbxSurfaceMaterial>());
-	for (UINT i = 0; i < materialCount; i++) {
-		LoadMaterial(fbxScene->GetSrcObject<FbxSurfaceMaterial>(i));
-	}
-
 	fbxScene->Destroy();
 	fbxImporter->Destroy();
 	fbxManager->Destroy();
@@ -97,10 +78,8 @@ bool FbxMeshFile::GenerateMeshFromFile(const std::string& filename)
 }
 
 // マテリアルデータの読み込み
-void FbxMeshFile::LoadMaterial(FbxSurfaceMaterial* material)
+void FbxMeshFile::LoadMaterial(MeshData& meshData, FbxMesh* mesh)
 {
-	Material objectMaterial = {};
-
 	enum class Material {
 		Ambient,
 		Diffuse,
@@ -111,6 +90,11 @@ void FbxMeshFile::LoadMaterial(FbxSurfaceMaterial* material)
 	// 初期化
 	FbxDouble3 colors[(int)Material::Max] = {};
 	FbxDouble factors[(int)Material::Max] = {};
+
+	// メッシュからマテリアルの取得
+	FbxLayerElementMaterial* elementMaterial = mesh->GetElementMaterial(0);
+	int index = elementMaterial->GetIndexArray().GetAt(0);
+	FbxSurfaceMaterial* material = mesh->GetNode()->GetSrcObject<FbxSurfaceMaterial>(index);
 	FbxProperty property = material->FindProperty(FbxSurfaceMaterial::sAmbient);
 
 	if (material->GetClassId().Is(FbxSurfaceLambert::ClassId)) {
@@ -151,32 +135,48 @@ void FbxMeshFile::LoadMaterial(FbxSurfaceMaterial* material)
 	// アンビエントカラーの設定
 	FbxDouble3 color = colors[(int)Material::Ambient];
 	FbxDouble factor = factors[(int)Material::Ambient];
-	objectMaterial.ambient = XMFLOAT4((float)color[0], (float)color[1], (float)color[2], (float)factor);
+	meshData.material.ambient = XMFLOAT4((float)color[0], (float)color[1], (float)color[2], (float)factor);
 	printf("ambient x : %lf y : %lf z : %lf factor : %lf\n", (float)color[0], (float)color[1], (float)color[2], (float)factor);
 
 	// ディフューズカラーの設定
 	color = colors[(int)Material::Diffuse];
 	factor = factors[(int)Material::Diffuse];
-	objectMaterial.diffuse = XMFLOAT4((float)color[0], (float)color[1], (float)color[2], (float)factor);
+	meshData.material.diffuse = XMFLOAT4((float)color[0], (float)color[1], (float)color[2], (float)factor);
 	printf("diffuse x : %lf y : %lf z : %lf factor : %lf\n", (float)color[0], (float)color[1], (float)color[2], (float)factor);
-
-	// マテリアルの登録
-	// auto materialName = material->GetName();
-	materials[material->GetName()] = objectMaterial;
-	printf("materialName %s\n", material->GetName());
 
 	// ディフューズマテリアルからテクスチャー情報の取得
 	FbxProperty diffuseProperty = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
 	int numTextures = diffuseProperty.GetSrcObjectCount<FbxFileTexture>();
 	FbxFileTexture* texture = nullptr;
-	std::string keyword;
 	if (numTextures) {
 		texture = diffuseProperty.GetSrcObject<FbxFileTexture>();		
 	}
 
-	// マテリアルとテクスチャーを関連付ける
-	if (LoadTexture(texture, keyword)) {
-		materialLinks[material->GetName()] = this->texture[keyword];
+	if (texture != nullptr) {
+		//「/」または「\\」を後ろから見つける
+		std::string filePath = texture->GetRelativeFileName();
+		auto findSplitPoint = filePath.find_last_of('/');
+		if (findSplitPoint == std::string::npos) {
+			findSplitPoint = filePath.find_last_of('\\');
+		}
+
+		// 相対パスからテクスチャの名前だけ取得
+		auto textureFileName = filePath.substr(findSplitPoint + 1);
+		auto test = fileNameBeforeSplit + textureFileName;
+		int filePathLength = static_cast<int>(test.length());
+
+		// ワイド文字に変換して、テクスチャの読み込みを行う
+		std::wstring wFileName;
+		wFileName.resize(filePathLength);
+		MultiByteToWideChar(CP_ACP, 0, test.c_str(), -1, &wFileName[0], filePathLength);
+		const auto hr = DirectX::CreateWICTextureFromFile(device.Get(), wFileName.c_str(), nullptr, meshData.texture.GetAddressOf());
+		if (FAILED(hr)) {
+			OutputDebugString(L"テクスチャーの読み込みに失敗\n");
+		}
+
+		// テクスチャー名を登録する
+		// textureNames.emplace_back(textureFileName);
+		meshData.textureName = textureFileName;
 	}
 }
 
@@ -190,6 +190,7 @@ void FbxMeshFile::CreateMesh(FbxMesh* mesh)
 	LoadNormal(meshData, mesh);
 	LoadUV(meshData, mesh);
 	SetMaterial(meshData, mesh);
+	LoadMaterial(meshData, mesh);
 	meshList.push_back(meshData);
 }
 
@@ -230,21 +231,14 @@ void FbxMeshFile::LoadVertices(MeshData& meshData, FbxMesh* mesh)
 // マテリアル名の設定
 void FbxMeshFile::SetMaterial(MeshData& meshData, FbxMesh* mesh)
 {
-	// マテリアルが無ければ終わり
-	if (!mesh->GetElementMaterialCount()) {
-		meshData.materialName = "";
-		return;
-	}
+	if (mesh->GetElementMaterialCount()) {
+		FbxLayerElementMaterial* material = mesh->GetElementMaterial(0);
+		int index = material->GetIndexArray().GetAt(0);
+		FbxSurfaceMaterial* surfaceMaterial = mesh->GetNode()->GetSrcObject<FbxSurfaceMaterial>(index);
 
-	FbxLayerElementMaterial* material = mesh->GetElementMaterial(0);
-	int index = material->GetIndexArray().GetAt(0);
-	FbxSurfaceMaterial* surfaceMaterial = mesh->GetNode()->GetSrcObject<FbxSurfaceMaterial>(index);
-
-	if (surfaceMaterial) {
-		meshData.materialName = surfaceMaterial->GetName();
-	}
-	else {
-		meshData.materialName = "";
+		if (surfaceMaterial) {
+			meshData.materialName = surfaceMaterial->GetName();
+		}
 	}
 }
 
@@ -295,41 +289,6 @@ void FbxMeshFile::LoadNormal(MeshData& meshData, FbxMesh* mesh)
 		meshData.vertices[i].normal.y = (float)normals[i][1];
 		meshData.vertices[i].normal.z = (float)normals[i][2];
 	}
-}
-
-// テクスチャー情報を読み込む
-bool FbxMeshFile::LoadTexture(FbxFileTexture* textrue, std::string& keyword)
-{
-	if (textrue == nullptr) {
-		return false;
-	}
-
-	// ファイル名の取得
-	std::string filePath = textrue->GetRelativeFileName();
-	// 「/」または「\\」を後ろから見つける
-	auto findSplitPoint = filePath.find_last_of('/');
-	if (findSplitPoint == std::string::npos) {
-		findSplitPoint = filePath.find_last_of('\\');
-	}
-	
-	// 相対パスからテクスチャの名前だけ取得
-	auto textureFileName = filePath.substr(findSplitPoint + 1);
-	auto test = fileNameBeforeSplit + textureFileName;
-	int filePathLength = static_cast<int>(test.length());
-
-	// ワイド文字に変換して、テクスチャの読み込みを行う
-	std::wstring wFileName;
-	wFileName.resize(filePathLength);
-	MultiByteToWideChar(CP_ACP, 0, test.c_str(), -1, &wFileName[0], filePathLength);
-	const auto hr = DirectX::CreateWICTextureFromFile(device.Get(), wFileName.c_str(), nullptr, texture[textureFileName].GetAddressOf());
-	if (FAILED(hr)) {
-		OutputDebugString(L"テクスチャーの読み込みに失敗\n");
-		return false;
-	}
-
-	textureNamess.emplace_back(textureFileName);
-	keyword = textureFileName;
-	return true;
 }
 
 // UV座標の読み込み
@@ -390,45 +349,6 @@ bool FbxMeshFile::CreateIndexBuffer(ID3D11DeviceContext* immediateContext)
 	return true;
 }
 
-// 描画
-void FbxMeshFile::Draw(ID3D11DeviceContext* immediateContext)
-{
-	static float time = 0.0f;
-	time += 0.01666f;
-	for (auto& mesh : meshList) {
-		ModelData modelData = {};
-		XMMATRIX world = XMMatrixIdentity();
-		world *= XMMatrixScaling(0.05f, 0.05f, 0.05f);
-		world *= XMMatrixRotationY(-XM_PIDIV2 * time * 0.1f);
-		modelData.world = world;
-
-		modelData.ambient = materials[mesh.materialName].ambient;
-		modelData.diffues = materials[mesh.materialName].diffuse;
-		modelData.specular = materials[mesh.materialName].specular;
-
-		immediateContext->UpdateSubresource(constantBuffer.Get(), 0, nullptr, &modelData, 0, 0);
-		immediateContext->GSSetConstantBuffers(1, 1, constantBuffer.GetAddressOf());
-		immediateContext->PSSetConstantBuffers(1, 1, constantBuffer.GetAddressOf());
-
-		// 頂点バッファーとインデックスバッファーの設定
-		ID3D11Buffer* vertexBuffers[1] = { mesh.vertexBuffer.Get() };
-		UINT strides[1] = { sizeof(VertexPositionNormalTextureColor) };
-		UINT offsets[1] = { 0 };
-		immediateContext->IASetVertexBuffers(0, ARRAYSIZE(vertexBuffers), vertexBuffers, strides, offsets);
-		immediateContext->IASetIndexBuffer(mesh.indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-
-
-		if (materialLinks.count(mesh.materialName)) {
-			immediateContext->PSSetShaderResources(0, 1, materialLinks[mesh.materialName].GetAddressOf());
-		}
-		else {
-			immediateContext->PSSetShaderResources(0, 0, nullptr);
-		}
-		immediateContext->DrawIndexed((UINT)mesh.indices.size(), 0, 0);
-		// immediateContext->Draw((UINT)mesh.vertices.size(), 0);
-	}
-}
-
 // メッシュ数の取得
 size_t FbxMeshFile::GetMeshCount() const 
 {
@@ -441,51 +361,13 @@ MeshData FbxMeshFile::GetMeshData(int index) const
 	return meshList.at(index);
 }
 
-// シェーダーリソースビューの取得
-ID3D11ShaderResourceView* FbxMeshFile::GetShaderResourceView(int index) const
+std::vector<MeshData> FbxMeshFile::GetMeshData() const
 {
-	std::string key = meshList.at(index).materialName;
-	if (materialLinks.count(key)) {
-		return materialLinks.at(key).Get();
-	}
-	else {
-		return nullptr;
-	}
-}
-
-// マテリアルの取得
-Material FbxMeshFile::GetMaterial(int index) const
-{
-	std::string key = meshList.at(index).materialName;
-	return materials.at(key);
+	return meshList;
 }
 
 // パラメーターの取得
 std::string FbxMeshFile::GetFbxFileName() const
 {
 	return fileNameAfterSpilt;
-}
-
-std::vector<std::string> FbxMeshFile::GetTextureName() const
-{
-	std::vector<std::string> ret;
-	for (auto i = texture.begin(); i != texture.end(); i++) {
-		ret.emplace_back(i->first);
-	}
-	return ret;
-}
-
-std::string FbxMeshFile::GetTextureName(int index) const
-{
-	return textureNamess.at(index);
-}
-
-UINT FbxMeshFile::GetMaterialCount() const
-{
-	return materialCount;
-}
-
-UINT FbxMeshFile::GetTextureCount() const
-{
-	return static_cast<UINT>(texture.size());
 }

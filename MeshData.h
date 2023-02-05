@@ -4,7 +4,9 @@
 #include <wrl/client.h>
 #include <vector>
 #include <string>
+#include <map>
 #include "Vertex.h"
+#include "Lightings.h"
 
 // メッシュデータ
 struct MeshData
@@ -25,4 +27,11 @@ struct MeshData
 	std::vector<UINT> indices = {};
 	// マテリアルの名前
 	std::string materialName = {};
+	// マテリアル
+	Material material = {};
+
+	// テクスチャーの名前
+	std::string textureName = {};
+	// テクスチャー
+	ComPtr<ID3D11ShaderResourceView> texture = nullptr;
 };

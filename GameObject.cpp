@@ -46,12 +46,11 @@ void GameObject::Draw(ID3D11DeviceContext* immediateContext, Effect& effect)
 		transform.SetRotation(0.0f, time * 0.2f, 0.0f);
 		transform.SetScale(0.05f, 0.05f, 0.05f);
 		effect.SetWorldMatrix(transform.GetWorldMatrix());
-		auto material = model->GetMaterial(i);
-		effect.SetMaterial(material);
+		effect.SetMaterial(mesh.material);
 		effect.Apply(immediateContext);
 
 		// テクスチャの設定
-		ID3D11ShaderResourceView* textureViews[1] = { model->GetShaderResourceView(i) };
+		ID3D11ShaderResourceView* textureViews[1] = { mesh.texture.Get() };
 		immediateContext->PSSetShaderResources(0, 1, textureViews);
 		immediateContext->DrawIndexed(static_cast<UINT>(mesh.indices.size()), 0, 0);
 	}
