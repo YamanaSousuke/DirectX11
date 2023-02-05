@@ -3,15 +3,19 @@
 #include <d3d11.h>
 #include <wrl/client.h>
 
+#include "FBXMeshFile.h"
 #include "Transform.h"
 #include "Geometry.h"
 #include "Lightings.h"
 #include "Effect.h"
 
 // ゲームオブジェクト
-class GameObject 
+class GameObject
 {
 public:
+	// モデルの設定
+	void SetModel(const FbxMeshFile* model);
+
 	// 頂点バッファーとインデックスバッファーの設定
 	template<class VertexType>
 	void SetBuffer(ID3D11Device* device, ID3D11DeviceContext* immediateContext, Geometry::Meshdata<VertexType> meshdata);
@@ -30,6 +34,7 @@ private:
 	template<class T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
+	const FbxMeshFile* model = nullptr;
 	// トランスフォーム
 	Transform transform = {};
 	// 頂点バッファー

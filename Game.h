@@ -5,6 +5,7 @@
 #include <DirectXMath.h>
 #include <wrl/client.h>
 #include "FBXMeshFile.h"
+#include "GameObject.h"
 
 #include "Lightings.h"
 #include "Effect.h"
@@ -50,6 +51,8 @@ private:
 	Effect effect = {};
 	// FBX
 	FbxMeshFile fbxMeshfile = {};
+	// ‰Æ
+	GameObject house;
 
 
 	// ƒtƒHƒO‚É‚Â‚¢‚Ä‚Ìİ’è

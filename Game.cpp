@@ -4,7 +4,6 @@
 #include "Vertex.h"
 #include "GameObject.h"
 #include "DDSTextureLoader.h"
-#include "ModelManager.h"
 #include <DirectXColors.h>
 
 #include "ImGui/imgui.h"
@@ -54,8 +53,7 @@ bool Game::InitWindow()
 	wndClass.lpfnWndProc = WindowProc;
 	wndClass.hInstance = hInstance;
 	wndClass.lpszClassName = className;
-	if (!RegisterClassEx(&wndClass))
-	{
+	if (!RegisterClassEx(&wndClass)) {
 		OutputDebugStringA("ウィンドウクラスの登録に失敗\n");
 		return false;
 	}
@@ -65,18 +63,14 @@ bool Game::InitWindow()
 	AdjustWindowRectEx(&rect, WS_OVERLAPPEDWINDOW, FALSE, 0);
 
 	// ウィンドウの作成
-	auto hWnd = CreateWindowEx(0, className, title, WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, CW_USEDEFAULT,
-		(rect.right - rect.left), (rect.bottom - rect.top),
-		NULL, NULL, hInstance, NULL);
-	if (hWnd == NULL)
-	{
+	auto hWnd = CreateWindowEx(0, className, title, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+		(rect.right - rect.left), (rect.bottom - rect.top), NULL, NULL, hInstance, NULL);
+	if (hWnd == NULL) {
 		OutputDebugStringA("ウィンドウの作成に失敗\n");
 		return false;
 	}
 
 	this->hWnd = hWnd;
-
 	// ウィンドウの表示
 	ShowWindow(hWnd, SW_SHOWNORMAL);
 	// クライアント領域の更新
@@ -131,7 +125,6 @@ bool Game::InitGraphicsDevice()
 		OutputDebugStringA("レンダーターゲットビューの作成に失敗\n");
 		return false;
 	}
-	backBuffer.Reset();
 
 	// テクスチャとシェーダーリソースビューのフォーマットを設定
 	DXGI_FORMAT textureFormat = depthStencilFormat;
@@ -157,7 +150,7 @@ bool Game::InitGraphicsDevice()
 	}
 
 	// 深度ステンシルの作成
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> depthStencil = nullptr;
+	ComPtr<ID3D11Texture2D> depthStencil = nullptr;
 	D3D11_TEXTURE2D_DESC depthStencilDesc = {};
 	depthStencilDesc.Width = width;
 	depthStencilDesc.Height = height;
@@ -249,21 +242,10 @@ int Game::Run()
 	if (!InitGUI()) {
 		return -1;
 	}
+
 	HRESULT hr = S_OK;
 
-	// テクスチャとマテリアル
-	ComPtr<ID3D11ShaderResourceView> texture = nullptr;
-	Material material = {};
-	material.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-
-	// 木箱の描画の準備
-	// auto box = new GameObject();
-	// DirectX::CreateDDSTextureFromFile(device.Get(), L"Texture/Wood.dds", nullptr, texture.GetAddressOf());
-	// box->SetBuffer(device.Get(), deviceContext.Get(), Geometry::CreateBox<VertexPositionNormalTexture>());
-	// box->SetTexture(texture.Get());
-	// box->GetTransform().SetPosition(0.0f, -1.0f, 0.0f);
-	// box->SetMaterial(material);
-	// 
+	fbxMeshfile.Init(device.Get());
 	if (!effect.InitAll(device.Get())) {
 		OutputDebugString(L"エフェクトの初期化に失敗");
 		return -1;
@@ -290,9 +272,9 @@ int Game::Run()
 		OutputDebugString(L"サンプラーの作成に失敗\n");
 	}
 
-	if (!fbxMeshfile.Load("Models/House1/House1.fbx", device.Get(), deviceContext.Get())) {
-		return false;
-	}
+	// FBXモデルの読み込み
+	auto model = fbxMeshfile.Load("Models/House1/House1.fbx", deviceContext.Get());
+	house.SetModel(model);
 
 	// メッセージループ
 	MSG msg = {};
@@ -310,8 +292,13 @@ int Game::Run()
 		ImGui::DragFloat("Fog End", &fogEnd, 0.05f, 0.0f, 0.0f, "%.1f");
 		ImGui::End();
 
-		ImGui::Begin("Debug");
+		// モデルについての説明
+		ImGui::Begin("Models");
+		ImGui::Text("fileName : %s", fbxMeshfile.GetFbxFileName().c_str());
 		ImGui::Text("materialCount : %d", fbxMeshfile.GetMaterialCount());
+		for (UINT i = 0; i < fbxMeshfile.GetTextureCount(); i++) {
+			ImGui::Text("texture %d : %s", i, fbxMeshfile.GetTextureName(i).c_str());
+		}
 		ImGui::End();
 
 		// ビュー行列
@@ -363,10 +350,8 @@ int Game::Run()
 
 		// 描画
 		effect.Apply(deviceContext.Get());
-		// box->Draw(deviceContext.Get(), effect);
-		// sphere->Draw(deviceContext.Get());
-		// ground->Draw(deviceContext.Get());
-		fbxMeshfile.Draw(deviceContext.Get());
+		house.Draw(deviceContext.Get(), effect);
+		//fbxMeshfile.Draw(deviceContext.Get());
 
 		// GUIの描画
 		ImGui::Render();
@@ -384,9 +369,6 @@ int Game::Run()
 			DispatchMessage(&msg);
 		}
 	}
-
-	// リソースの解放
-	// box->Release();
 
 	// GUIの開放
 	ImGui_ImplDX11_Shutdown();

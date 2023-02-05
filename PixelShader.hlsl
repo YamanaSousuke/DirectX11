@@ -128,5 +128,5 @@ float4 main(PSInput input) : SV_TARGET
 
 	float4 ambientColor = material.materialAmbient * ambientFactor;
 	float4 diffuseColor = input.color * material.materialDiffuse * diffuseFactor;
-	return texel + ambientColor + diffuseColor;
+	return texel /* + ambientColor + diffuseColor*/;
 }

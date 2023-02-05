@@ -1,31 +1,44 @@
 #pragma once
-
-#pragma warning(push)
 #pragma warning(disable : 26451)
 #pragma warning(disable : 26495)
 #pragma warning(disable : 4099)
+
 #include <fbxsdk.h>
-#pragma warning(pop)
 #include <d3d11.h>
 #include <wrl/client.h>
 #include <vector>
+#include <map>
 #include <DirectXMath.h>
 
 #include "VertexShader.h"
 #include "MeshData.h"
 #include "Lightings.h"
-#include <map>
 
 class FbxMeshFile
 {
 public:
+	// 初期化
+	void Init(ID3D11Device* device);
 	// ファイルの読み込み
-	bool Load(const std::string& filename, ID3D11Device* device, ID3D11DeviceContext* immediateContext);
+	FbxMeshFile* Load(const std::string& filename, ID3D11DeviceContext* immediateContext);
 	// 描画
 	void Draw(ID3D11DeviceContext* immediateContext);
+	// メッシュ数の取得
+	size_t GetMeshCount() const;
+	// メッシュデータの取得
+	MeshData GetMeshData(int index) const;
+	// シェーダーリソースビューの取得
+	ID3D11ShaderResourceView* GetShaderResourceView(int index) const;
+	// マテリアルの取得
+	Material GetMaterial(int index) const;
+
 
 	// パラメーターの取得
+	std::string GetFbxFileName() const;
+	std::vector<std::string> GetTextureName() const;
+	std::string GetTextureName(int index) const;
 	UINT GetMaterialCount() const;
+	UINT GetTextureCount() const;
 
 	struct ModelData {
 		DirectX::XMMATRIX world;
@@ -59,9 +72,9 @@ private:
 	void LoadUV(MeshData& meshData, FbxMesh* mesh);
 
 	// 頂点バッファーの作成
-	bool CreateVertexBuffer(ID3D11Device* device, ID3D11DeviceContext* immediateContext);
+	bool CreateVertexBuffer(ID3D11DeviceContext* immediateContext);
 	// インデックスバッファーの作成
-	bool CreateIndexBuffer(ID3D11Device* device, ID3D11DeviceContext* immediateContext);
+	bool CreateIndexBuffer(ID3D11DeviceContext* immediateContext);
 
 	// メッシュデータ
 	std::vector<MeshData> meshList = {};
@@ -76,9 +89,11 @@ private:
 
 	std::map<std::string, ComPtr<ID3D11ShaderResourceView>> texture;
 	std::map<std::string, ComPtr<ID3D11ShaderResourceView>> materialLinks;
+	std::vector<std::string> textureNamess;
 
-	std::string string;
-
-	// FBXモデルのパラメーター
+	// 最後の「/」または「\\」で区切られた文字列の前半部分
+	std::string fileNameBeforeSplit;
+	// 最後の「/」または「\\」で区切られた文字列の後半部分
+	std::string fileNameAfterSpilt;
 	UINT materialCount = 0;
 };
