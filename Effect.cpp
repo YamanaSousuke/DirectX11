@@ -132,4 +132,6 @@ void Effect::RenderDefault(ID3D11DeviceContext* immediateContext)
 	immediateContext->PSSetShader(pixelShader.Get(), nullptr, 0);
 	immediateContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	immediateContext->IASetInputLayout(inputLayout.Get());
+	ID3D11SamplerState* samplerStates[1] = { RenderState::linerSamplerState.Get() };
+	immediateContext->PSSetSamplers(0, 1, samplerStates);
 }

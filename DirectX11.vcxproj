@@ -175,6 +175,7 @@
     <ClCompile Include="ImGui\imgui_widgets.cpp" />
     <ClCompile Include="MeshData.cpp" />
     <ClCompile Include="Program.cpp" />
+    <ClCompile Include="RenderState.cpp" />
     <ClCompile Include="Transform.cpp" />
     <ClCompile Include="Vertex.cpp" />
   </ItemGroup>
@@ -196,6 +197,7 @@
     <ClInclude Include="ImGui\imstb_truetype.h" />
     <ClInclude Include="Lightings.h" />
     <ClInclude Include="MeshData.h" />
+    <ClInclude Include="RenderState.h" />
     <ClInclude Include="Transform.h" />
     <ClInclude Include="Vertex.h" />
   </ItemGroup>

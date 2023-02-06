@@ -5,6 +5,7 @@
 #include <DirectXMath.h>
 #include "ConstantBuffer.h"
 #include "Lightings.h"
+#include "RenderState.h"
 
 class Effect
 {
@@ -12,7 +13,6 @@ public:
 	// リソースの初期化
 	bool InitAll(ID3D11Device* device);
 	// ビュー行列の設定
-	void SetViewMatrix(const DirectX::XMMATRIX& matrix);
 	void SetViewMatrix(const DirectX::XMVECTOR& eye, const DirectX::XMVECTOR& focus, const DirectX::XMVECTOR& up);
 	// プロジェクション行列の設定
 	void SetProjectionMatrix(float fov, float aspect, float nearZ, float farZ);

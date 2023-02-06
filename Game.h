@@ -9,6 +9,7 @@
 
 #include "Lightings.h"
 #include "Effect.h"
+#include "RenderState.h"
 
 // アプリケーション全体を表す
 class Game
