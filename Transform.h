@@ -21,6 +21,12 @@ public:
 	DirectX::XMFLOAT3 GetPosition() const;
 	DirectX::XMVECTOR GetPositionVector() const;
 
+	// 回転の取得
+	DirectX::XMFLOAT3 GetRotation() const;
+
+	// スケールの取得
+	DirectX::XMFLOAT3 GetScale() const;
+
 	// ワールド変換行列の取得
 	DirectX::XMMATRIX GetWorldMatrix() const;
 	// ワールド変換逆行列の取得

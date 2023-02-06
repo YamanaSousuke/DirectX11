@@ -17,15 +17,19 @@ void Transform::SetPosition(float x, float y, float z)
 void Transform::SetRotation(const XMFLOAT3& eulerAngles)
 {
 	rotation = eulerAngles;
+	// rotation.x = XMConvertToRadians(eulerAngles.x);
+	// rotation.y = XMConvertToRadians(eulerAngles.y);
+	// rotation.z = XMConvertToRadians(eulerAngles.z);
 }
 
 void Transform::SetRotation(float x, float y, float z)
 {
 	rotation = XMFLOAT3(x, y, z);
+	// SetRotation(XMFLOAT3(x, y, z));
 }
 
 // 拡大縮小の設定
-void Transform::SetScale(const DirectX::XMFLOAT3& scale)
+void Transform::SetScale(const XMFLOAT3& scale)
 {
 	this->scale = scale;
 }
@@ -44,6 +48,18 @@ XMFLOAT3 Transform::GetPosition() const
 XMVECTOR Transform::GetPositionVector() const
 {
 	return XMLoadFloat3(&position);
+}
+
+// 回転の取得
+DirectX::XMFLOAT3 Transform::GetRotation() const
+{
+	return rotation;
+}
+
+// スケールの取得
+DirectX::XMFLOAT3 Transform::GetScale() const
+{
+	return scale;
 }
 
 // ワールド変換行列の取得

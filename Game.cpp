@@ -1,10 +1,6 @@
 #include <d3dcompiler.h>
-#include "Game.h"
-#include "Geometry.h"
-#include "Vertex.h"
-#include "GameObject.h"
-#include "DDSTextureLoader.h"
 #include <DirectXColors.h>
+#include "Game.h"
 
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_dx11.h"
@@ -259,6 +255,7 @@ int Game::Run()
 	// FBXモデルの読み込み
 	auto model = fbxMeshfile.Load("Models/House1/House1.fbx", deviceContext.Get());
 	house.SetModel(model);
+	house.GetTransform().SetScale(0.05f, 0.05f, 0.05f);
 
 	// メッセージループ
 	MSG msg = {};
@@ -272,14 +269,34 @@ int Game::Run()
 		ImGui::Begin("Fog");
 		ImGui::Checkbox("Enable Fog", &fogEnable);
 		ImGui::ColorEdit3("Color", &fogColor.x);
-		ImGui::DragFloat("Fog Start", &fogStart, 0.05f, 0.0f, 0.0f, "%.1f");
-		ImGui::DragFloat("Fog End", &fogEnd, 0.05f, 0.0f, 0.0f, "%.1f");
+		ImGui::DragFloat("Fog Start", &fogStart, 0.05f, 0.0f, 0.0f, "%.2f");
+		ImGui::DragFloat("Fog End", &fogEnd, 0.05f, 0.0f, 0.0f, "%.2f");
 		ImGui::End();
 
 		// モデルについての説明
 		auto meshList = fbxMeshfile.GetMeshData();
 		ImGui::Begin("Models");
 		ImGui::Text("fileName : %s", fbxMeshfile.GetFbxFileName().c_str());
+
+		static auto position = house.GetTransform().GetPosition();
+		static auto rotation = house.GetTransform().GetRotation();
+		static auto scale = house.GetTransform().GetScale();
+
+		// トランスフォーム
+		if (ImGui::TreeNode("Transform")) {
+			ImGui::Text("Position");
+			ImGui::DragFloat3("##position", &position.x, 0.05f, 0.0f, 0.0f, "%.2f");
+			ImGui::Text("Rotation");
+			ImGui::DragFloat3("##rotation", &rotation.x, 0.05f, 0.0f, 0.0f, "%.2f");
+			ImGui::Text("Scale");
+			ImGui::DragFloat3("##scale", &scale.x, 0.05f, 0.0f, 0.0f, "%.2f");
+			ImGui::TreePop();
+		}
+
+		house.GetTransform().SetPosition(position);
+		house.GetTransform().SetRotation(XMConvertToRadians(rotation.x), XMConvertToRadians(rotation.y), XMConvertToRadians(rotation.z));
+		house.GetTransform().SetScale(scale);
+
 		// マテリアルについての説明
 		if (ImGui::TreeNode("Material")) {
 			for (auto& mesh : meshList) {
@@ -287,6 +304,7 @@ int Game::Run()
 			}
 			ImGui::TreePop();
 		}
+
 		// テクスチャーについての説明
 		if (ImGui::TreeNode("Texture")) {
 			for (auto& mesh : meshList) {
@@ -304,7 +322,6 @@ int Game::Run()
 		XMVECTOR focusPosition = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
 		XMVECTOR upDirection = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 		XMMATRIX view = XMMatrixLookAtLH(eyePosition, focusPosition, upDirection);
-
 		effect.SetViewMatrix(eyePosition, focusPosition, upDirection);
 
 		// プロジェクション行列

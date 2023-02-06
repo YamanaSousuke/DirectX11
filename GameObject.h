@@ -6,7 +6,6 @@
 #include "FBXMeshFile.h"
 #include "Transform.h"
 #include "Geometry.h"
-#include "Lightings.h"
 #include "Effect.h"
 
 // ゲームオブジェクト

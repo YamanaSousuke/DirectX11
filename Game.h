@@ -1,15 +1,5 @@
 #pragma once
-
-#include <Windows.h>
-#include <d3d11.h>
-#include <DirectXMath.h>
-#include <wrl/client.h>
-#include "FBXMeshFile.h"
 #include "GameObject.h"
-
-#include "Lightings.h"
-#include "Effect.h"
-#include "RenderState.h"
 
 // アプリケーション全体を表す
 class Game

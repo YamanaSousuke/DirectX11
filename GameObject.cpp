@@ -29,9 +29,6 @@ void GameObject::SetMaterial(const Material& material)
 // 描画
 void GameObject::Draw(ID3D11DeviceContext* immediateContext, Effect& effect)
 {
-	static float time = 0.0f;
-	time += 0.01666f;
-
 	auto meshList = model->GetMeshData();
 	for (auto& mesh : meshList) {
 		// 頂点バッファーとインデックスバッファーの設定
@@ -40,10 +37,6 @@ void GameObject::Draw(ID3D11DeviceContext* immediateContext, Effect& effect)
 		UINT offsets[1] = { 0 };
 		immediateContext->IASetVertexBuffers(0, ARRAYSIZE(vertexBuffers), vertexBuffers, strides, offsets);
 		immediateContext->IASetIndexBuffer(mesh.indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-
-		transform.SetRotation(0.0f, XM_PIDIV2, 0.0f);
-		transform.SetScale(0.05f, 0.05f, 0.05f);
-		transform.SetPosition(0.0f, 0.0f ,0.0f);
 		effect.SetWorldMatrix(transform.GetWorldMatrix());
 		effect.SetMaterial(mesh.material);
 		effect.Apply(immediateContext);

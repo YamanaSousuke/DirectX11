@@ -7,6 +7,7 @@
 #include "Lightings.h"
 #include "RenderState.h"
 
+// シェーダーと定数バッファーを管理する
 class Effect
 {
 public:
@@ -65,6 +66,7 @@ private:
 		float fogRange;
 	};
 
+	// 定数バッファーで転送するデータ
 	enum class Data
 	{
 		Scene,
@@ -80,7 +82,6 @@ private:
 
 	// 定数バッファーをまとめて管理する
 	std::vector<ConstantBufferBase*> constantBuffers = { nullptr };
-
 	// 頂点シェーダー
 	ComPtr<ID3D11VertexShader> vertexShader = nullptr;
 	// ジオメトリシェーダー

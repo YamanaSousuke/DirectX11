@@ -49,7 +49,7 @@ void Effect::SetViewMatrix(const XMVECTOR& eye, const XMVECTOR& focus, const XMV
 {
 	auto view = XMMatrixLookAtLH(eye, focus, up);
 	auto& sceneParameter = this->sceneParameter;
-	XMStoreFloat4x4(&sceneParameter.data.view, XMMatrixTranspose(view));
+	XMStoreFloat4x4(&sceneParameter.GetData().view, XMMatrixTranspose(view));
 }
 
 // プロジェクション行列の設定
@@ -57,33 +57,33 @@ void Effect::SetProjectionMatrix(float fov, float aspect, float nearZ, float far
 {
 	auto projection = XMMatrixPerspectiveFovLH(fov, aspect, nearZ, farZ);
 	auto& sceneParameter = this->sceneParameter;
-	XMStoreFloat4x4(&sceneParameter.data.projection, XMMatrixTranspose(projection));
+	XMStoreFloat4x4(&sceneParameter.GetData().projection, XMMatrixTranspose(projection));
 }
 
 // ワールド行列の設定
 void Effect::SetWorldMatrix(const XMMATRIX& matrix)
 {
 	auto& model = modelParameter;
-	XMStoreFloat4x4(&model.data.world, XMMatrixTranspose(matrix));
+	XMStoreFloat4x4(&model.GetData().world, XMMatrixTranspose(matrix));
 }
 
 // マテリアルの設定
 void Effect::SetMaterial(const Material& material)
 {
 	auto& model = modelParameter;
-	model.data.material = material;
+	model.GetData().material = material;
 }
 
 // ディレクショナルライトの設定
 void Effect::SetDirectionalLight(UINT index, const DirectionalLight& directionalLight)
 {
-	lightParameter.data.directionalLight[index]= directionalLight;
+	lightParameter.GetData().directionalLight[index]= directionalLight;
 }
 
 // 視点の設定
 void Effect::SetEyePosition(const DirectX::XMFLOAT3& position)
 {
-	lightParameter.data.eyePosition = position;
+	lightParameter.GetData().eyePosition = position;
 }
 
 // 定数バッファーとテクスチャ情報の適応
@@ -104,26 +104,27 @@ void Effect::Apply(ID3D11DeviceContext* immediateContext)
 void Effect::SetFogColor(const XMFLOAT3& color)
 {
 	auto& fogParameter = this->fogParameter;
-	fogParameter.data.fogColor = color;
+	fogParameter.GetData().fogColor = color;
 }
 
 void Effect::SetFogState(bool enable)
 {
 	auto& fogParameter = this->fogParameter;
-	fogParameter.data.fogEnable = enable;
+	fogParameter.GetData().fogEnable = enable;
 }
 
 void Effect::SetFogStart(float start)
 {
 	auto& fogParameter = this->fogParameter;
-	fogParameter.data.fogStart = start;
+	fogParameter.GetData().fogStart = start;
 }
 
 void Effect::SetFogRange(float range)
 {
 	auto& fogParameter = this->fogParameter;
-	fogParameter.data.fogRange = range;
+	fogParameter.GetData().fogRange = range;
 }
+
 // デフォルトの描画
 void Effect::RenderDefault(ID3D11DeviceContext* immediateContext)
 {
