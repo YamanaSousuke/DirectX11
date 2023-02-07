@@ -10,26 +10,20 @@ void FbxMeshFile::Init(ID3D11Device* device)
 }
 
 // ファイルの読み込み
-FbxMeshFile* FbxMeshFile::Load(const std::string& filename, ID3D11DeviceContext* immediateContext)
+Model FbxMeshFile::Load(const std::string& filename, ID3D11DeviceContext* immediateContext)
 {
 	// 最後の「/」または「\\」で文字列を分割する
 	int filePathLength = static_cast<int>(filename.length());
 	auto findSplitPoint = filename.find_last_of('/');
 	fileNameBeforeSplit = filename.substr(0, findSplitPoint + 1);
-	fileNameAfterSpilt = filename.substr(findSplitPoint + 1);
+	model.SetModelName(filename.substr(findSplitPoint + 1));
 
-	if (!GenerateMeshFromFile(filename)) {
-		return nullptr;
-	}
+	GenerateMeshFromFile(filename);
 
-	if (!CreateVertexBuffer(immediateContext)) {
-		return nullptr;
-	}
+	// バッファーの作成
+	CreateBuffer(immediateContext);
 
-	if (!CreateIndexBuffer(immediateContext)) {
-		return nullptr;
-	}
-	return this;
+	return model;
 }
 
 // ファイルからメッシュの生成を行う
@@ -78,7 +72,7 @@ bool FbxMeshFile::GenerateMeshFromFile(const std::string& filename)
 }
 
 // マテリアルデータの読み込み
-void FbxMeshFile::LoadMaterial(MeshData& meshData, FbxMesh* mesh)
+void FbxMeshFile::LoadMaterial(Model::MeshData& meshData, FbxMesh* mesh)
 {
 	enum class Material {
 		Ambient,
@@ -136,6 +130,7 @@ void FbxMeshFile::LoadMaterial(MeshData& meshData, FbxMesh* mesh)
 	FbxDouble3 color = colors[(int)Material::Ambient];
 	FbxDouble factor = factors[(int)Material::Ambient];
 	meshData.material.ambient = XMFLOAT4((float)color[0], (float)color[1], (float)color[2], (float)factor);
+	printf("x : %lf, y : %lf, z : %lf, factor : %lf\n", (float)color[0], (float)color[1], (float)color[2], (float)factor);
 
 	// ディフューズカラーの設定
 	color = colors[(int)Material::Diffuse];
@@ -173,14 +168,14 @@ void FbxMeshFile::LoadMaterial(MeshData& meshData, FbxMesh* mesh)
 		}
 
 		// テクスチャー名を登録する
-		meshData.SetTextureName(textureFileName);
+		meshData.textureName = textureFileName;
 	}
 }
 
 // メッシュデータの作成
 void FbxMeshFile::CreateMesh(FbxMesh* mesh)
 {
-	MeshData meshData = {};
+	Model::MeshData meshData = {};
 	LoadIndices(meshData, mesh);
     LoadVertices(meshData, mesh);
 	LoadColors(meshData, mesh);
@@ -188,11 +183,11 @@ void FbxMeshFile::CreateMesh(FbxMesh* mesh)
 	LoadUV(meshData, mesh);
 	SetMaterial(meshData, mesh);
 	LoadMaterial(meshData, mesh);
-	meshList.push_back(meshData);
+	model.PushMeshData(meshData);
 }
 
 // 頂点インデックスデータを読み込む
-void FbxMeshFile::LoadIndices(MeshData& meshData, FbxMesh* mesh)
+void FbxMeshFile::LoadIndices(Model::MeshData& meshData, FbxMesh* mesh)
 {
 	auto numPolygon = mesh->GetPolygonCount();
 	const int triangle = 3;
@@ -204,7 +199,7 @@ void FbxMeshFile::LoadIndices(MeshData& meshData, FbxMesh* mesh)
 }
 
 // 頂点データを読み込む
-void FbxMeshFile::LoadVertices(MeshData& meshData, FbxMesh* mesh)
+void FbxMeshFile::LoadVertices(Model::MeshData& meshData, FbxMesh* mesh)
 {
 	// 頂点バッファーの取得
 	FbxVector4* vertices = mesh->GetControlPoints();
@@ -226,7 +221,7 @@ void FbxMeshFile::LoadVertices(MeshData& meshData, FbxMesh* mesh)
 }
 
 // マテリアル名の設定
-void FbxMeshFile::SetMaterial(MeshData& meshData, FbxMesh* mesh)
+void FbxMeshFile::SetMaterial(Model::MeshData& meshData, FbxMesh* mesh)
 {
 	if (mesh->GetElementMaterialCount()) {
 		FbxLayerElementMaterial* material = mesh->GetElementMaterial(0);
@@ -240,11 +235,10 @@ void FbxMeshFile::SetMaterial(MeshData& meshData, FbxMesh* mesh)
 }
 
 // 頂点カラーデータを読み込む
-void FbxMeshFile::LoadColors(MeshData& meshData, FbxMesh* mesh)
+void FbxMeshFile::LoadColors(Model::MeshData& meshData, FbxMesh* mesh)
 {
 	// 頂点カラーデータ数の取得 
 	int count = mesh->GetElementVertexColorCount();
-	printf("colorCount : %d\n", count);
 	if (count == 0) {
 		return;
 	}
@@ -277,7 +271,7 @@ void FbxMeshFile::LoadColors(MeshData& meshData, FbxMesh* mesh)
 }
 
 // 法線データを読み込む
-void FbxMeshFile::LoadNormal(MeshData& meshData, FbxMesh* mesh)
+void FbxMeshFile::LoadNormal(Model::MeshData& meshData, FbxMesh* mesh)
 {
 	FbxArray<FbxVector4> normals = {};
 	mesh->GetPolygonVertexNormals(normals);
@@ -289,7 +283,7 @@ void FbxMeshFile::LoadNormal(MeshData& meshData, FbxMesh* mesh)
 }
 
 // UV座標の読み込み
-void FbxMeshFile::LoadUV(MeshData& meshData, FbxMesh* mesh)
+void FbxMeshFile::LoadUV(Model::MeshData& meshData, FbxMesh* mesh)
 {
 	FbxStringList uvNames;
 	mesh->GetUVSetNames(uvNames);
@@ -303,9 +297,10 @@ void FbxMeshFile::LoadUV(MeshData& meshData, FbxMesh* mesh)
 	}
 }
 
-// 頂点バッファーの作成
-bool FbxMeshFile::CreateVertexBuffer(ID3D11DeviceContext* immediateContext)
+// 頂点バッファー、インデックスバッファーの作成
+void FbxMeshFile::CreateBuffer(ID3D11DeviceContext* immediateContext)
 {
+	auto& meshList = model.GetMeshData();
 	for (auto& mesh : meshList) {
 		D3D11_BUFFER_DESC bufferDesc = {};
 		bufferDesc.ByteWidth = sizeof(VertexPositionNormalTextureColor) * (UINT)mesh.vertices.size();
@@ -314,50 +309,18 @@ bool FbxMeshFile::CreateVertexBuffer(ID3D11DeviceContext* immediateContext)
 		bufferDesc.CPUAccessFlags = 0;
 		bufferDesc.MiscFlags = 0;
 		bufferDesc.StructureByteStride = 0;
-		const auto hr = device->CreateBuffer(&bufferDesc, nullptr, mesh.vertexBuffer.GetAddressOf());
+		auto hr = device->CreateBuffer(&bufferDesc, nullptr, mesh.vertexBuffer.GetAddressOf());
 		if (FAILED(hr)) {
 			OutputDebugString(L"頂点バッファーの作成に失敗\n");
-			return false;
 		}
 		immediateContext->UpdateSubresource(mesh.vertexBuffer.Get(), 0, nullptr, mesh.vertices.data(), 0, 0);
-	}
-	return true;
-}
 
-// インデックスバッファーの作成
-bool FbxMeshFile::CreateIndexBuffer(ID3D11DeviceContext* immediateContext)
-{
-	for (auto& mesh : meshList) {
-		D3D11_BUFFER_DESC bufferDesc = {};
 		bufferDesc.ByteWidth = sizeof(UINT) * (UINT)mesh.indices.size();
-		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
 		bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-		bufferDesc.CPUAccessFlags = 0;
-		bufferDesc.MiscFlags = 0;
-		bufferDesc.StructureByteStride = 0;
-		const auto hr = device->CreateBuffer(&bufferDesc, nullptr, mesh.indexBuffer.GetAddressOf());
+		hr = device->CreateBuffer(&bufferDesc, nullptr, mesh.indexBuffer.GetAddressOf());
 		if (FAILED(hr)) {
 			OutputDebugString(L"インデックスバッファーの作成に失敗\n");
 		}
 		immediateContext->UpdateSubresource(mesh.indexBuffer.Get(), 0, nullptr, mesh.indices.data(), 0, 0);
 	}
-
-	return true;
-}
-
-// メッシュ数の取得
-size_t FbxMeshFile::GetMeshCount() const 
-{
-	return meshList.size();
-}
-
-std::vector<MeshData> FbxMeshFile::GetMeshData() const
-{
-	return meshList;
-}
-
-// パラメーターの取得
-std::string FbxMeshFile::GetFbxFileName() const
-{
-	return fileNameAfterSpilt;
 }

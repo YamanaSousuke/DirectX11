@@ -17,15 +17,11 @@ void Transform::SetPosition(float x, float y, float z)
 void Transform::SetRotation(const XMFLOAT3& eulerAngles)
 {
 	rotation = eulerAngles;
-	// rotation.x = XMConvertToRadians(eulerAngles.x);
-	// rotation.y = XMConvertToRadians(eulerAngles.y);
-	// rotation.z = XMConvertToRadians(eulerAngles.z);
 }
 
 void Transform::SetRotation(float x, float y, float z)
 {
 	rotation = XMFLOAT3(x, y, z);
-	// SetRotation(XMFLOAT3(x, y, z));
 }
 
 // ägëÂèkè¨ÇÃê›íË

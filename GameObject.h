@@ -12,9 +12,10 @@
 class GameObject
 {
 public:
-	// モデルの設定
-	void SetModel(const FbxMeshFile* model);
-
+	// コンストラクタ
+	explicit GameObject(const Model& model);
+	// モデルの取得
+	Model& GetModel();
 	// 頂点バッファーとインデックスバッファーの設定
 	template<class VertexType>
 	void SetBuffer(ID3D11Device* device, ID3D11DeviceContext* immediateContext, Geometry::Meshdata<VertexType> meshdata);
@@ -33,7 +34,7 @@ private:
 	template<class T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-	const FbxMeshFile* model = nullptr;
+	Model model = {};
 	// トランスフォーム
 	Transform transform = {};
 	// 頂点バッファー

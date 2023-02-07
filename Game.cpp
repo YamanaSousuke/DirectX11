@@ -1,5 +1,3 @@
-#include <d3dcompiler.h>
-#include <DirectXColors.h>
 #include "Game.h"
 
 #include "ImGui/imgui.h"
@@ -254,8 +252,10 @@ int Game::Run()
 
 	// FBXモデルの読み込み
 	auto model = fbxMeshfile.Load("Models/House1/House1.fbx", deviceContext.Get());
-	house.SetModel(model);
+	GameObject house(model);
 	house.GetTransform().SetScale(0.05f, 0.05f, 0.05f);
+	house.GetTransform().SetPosition(-1.0f, 0.0f, 0.0f);
+	house.GetTransform().SetRotation(0.0f, XM_PIDIV2, 0.0f);
 
 	// メッセージループ
 	MSG msg = {};
@@ -274,47 +274,57 @@ int Game::Run()
 		ImGui::End();
 
 		// モデルについての説明
-		auto meshList = fbxMeshfile.GetMeshData();
 		ImGui::Begin("Models");
-		ImGui::Text("fileName : %s", fbxMeshfile.GetFbxFileName().c_str());
+		ImGui::Text("modelName : %s", house.GetModel().GetModelName());
 
 		static auto position = house.GetTransform().GetPosition();
-		static auto rotation = house.GetTransform().GetRotation();
+		// static auto rotation = XMFLOAT3(0.0f, XM_PIDIV2, 0.0f);
 		static auto scale = house.GetTransform().GetScale();
 
 		// トランスフォーム
 		if (ImGui::TreeNode("Transform")) {
 			ImGui::Text("Position");
 			ImGui::DragFloat3("##position", &position.x, 0.05f, 0.0f, 0.0f, "%.2f");
-			ImGui::Text("Rotation");
-			ImGui::DragFloat3("##rotation", &rotation.x, 0.05f, 0.0f, 0.0f, "%.2f");
+			// ImGui::Text("Rotation");
+			// ImGui::DragFloat3("##rotation", &rotation.x, 0.05f, 0.0f, 0.0f, "%.2f");
 			ImGui::Text("Scale");
 			ImGui::DragFloat3("##scale", &scale.x, 0.05f, 0.0f, 0.0f, "%.2f");
 			ImGui::TreePop();
 		}
 
 		house.GetTransform().SetPosition(position);
-		house.GetTransform().SetRotation(XMConvertToRadians(rotation.x), XMConvertToRadians(rotation.y), XMConvertToRadians(rotation.z));
+		// house.GetTransform().SetRotation(XMConvertToRadians(rotation.x), XMConvertToRadians(rotation.y), XMConvertToRadians(rotation.z));
 		house.GetTransform().SetScale(scale);
 
+		auto& meshList = house.GetModel().GetMeshData();
 		// マテリアルについての説明
 		if (ImGui::TreeNode("Material")) {
+			 
 			for (auto& mesh : meshList) {
 				ImGui::Text("material : %s", mesh.materialName.c_str());
 			}
 			ImGui::TreePop();
 		}
-
 		// テクスチャーについての説明
 		if (ImGui::TreeNode("Texture")) {
 			for (auto& mesh : meshList) {
-				if (mesh.IsValidTexture()) {
+				if (!mesh.textureName.empty()) {
 					ImGui::Text("texture : %s", mesh.textureName.c_str());
 				}
 			}
 			ImGui::TreePop();
 		}
-		
+
+		static float smooth = 0.0f;
+		static float metallic = 0.0f;
+		ImGui::Text("smooth");
+		ImGui::SliderFloat("##smooth", &smooth, 0.0f, 1.0f, "%.2f");
+		ImGui::Text("metallic");
+		ImGui::SliderFloat("##metallic", &metallic, 0.0f, 1.0f, "%.2f");
+		for (auto& mesh : meshList) {
+			mesh.material.smooth = smooth;
+			mesh.material.metallic = metallic;
+		}
 		ImGui::End();
 
 		// ビュー行列
@@ -334,9 +344,15 @@ int Game::Run()
 
 		// ライト
 		DirectionalLight directionalLight[4] = {};
-		directionalLight[0].diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		directionalLight[0].diffuse = XMFLOAT4(1.0f, 0.84f, 0.0f, 1.0f);
 		directionalLight[0].ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
 		directionalLight[0].direction = XMFLOAT4(-1.0f, -1.0f, 2.0f, 0.0f);
+		directionalLight[1].diffuse = XMFLOAT4(1.0f, 0.84f, 0.0f, 1.0f);
+		directionalLight[1].ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+		directionalLight[1].direction = XMFLOAT4(-1.0f, -1.0f, 0.0f, 0.0f);
+		directionalLight[2].diffuse = XMFLOAT4(1.0f, 0.84f, 0.0f, 1.0f);
+		directionalLight[2].ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+		directionalLight[2].direction = XMFLOAT4(-1.0f, -1.0f, -2.0f, 0.0f);
 		for (UINT i = 0; i < ARRAYSIZE(directionalLight); i++) {
 			effect.SetDirectionalLight(i, directionalLight[i]);
 		}
@@ -351,16 +367,15 @@ int Game::Run()
 		effect.SetFogRange(abs(fogEnd - fogStart));
 
 		// レンダーターゲットを設定
-		deviceContext->OMSetRenderTargets(_countof(renderTargetView), renderTargetView->GetAddressOf(), depthStencilView.Get());
+		deviceContext->OMSetRenderTargets(ARRAYSIZE(renderTargetView), renderTargetView->GetAddressOf(), depthStencilView.Get());
 		// 画面のクリア
-		deviceContext->ClearRenderTargetView(renderTargetView[0].Get(), reinterpret_cast<const float*>(&Colors::Black));
+		auto backgroundColor = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+		deviceContext->ClearRenderTargetView(renderTargetView[0].Get(), reinterpret_cast<const float*>(&backgroundColor));
 		deviceContext->ClearDepthStencilView(depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-		deviceContext->RSSetViewports(_countof(viewports), viewports);
-
-		// デフォルトの描画
-		effect.RenderDefault(deviceContext.Get());
+		deviceContext->RSSetViewports(ARRAYSIZE(viewports), viewports);
 
 		// 描画
+		effect.RenderDefault(deviceContext.Get());
 		effect.Apply(deviceContext.Get());
 		house.Draw(deviceContext.Get(), effect);
 

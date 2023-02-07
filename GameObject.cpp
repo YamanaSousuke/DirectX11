@@ -2,10 +2,16 @@
 
 using namespace DirectX;
 
-// モデルの設定
-void GameObject::SetModel(const FbxMeshFile* model)
+// コンストラクタ
+GameObject::GameObject(const Model& model)
 {
 	this->model = model;
+}
+
+// モデルの取得
+Model& GameObject::GetModel()
+{
+	return model;
 }
 
 // トランスフォームの取得
@@ -29,7 +35,7 @@ void GameObject::SetMaterial(const Material& material)
 // 描画
 void GameObject::Draw(ID3D11DeviceContext* immediateContext, Effect& effect)
 {
-	auto meshList = model->GetMeshData();
+	auto& meshList = model.GetMeshData();
 	for (auto& mesh : meshList) {
 		// 頂点バッファーとインデックスバッファーの設定
 		ID3D11Buffer* vertexBuffers[1] = { mesh.vertexBuffer.Get() };

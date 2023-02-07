@@ -21,8 +21,8 @@ struct Material {
 	float4 materialDiffuse;
 	float4 materialAmbient;
 	float4 materialSpecular;
-	// float smooth;
-	// float metallic;
+	float smooth;
+	float metallic;
 };
 
 // ƒV[ƒ“î•ñ

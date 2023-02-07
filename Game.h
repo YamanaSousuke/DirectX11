@@ -45,9 +45,6 @@ private:
 	Effect effect = {};
 	// FBX
 	FbxMeshFile fbxMeshfile = {};
-	// ‰Æ
-	GameObject house;
-
 
 	// ƒtƒHƒO‚É‚Â‚¢‚Ä‚Ìİ’è
 	bool fogEnable = false;
