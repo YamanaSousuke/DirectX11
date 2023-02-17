@@ -6,9 +6,6 @@
 
 #include <algorithm>
 
-// TODO : 消す
-#include <iostream>
-
 using namespace Microsoft::WRL;
 using namespace DirectX;
 
@@ -246,7 +243,7 @@ int Game::Run()
 	fbxMeshfile.Init(device.Get());
 
 	// サンプラー、ブレンド、ラスタライザステートの初期化
-	if (!RenderState::InitAll(device.Get())) {\
+	if (!RenderState::InitAll(device.Get())) {
 		return -1;
 	}
 
@@ -273,7 +270,6 @@ int Game::Run()
 
 		// フォグについての説明
 		if (ImGui::Begin("Fog")) {
-			
 			ImGui::Checkbox("Enable Fog", &fogEnable);
 			ImGui::ColorEdit3("Color", &fogColor.x);
 			ImGui::DragFloat("Fog Start", &fogStart, 0.05f, 0.0f, 0.0f, "%.3f");
@@ -288,11 +284,12 @@ int Game::Run()
 		ImGui::Begin("Models");
 		ImGui::Text("modelName : %s", house.GetModel().GetModelName());
 
+		// トランスフォームの取得 
 		auto position = house.GetTransform().GetPosition();
 		auto rotation = house.GetTransform().GetRotationInDegree();
 		auto scale = house.GetTransform().GetScale();
 
-		// トランスフォーム
+		// トランスフォームの設定
 		if (ImGui::TreeNode("Transform")) {
 			ImGui::Text("Position");
 			ImGui::DragFloat3("##position", &position.x, 0.05f, 0.0f, 0.0f, "%.3f");
@@ -303,6 +300,7 @@ int Game::Run()
 			ImGui::TreePop();
 		}
 
+		// トランスフォームの更新
 		house.GetTransform().SetPosition(position);
 		house.GetTransform().SetRotation(0.0f, time * 0.25f, 0.0f);
 		house.GetTransform().SetScale(scale);
@@ -326,16 +324,21 @@ int Game::Run()
 			ImGui::TreePop();
 		}
 
-		static float smooth = 0.0f;
-		static float metallic = 0.0f;
-		ImGui::Text("smooth");
-		ImGui::SliderFloat("##smooth", &smooth, 0.0f, 1.0f, "%.2f");
-		ImGui::Text("metallic");
-		ImGui::SliderFloat("##metallic", &metallic, 0.0f, 1.0f, "%.2f");
-		for (auto& mesh : meshList) {
-			mesh.material.smooth = smooth;
-			mesh.material.metallic = metallic;
+		// マテリアルのパラメーターの設定
+		if (ImGui::TreeNode("Material Parameter")) {
+			static float smooth = 0.0f;
+			static float metallic = 0.0f;
+			ImGui::Text("smooth");
+			ImGui::SliderFloat("##smooth", &smooth, 0.0f, 1.0f, "%.2f");
+			ImGui::Text("metallic");
+			ImGui::SliderFloat("##metallic", &metallic, 0.0f, 1.0f, "%.2f");
+			for (auto& mesh : meshList) {
+				mesh.material.smooth = smooth;
+				mesh.material.metallic = metallic;
+			}
+			ImGui::TreePop();
 		}
+
 		ImGui::End();
 
 		// ビュー行列
