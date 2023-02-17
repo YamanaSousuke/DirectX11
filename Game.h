@@ -50,7 +50,7 @@ private:
 	bool fogEnable = false;
 	DirectX::XMFLOAT3 fogColor = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
 	float fogStart = 0.0f;
-	float fogEnd = 0.0f;
+	float fogEnd = 40.0f;
 
 	// ウィンドウの作成
 	bool InitWindow();

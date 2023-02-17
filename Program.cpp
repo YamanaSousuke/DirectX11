@@ -14,7 +14,7 @@ int main()
 {
 	Game game;
 	// 初期化
-	game.Initialize(L"DirectX11", 1024, 576);
+	game.Initialize(L"DirectX11", static_cast<UINT>(1024 * 1.05f), static_cast<UINT>(576 * 1.2f));
 	// メッセージループの実行
 	return game.Run();
 }

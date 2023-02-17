@@ -11,7 +11,7 @@ using namespace DirectX;
 bool Effect::InitAll(ID3D11Device* device)
 {
 	// 定数バッファーの作成
-	constantBuffers.assign({ &sceneParameter, &modelParameter, &lightParameter, /*&fogParameter*/});
+	constantBuffers.assign({ &sceneParameter, &modelParameter, &lightParameter, &fogParameter, /*&crushParameter*/});
 	for (auto& constantBuffer : constantBuffers) {
 		constantBuffer->CreateBuffer(device);
 	}
@@ -60,6 +60,19 @@ void Effect::SetProjectionMatrix(float fov, float aspect, float nearZ, float far
 	XMStoreFloat4x4(&sceneParameter.GetData().projection, XMMatrixTranspose(projection));
 }
 
+// 前回のフレームからの経過時間の設定
+void Effect::SetTime(float time)
+{
+	auto& sceneParameter = this->sceneParameter;
+	sceneParameter.GetData().time = time;
+}
+
+void Effect::SetRandom(int random)
+{
+	auto& sceneParameter = this->sceneParameter;
+	sceneParameter.GetData().randomTest = random;
+}
+
 // ワールド行列の設定
 void Effect::SetWorldMatrix(const XMMATRIX& matrix)
 {
@@ -94,13 +107,16 @@ void Effect::Apply(ID3D11DeviceContext* immediateContext)
 	constantBuffer[static_cast<int>(Data::Model)]->BindGS(immediateContext);
 	constantBuffer[static_cast<int>(Data::Model)]->BindPS(immediateContext);
 	constantBuffer[static_cast<int>(Data::Light)]->BindPS(immediateContext);
-	// constantBuffer[static_cast<int>(Data::Fog)]->BindPS(immediateContext);
+	constantBuffer[static_cast<int>(Data::Fog)]->BindPS(immediateContext);
+	//constantBuffer[static_cast<int>(Data::Crush)]->BindGS(immediateContext);
+	//constantBuffer[static_cast<int>(Data::Crush)]->BindPS(immediateContext);
 
 	for (auto& buffer : constantBuffers) {
 		buffer->UpdateBuffer(immediateContext);
 	}
 }
 
+// フォグについての設定
 void Effect::SetFogColor(const XMFLOAT3& color)
 {
 	auto& fogParameter = this->fogParameter;
@@ -123,6 +139,19 @@ void Effect::SetFogRange(float range)
 {
 	auto& fogParameter = this->fogParameter;
 	fogParameter.GetData().fogRange = range;
+}
+
+// 粉砕エフェクトについての設定
+void Effect::SetInitialVelocity(const DirectX::XMFLOAT4 initialVelocity)
+{
+	auto& crushParameter = this->crushParameter;
+	crushParameter.GetData().initialVelocity = initialVelocity;
+}
+
+void Effect::SetIntencity(float intencity)
+{
+	auto& crushParameter = this->crushParameter;
+	crushParameter.GetData().intencity = intencity;
 }
 
 // デフォルトの描画

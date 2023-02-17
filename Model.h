@@ -12,11 +12,11 @@
 class Model
 {
 public:
+	template <class T>
+	using ComPtr = Microsoft::WRL::ComPtr<T>;
+
 	// メッシュデータ
-	struct MeshData
-	{
-		// 頂点数
-		UINT vertexCount = 0;
+	struct MeshData {
 		// 頂点配列
 		std::vector<VertexPositionNormalTextureColor> vertices = {};
 		// インデックス配列
@@ -28,11 +28,11 @@ public:
 		// テクスチャーの名前
 		std::string textureName = {};
 		// テクスチャー
-		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> texture = nullptr;
+		ComPtr<ID3D11ShaderResourceView> texture = nullptr;
 		// 頂点バッファー
-		Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer = nullptr;
+		ComPtr<ID3D11Buffer> vertexBuffer = nullptr;
 		// インデックスバッファー
-		Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer = nullptr;
+		ComPtr<ID3D11Buffer> indexBuffer = nullptr;
 	};
 
 	// モデル名の設定

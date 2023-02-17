@@ -23,6 +23,8 @@ public:
 
 	// 回転の取得
 	DirectX::XMFLOAT3 GetRotation() const;
+	// 度で回転の取得
+	DirectX::XMFLOAT3 GetRotationInDegree() const;
 
 	// スケールの取得
 	DirectX::XMFLOAT3 GetScale() const;

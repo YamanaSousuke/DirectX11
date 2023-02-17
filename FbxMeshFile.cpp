@@ -130,7 +130,6 @@ void FbxMeshFile::LoadMaterial(Model::MeshData& meshData, FbxMesh* mesh)
 	FbxDouble3 color = colors[(int)Material::Ambient];
 	FbxDouble factor = factors[(int)Material::Ambient];
 	meshData.material.ambient = XMFLOAT4((float)color[0], (float)color[1], (float)color[2], (float)factor);
-	printf("x : %lf, y : %lf, z : %lf, factor : %lf\n", (float)color[0], (float)color[1], (float)color[2], (float)factor);
 
 	// ディフューズカラーの設定
 	color = colors[(int)Material::Diffuse];

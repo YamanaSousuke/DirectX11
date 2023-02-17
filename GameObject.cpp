@@ -43,6 +43,8 @@ void GameObject::Draw(ID3D11DeviceContext* immediateContext, Effect& effect)
 		UINT offsets[1] = { 0 };
 		immediateContext->IASetVertexBuffers(0, ARRAYSIZE(vertexBuffers), vertexBuffers, strides, offsets);
 		immediateContext->IASetIndexBuffer(mesh.indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+
+		// 定数バッファーの設定
 		effect.SetWorldMatrix(transform.GetWorldMatrix());
 		effect.SetMaterial(mesh.material);
 		effect.Apply(immediateContext);
@@ -50,6 +52,7 @@ void GameObject::Draw(ID3D11DeviceContext* immediateContext, Effect& effect)
 		// テクスチャの設定
 		ID3D11ShaderResourceView* textureViews[1] = { mesh.texture.Get() };
 		immediateContext->PSSetShaderResources(0, 1, textureViews);
+		// 描画
 		immediateContext->DrawIndexed(static_cast<UINT>(mesh.indices.size()), 0, 0);
 	}
 }

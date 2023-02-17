@@ -2,28 +2,27 @@
 
 static const float roughness = 0.5f;
 static const float microfacet = 0.3f;
+static const float maxEnergy = 1.5f;
 
 // フレネル反射を考慮した拡散反射率の計算
 float CalcDiffuse(float3 normal, float3 light, float3 view)
 {
 	float halfVector = (light + view);
-
-	float energyBias = lerp(0.0f, 0.5f, roughness);
-	float energyFactor = lerp(1.0f, 1.0f / 1.51f, roughness);
-
 	float dotLH = saturate(dot(light, halfVector));
 
-	// 光が平行に入射したときの拡散反射率
-	float fd90 = energyBias + 2.0f * dotLH * dotLH * roughness;
+	// 1を超えないようにmaxEnergyで正規化をする
+	float energyBias = lerp(0.0f, 0.5f, roughness);
+	float energyFactor = lerp(1.0f, 1.0f / maxEnergy, roughness);
 
+	// 光が平行に入射したときの拡散反射率
+	float f90 = energyBias + 2.0f * dotLH * dotLH * roughness;
 	// 法線と光源に向かうベクトルの拡散反射率
 	float dotNL = saturate(dot(normal, light));
-	float fl = (1 + (fd90 - 1) * pow(1 - dotNL, 5));
-
+	float lightScatter = (1 + (f90 - 1) * pow(1 - dotNL, 5));
 	// 法線と視線に向かうベクトルの拡散反射率
 	float dotNV = saturate(dot(normal, view));
-	float fv = (1 + (fd90 - 1) * pow(1 - dotNV, 5));
-	return (fl * fv * energyFactor / PI);
+	float viewScatter = (1 + (f90 - 1) * pow(1 - dotNV, 5));
+	return (lightScatter * viewScatter * energyFactor / PI);
 }
 
 // ベックマン分布(マイクロファセット法線の分布)
@@ -54,8 +53,6 @@ float GeometricDamping(float dotNH, float dotNV, float dotVH, float dotNL)
 float CookTrranceSpecular(float3 light, float3 view, float3 normal, float metallic)
 {
 	float halfVector = normalize(light + view);
-	float f0 = metallic;
-
 	// 内積の計算
 	float dotNH = saturate(dot(normal, halfVector));
 	float dotVH = saturate(dot(view, halfVector));
@@ -65,13 +62,12 @@ float CookTrranceSpecular(float3 light, float3 view, float3 normal, float metall
 	// D項
 	float d = Beckmann(microfacet, dotNH);
 	// F項
-	float f = Fresnel(f0, dotVH);
+	float f = Fresnel(metallic, dotVH);
 	// G項
 	float g = GeometricDamping(dotNH, dotNV, dotVH, dotNL);
 	// m項
 	float m = dotNV * dotNH * PI;
 	return max(f * d * g / m, 0.0f);
-
 }
 
 // ピクセルシェーダー
@@ -115,11 +111,11 @@ float4 main(PSInput input) : SV_TARGET
 	}
 	light += ambientColor * albedoColor;
 
-	//// フォグ
-	//[flatten]
-	//if (fogEnable) {
-	//	float fogLerp = saturate((distanceToEye - fogStart) / fogRange);
-	//	light = lerp(light, fogColor, fogLerp);
-	//}
+	// フォグ
+	[flatten]
+	if (fogEnable) {
+		float fogLerp = saturate((distanceToEye - fogStart) / fogRange);
+		light = lerp(light, fogColor, fogLerp);
+	}
 	return float4(light, 1.0f);
 }

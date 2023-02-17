@@ -1,4 +1,5 @@
 #include "Transform.h"
+#include <math.h>
 
 using namespace DirectX;
 
@@ -47,13 +48,21 @@ XMVECTOR Transform::GetPositionVector() const
 }
 
 // 回転の取得
-DirectX::XMFLOAT3 Transform::GetRotation() const
+XMFLOAT3 Transform::GetRotation() const
 {
 	return rotation;
 }
 
+// 度で回転の取得
+XMFLOAT3 Transform::GetRotationInDegree() const
+{
+	return XMFLOAT3(fmod(XMConvertToDegrees(rotation.x), 360.0f), 
+		fmod(XMConvertToDegrees(rotation.y), 360.0f), 
+		fmod(XMConvertToDegrees(rotation.z), 360.0f));
+}
+
 // スケールの取得
-DirectX::XMFLOAT3 Transform::GetScale() const
+XMFLOAT3 Transform::GetScale() const
 {
 	return scale;
 }

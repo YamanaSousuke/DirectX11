@@ -4,6 +4,11 @@
 #include "ImGui/imgui_impl_dx11.h"
 #include "ImGui/imgui_impl_win32.h"
 
+#include <algorithm>
+
+// TODO : 消す
+#include <iostream>
+
 using namespace Microsoft::WRL;
 using namespace DirectX;
 
@@ -241,7 +246,7 @@ int Game::Run()
 	fbxMeshfile.Init(device.Get());
 
 	// サンプラー、ブレンド、ラスタライザステートの初期化
-	if (!RenderState::InitAll(device.Get())) {
+	if (!RenderState::InitAll(device.Get())) {\
 		return -1;
 	}
 
@@ -253,47 +258,53 @@ int Game::Run()
 	// FBXモデルの読み込み
 	auto model = fbxMeshfile.Load("Models/House1/House1.fbx", deviceContext.Get());
 	GameObject house(model);
-	house.GetTransform().SetScale(0.05f, 0.05f, 0.05f);
-	house.GetTransform().SetPosition(-1.0f, 0.0f, 0.0f);
-	house.GetTransform().SetRotation(0.0f, XM_PIDIV2, 0.0f);
+	house.GetTransform().SetScale(0.04f, 0.04f, 0.04f);
 
+	static float time = 0.0f;
 	// メッセージループ
 	MSG msg = {};
 	while (true) {
+		time += 0.016f;
+
 		// GUIの更新処理
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
 
 		// フォグについての説明
-		ImGui::Begin("Fog");
-		ImGui::Checkbox("Enable Fog", &fogEnable);
-		ImGui::ColorEdit3("Color", &fogColor.x);
-		ImGui::DragFloat("Fog Start", &fogStart, 0.05f, 0.0f, 0.0f, "%.2f");
-		ImGui::DragFloat("Fog End", &fogEnd, 0.05f, 0.0f, 0.0f, "%.2f");
+		if (ImGui::Begin("Fog")) {
+			
+			ImGui::Checkbox("Enable Fog", &fogEnable);
+			ImGui::ColorEdit3("Color", &fogColor.x);
+			ImGui::DragFloat("Fog Start", &fogStart, 0.05f, 0.0f, 0.0f, "%.3f");
+			if (fogStart >= fogEnd) {
+				fogEnd = fogStart;
+			}
+			ImGui::DragFloat("Fog End", &fogEnd, 0.05f, 0.0f, 0.0f, "%.3f");
+		}
 		ImGui::End();
 
 		// モデルについての説明
 		ImGui::Begin("Models");
 		ImGui::Text("modelName : %s", house.GetModel().GetModelName());
 
-		static auto position = house.GetTransform().GetPosition();
-		// static auto rotation = XMFLOAT3(0.0f, XM_PIDIV2, 0.0f);
-		static auto scale = house.GetTransform().GetScale();
+		auto position = house.GetTransform().GetPosition();
+		auto rotation = house.GetTransform().GetRotationInDegree();
+		auto scale = house.GetTransform().GetScale();
 
 		// トランスフォーム
 		if (ImGui::TreeNode("Transform")) {
 			ImGui::Text("Position");
-			ImGui::DragFloat3("##position", &position.x, 0.05f, 0.0f, 0.0f, "%.2f");
-			// ImGui::Text("Rotation");
-			// ImGui::DragFloat3("##rotation", &rotation.x, 0.05f, 0.0f, 0.0f, "%.2f");
+			ImGui::DragFloat3("##position", &position.x, 0.05f, 0.0f, 0.0f, "%.3f");
+			ImGui::Text("Rotation");
+			ImGui::Text("x : %.3f, y : %.3f, z : %.3f", rotation.x, rotation.y, rotation.z);
 			ImGui::Text("Scale");
-			ImGui::DragFloat3("##scale", &scale.x, 0.05f, 0.0f, 0.0f, "%.2f");
+			ImGui::DragFloat3("##scale", &scale.x, 0.05f, 0.0f, 0.0f, "%.3f");
 			ImGui::TreePop();
 		}
 
 		house.GetTransform().SetPosition(position);
-		// house.GetTransform().SetRotation(XMConvertToRadians(rotation.x), XMConvertToRadians(rotation.y), XMConvertToRadians(rotation.z));
+		house.GetTransform().SetRotation(0.0f, time * 0.25f, 0.0f);
 		house.GetTransform().SetScale(scale);
 
 		auto& meshList = house.GetModel().GetMeshData();
@@ -342,6 +353,10 @@ int Game::Run()
 		XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(fovAngleY), aspectRatio, nearZ, farZ);
 		effect.SetProjectionMatrix(XMConvertToRadians(fovAngleY), aspectRatio, nearZ, farZ);
 
+		effect.SetTime(time);
+
+		
+
 		// ライト
 		DirectionalLight directionalLight[4] = {};
 		directionalLight[0].diffuse = XMFLOAT4(1.0f, 0.84f, 0.0f, 1.0f);
@@ -365,6 +380,10 @@ int Game::Run()
 		effect.SetFogState(fogEnable);
 		effect.SetFogStart(fogStart);
 		effect.SetFogRange(abs(fogEnd - fogStart));
+
+		// 粉砕エフェクトについての設定
+		effect.SetInitialVelocity(XMFLOAT4(0.0f, 5.0f, 0.0f, 0.0f));
+		effect.SetIntencity(6.0f);
 
 		// レンダーターゲットを設定
 		deviceContext->OMSetRenderTargets(ARRAYSIZE(renderTargetView), renderTargetView->GetAddressOf(), depthStencilView.Get());

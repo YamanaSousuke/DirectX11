@@ -8,6 +8,8 @@ static const int numDirectionalLight = 4;
 static const float ambient = 0.2f;
 // π
 static const float PI = 3.1415926f;
+// 重力
+static const float4 gravity = float4(0.0f, -9.8f, 0.0f, 0.0f);
 
 // ディレクショナルライト
 struct DirectionalLight {
@@ -29,6 +31,8 @@ struct Material {
 cbuffer SceneParameter : register(b0) {
 	matrix view;
 	matrix projection;
+	float time;
+	int randomTest;
 };
 
 // モデル情報
@@ -49,6 +53,12 @@ cbuffer FogParameter : register(b3) {
 	int fogEnable;
 	float fogStart;
 	float fogRange;
+}
+
+// 粉砕エフェクト
+cbuffer CrushParameter : register(b4) {
+	float4 initialVelocity;
+	float intencity;
 }
 
 // 頂点シェーダーへの入力
