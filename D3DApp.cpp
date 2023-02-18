@@ -23,6 +23,23 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
+// 全体の初期化
+bool D3DApp::Init()
+{
+	if (!InitMainWindow()) {
+		return false;
+	}
+
+	if (!InitGraphicsDevice()) {
+		return false;
+	}
+
+	if (!InitGUI()) {
+		return false;
+	}
+
+	return true;
+}
 
 // ウィンドウの初期化
 bool D3DApp::InitMainWindow()
@@ -41,7 +58,7 @@ bool D3DApp::InitMainWindow()
 	}
 
 	// クライアント領域の指定
-	RECT rect = { 0, 0, width, height };
+	RECT rect = { 0, 0, static_cast<LONG>(width), static_cast<LONG>(height) };
 	AdjustWindowRectEx(&rect, WS_OVERLAPPEDWINDOW, FALSE, 0);
 
 	// ウィンドウの作成
@@ -191,4 +208,54 @@ bool D3DApp::InitGraphicsDevice()
 	viewports[0].TopLeftY = 0.0f;
 
 	return true;
+}
+
+// GUIの初期化
+bool D3DApp::InitGUI()
+{
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	ImGui::StyleColorsDark();
+	ImGui_ImplWin32_Init(hWnd);
+	ImGui_ImplDX11_Init(device.Get(), deviceContext.Get());
+	return true;
+}
+
+// メッセージループの実行
+int D3DApp::Run()
+{
+	// メッセージループ
+	MSG msg = {};
+	while (true) {
+
+		DrawScene();
+		UpdateScene();
+
+		if (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
+			// メッセージを取得
+			if (!GetMessage(&msg, NULL, 0, 0)) {
+				break;
+			}
+
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+	}
+	return 0;
+}
+
+// アスペクト比の取得
+float D3DApp::AspectRatio() const
+{
+	return static_cast<float>(width) / height;
+}
+
+// デストラクタ
+D3DApp::~D3DApp()
+{
+	// GUIの開放
+	ImGui_ImplDX11_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
 }

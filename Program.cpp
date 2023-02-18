@@ -14,6 +14,10 @@ int main()
 {
 	// 初期化
 	Game game(L"DirectX11", static_cast<UINT>(1024 * 1.05f), static_cast<UINT>(576 * 1.2f));
+	if (!game.Init()) {
+		return 0;
+	}
+
 	// メッセージループの実行
 	return game.Run();
 }

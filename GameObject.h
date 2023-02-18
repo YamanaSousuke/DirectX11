@@ -12,8 +12,11 @@
 class GameObject
 {
 public:
+	GameObject() = default;
 	// コンストラクタ
 	explicit GameObject(const Model& model);
+	// モデルの設定
+	void SetModel(const Model& model);
 	// モデルの取得
 	Model& GetModel();
 	// 頂点バッファーとインデックスバッファーの設定

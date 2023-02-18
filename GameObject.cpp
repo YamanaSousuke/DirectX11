@@ -8,6 +8,12 @@ GameObject::GameObject(const Model& model)
 	this->model = model;
 }
 
+// ƒ‚ƒfƒ‹‚ÌÝ’è
+void GameObject::SetModel(const Model& model)
+{
+	this->model = model;
+}
+
 // ƒ‚ƒfƒ‹‚ÌŽæ“¾
 Model& GameObject::GetModel()
 {
