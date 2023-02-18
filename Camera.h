@@ -8,13 +8,11 @@ class Camera
 {
 public:
 	// ビュー行列の設定
-	void SetViewMatrix(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT3& focus, const DirectX::XMFLOAT3& up);
+	void SetViewMatrix(const DirectX::XMVECTOR& position, const DirectX::XMVECTOR& focus, const DirectX::XMVECTOR& up);
 	// ビュー行列の取得
 	DirectX::XMMATRIX GetViewMatrix() const;
-
-
-	// 視錐台の設定
-	void SetFrustum(float fov, float aspect, float nearZ, float farZ);
+	// プロジェクション行列の設定
+	void SetProjectionMatrix(float fov, float aspect, float nearZ, float farZ);
 	// プロジェクション行列の取得
 	DirectX::XMMATRIX GetProjectionMatrix() const;
 
@@ -23,6 +21,8 @@ public:
 private:
 	// トランスフォーム
 	Transform transform = {};
+	// 
+	DirectX::XMMATRIX view;
 
 	// 視野
 	float fov = 0.0f;

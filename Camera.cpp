@@ -3,20 +3,20 @@
 using namespace DirectX;
 
 // ビュー行列の設定
-void Camera::SetViewMatrix(const XMFLOAT3& position, const XMFLOAT3& focus, const XMFLOAT3& up)
+void Camera::SetViewMatrix(const XMVECTOR& position, const XMVECTOR& focus, const XMVECTOR& up)
 {
-	transform.SetPosition(position);
-	// XMMatrixLookAtLH(eye, focus, up);
+	transform.SetPosition(position.m128_f32[0], position.m128_f32[1], position.m128_f32[2]);
+	view = XMMatrixLookAtLH(position, focus, up);
 }
 
 // ビュー行列の取得
 XMMATRIX Camera::GetViewMatrix() const
 {
-	return transform.GetWorldInverseMatrix();
+	return view;
 }
 
 // 視錐台の設定
-void Camera::SetFrustum(float fov, float aspect, float nearZ, float farZ)
+void Camera::SetProjectionMatrix(float fov, float aspect, float nearZ, float farZ)
 {
 	this->fov = fov;
 	this->aspect = aspect;

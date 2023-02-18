@@ -45,18 +45,17 @@ bool Effect::InitAll(ID3D11Device* device)
 }
 
 // ビュー行列の設定
-void Effect::SetViewMatrix(const XMVECTOR& eye, const XMVECTOR& focus, const XMVECTOR& up)
+void Effect::SetViewMatrix(const DirectX::XMMATRIX& view)
 {
-	auto view = XMMatrixLookAtLH(eye, focus, up);
 	auto& sceneParameter = this->sceneParameter;
 	XMStoreFloat4x4(&sceneParameter.GetData().view, XMMatrixTranspose(view));
 }
 
 // プロジェクション行列の設定
-void Effect::SetProjectionMatrix(const DirectX::XMMATRIX& matrix)
+void Effect::SetProjectionMatrix(const DirectX::XMMATRIX& projection)
 {
 	auto& sceneParameter = this->sceneParameter;
-	XMStoreFloat4x4(&sceneParameter.GetData().projection, XMMatrixTranspose(matrix));
+	XMStoreFloat4x4(&sceneParameter.GetData().projection, XMMatrixTranspose(projection));
 }
 
 // 前回のフレームからの経過時間の設定

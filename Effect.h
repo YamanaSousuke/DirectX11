@@ -14,9 +14,9 @@ public:
 	// リソースの初期化
 	bool InitAll(ID3D11Device* device);
 	// ビュー行列の設定
-	void SetViewMatrix(const DirectX::XMVECTOR& eye, const DirectX::XMVECTOR& focus, const DirectX::XMVECTOR& up);
+	void SetViewMatrix(const DirectX::XMMATRIX& view);
 	// プロジェクション行列の設定
-	void SetProjectionMatrix(const DirectX::XMMATRIX& matrix);
+	void SetProjectionMatrix(const DirectX::XMMATRIX& projection);
 	// 前回のフレームからの経過時間の設定
 	void SetTime(float time);
 
