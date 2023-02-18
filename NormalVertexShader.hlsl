@@ -1,4 +1,13 @@
-float4 main( float4 pos : POSITION ) : SV_POSITION
+#include "BasicShader.hlsli"
+
+// エントリーポイント
+VSOutput main(VSInput input)
 {
-	return pos;
+	VSOutput output;
+	output.position = input.position;
+	output.worldPosition = input.position;
+	output.color = input.color;
+	output.normal = input.normal;
+	output.texCoord = input.texCoord;
+	return output;
 }

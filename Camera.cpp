@@ -15,6 +15,20 @@ XMMATRIX Camera::GetViewMatrix() const
 	return transform.GetWorldInverseMatrix();
 }
 
+// 視錐台の設定
+void Camera::SetFrustum(float fov, float aspect, float nearZ, float farZ)
+{
+	this->fov = fov;
+	this->aspect = aspect;
+	this->nearZ = nearZ;
+	this->farZ = farZ;
+}
+
+// プロジェクション行列の取得
+XMMATRIX Camera::GetProjectionMatrix() const
+{
+	return XMMatrixPerspectiveFovLH(fov, aspect, nearZ, farZ);
+}
 
 // トランスフォームの取得
 Transform& Camera::GetTransform()

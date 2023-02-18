@@ -1,5 +1,6 @@
 #include "BasicShader.hlsli"
 
+// エントリーポイント
 VSOutput main(VSInput input)
 {
 	VSOutput output;

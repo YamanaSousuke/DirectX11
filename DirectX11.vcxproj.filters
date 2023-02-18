@@ -22,6 +22,9 @@
     <Filter Include="ヘッダー ファイル\ImGui">
       <UniqueIdentifier>{74e3b635-595b-41b7-8812-9c51b8e601b4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shader">
+      <UniqueIdentifier>{5c7cd074-ad98-4721-82cc-8a730d6d9f2a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp">
@@ -142,11 +145,19 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="VertexShader.hlsl" />
-    <FxCompile Include="PixelShader.hlsl" />
-    <FxCompile Include="GeometryShader.hlsl" />
+    <FxCompile Include="GeometryShader.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="PixelShader.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="VertexShader.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="BasicShader.hlsli" />
+    <None Include="BasicShader.hlsli">
+      <Filter>Shader</Filter>
+    </None>
   </ItemGroup>
 </Project>

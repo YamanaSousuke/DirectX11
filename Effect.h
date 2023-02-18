@@ -16,7 +16,7 @@ public:
 	// ビュー行列の設定
 	void SetViewMatrix(const DirectX::XMVECTOR& eye, const DirectX::XMVECTOR& focus, const DirectX::XMVECTOR& up);
 	// プロジェクション行列の設定
-	void SetProjectionMatrix(float fov, float aspect, float nearZ, float farZ);
+	void SetProjectionMatrix(const DirectX::XMMATRIX& matrix);
 	// 前回のフレームからの経過時間の設定
 	void SetTime(float time);
 
@@ -44,6 +44,8 @@ public:
 
 	// デフォルトの描画
 	void RenderDefault(ID3D11DeviceContext* immediateContext);
+	// 法線の描画
+	void ShowNormaLine(ID3D11DeviceContext* immediateContext);
 private:
 	template<class T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;

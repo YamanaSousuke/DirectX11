@@ -12,9 +12,24 @@ public:
 	// ビュー行列の取得
 	DirectX::XMMATRIX GetViewMatrix() const;
 
+
+	// 視錐台の設定
+	void SetFrustum(float fov, float aspect, float nearZ, float farZ);
+	// プロジェクション行列の取得
+	DirectX::XMMATRIX GetProjectionMatrix() const;
+
 	// トランスフォームの取得
 	Transform& GetTransform();
 private:
 	// トランスフォーム
 	Transform transform = {};
+
+	// 視野
+	float fov = 0.0f;
+	// アスペクト比
+	float aspect = 0.0f;
+	// ニアクリッピング
+	float nearZ = 0.0f;
+	// ファークリッピング
+	float farZ = 0.0f;
 };

@@ -252,6 +252,15 @@ int Game::Run()
 		return -1;
 	}
 
+
+	// camera.GetTransform().SetPosition(XMFLOAT3(0.0f, 0.0f, -10.0f));
+	auto fovAngle = 60.0f;
+	auto aspectRatio = (float)(width) / (float)(height);
+	auto nearZ = 0.3f;
+	auto farZ = 1000.0f;
+	camera.SetFrustum(XMConvertToRadians(fovAngle), aspectRatio, nearZ, farZ);
+
+
 	// FBXモデルの読み込み
 	auto model = fbxMeshfile.Load("Models/House1/House1.fbx", deviceContext.Get());
 	GameObject house(model);
@@ -349,16 +358,8 @@ int Game::Run()
 		effect.SetViewMatrix(eyePosition, focusPosition, upDirection);
 
 		// プロジェクション行列
-		auto fovAngleY = 60.0f;
-		auto aspectRatio = (float)(width) / (float)(height);
-		auto nearZ = 0.3f;
-		auto farZ = 1000.0f;
-		XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(fovAngleY), aspectRatio, nearZ, farZ);
-		effect.SetProjectionMatrix(XMConvertToRadians(fovAngleY), aspectRatio, nearZ, farZ);
-
+		effect.SetProjectionMatrix(camera.GetProjectionMatrix());
 		effect.SetTime(time);
-
-		
 
 		// ライト
 		DirectionalLight directionalLight[4] = {};

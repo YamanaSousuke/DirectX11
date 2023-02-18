@@ -53,11 +53,10 @@ void Effect::SetViewMatrix(const XMVECTOR& eye, const XMVECTOR& focus, const XMV
 }
 
 // プロジェクション行列の設定
-void Effect::SetProjectionMatrix(float fov, float aspect, float nearZ, float farZ)
+void Effect::SetProjectionMatrix(const DirectX::XMMATRIX& matrix)
 {
-	auto projection = XMMatrixPerspectiveFovLH(fov, aspect, nearZ, farZ);
 	auto& sceneParameter = this->sceneParameter;
-	XMStoreFloat4x4(&sceneParameter.GetData().projection, XMMatrixTranspose(projection));
+	XMStoreFloat4x4(&sceneParameter.GetData().projection, XMMatrixTranspose(matrix));
 }
 
 // 前回のフレームからの経過時間の設定

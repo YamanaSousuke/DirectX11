@@ -1,4 +1,6 @@
 #pragma once
+
+#include "Camera.h"
 #include "GameObject.h"
 
 // アプリケーション全体を表す
@@ -41,6 +43,8 @@ private:
 	// ビューポート
 	D3D11_VIEWPORT viewports[1] = {};
 
+	// カメラ
+	Camera camera = {};
 	// エフェクト
 	Effect effect = {};
 	// FBX
