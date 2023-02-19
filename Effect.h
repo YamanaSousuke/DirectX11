@@ -44,8 +44,6 @@ public:
 
 	// デフォルトの描画
 	void RenderDefault(ID3D11DeviceContext* immediateContext);
-	// 法線の描画
-	void ShowNormaLine(ID3D11DeviceContext* immediateContext);
 private:
 	template<class T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;

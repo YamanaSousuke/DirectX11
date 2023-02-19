@@ -48,16 +48,10 @@ bool Game::Init()
 	return true;
 }
 
+// シーンの更新
 void Game::UpdateScene()
 {
-	static float time = 0.0f;
 	time += 0.016f;
-	
-	// GUIの更新処理
-	ImGui_ImplDX11_NewFrame();
-	ImGui_ImplWin32_NewFrame();
-	ImGui::NewFrame();
-	
 	// フォグについての説明
 	if (ImGui::Begin("Fog")) {
 		ImGui::Checkbox("Enable Fog", &fogEnable);
@@ -128,8 +122,8 @@ void Game::UpdateScene()
 		}
 		ImGui::TreePop();
 	}
-	
 	ImGui::End();
+	ImGui::Render();
 	
 	// ビュー行列、プロジェクション行列の設定
 	effect.SetViewMatrix(camera.GetViewMatrix());
@@ -162,29 +156,25 @@ void Game::UpdateScene()
 	// 粉砕エフェクトについての設定
 	effect.SetInitialVelocity(XMFLOAT4(0.0f, 5.0f, 0.0f, 0.0f));
 	effect.SetIntencity(6.0f);
-	
+}
+
+// シーンの描画
+void Game::DrawScene()
+{
 	// レンダーターゲットを設定
-	deviceContext->OMSetRenderTargets(ARRAYSIZE(renderTargetView), renderTargetView->GetAddressOf(), depthStencilView.Get());
+	deviceContext->OMSetRenderTargets(1, renderTargetView.GetAddressOf(), depthStencilView.Get());
 	// 画面のクリア
-	auto backgroundColor = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
-	deviceContext->ClearRenderTargetView(renderTargetView[0].Get(), reinterpret_cast<const float*>(&backgroundColor));
+	deviceContext->ClearRenderTargetView(renderTargetView.Get(), backgroundColor);
 	deviceContext->ClearDepthStencilView(depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	deviceContext->RSSetViewports(ARRAYSIZE(viewports), viewports);
-	
+
 	// 描画
 	effect.SetTime(time);
 	effect.RenderDefault(deviceContext.Get());
 	effect.Apply(deviceContext.Get());
 	house.Draw(deviceContext.Get(), effect);
-	
-	// GUIの描画
-	ImGui::Render();
-	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
 	// 表示
+	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 	swapchain->Present(1, 0);
-}
-
-void Game::DrawScene()
-{
-
 }

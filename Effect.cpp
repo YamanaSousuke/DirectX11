@@ -97,23 +97,6 @@ void Effect::SetEyePosition(const DirectX::XMFLOAT3& position)
 	lightParameter.GetData().eyePosition = position;
 }
 
-// 定数バッファーとテクスチャ情報の適応
-void Effect::Apply(ID3D11DeviceContext* immediateContext)
-{
-	auto& constantBuffer = constantBuffers;
-	constantBuffer[static_cast<int>(Data::Scene)]->BindGS(immediateContext);
-	constantBuffer[static_cast<int>(Data::Model)]->BindGS(immediateContext);
-	constantBuffer[static_cast<int>(Data::Model)]->BindPS(immediateContext);
-	constantBuffer[static_cast<int>(Data::Light)]->BindPS(immediateContext);
-	constantBuffer[static_cast<int>(Data::Fog)]->BindPS(immediateContext);
-	//constantBuffer[static_cast<int>(Data::Crush)]->BindGS(immediateContext);
-	//constantBuffer[static_cast<int>(Data::Crush)]->BindPS(immediateContext);
-
-	for (auto& buffer : constantBuffers) {
-		buffer->UpdateBuffer(immediateContext);
-	}
-}
-
 // フォグについての設定
 void Effect::SetFogColor(const XMFLOAT3& color)
 {
@@ -162,4 +145,21 @@ void Effect::RenderDefault(ID3D11DeviceContext* immediateContext)
 	immediateContext->IASetInputLayout(inputLayout.Get());
 	ID3D11SamplerState* samplerStates[1] = { RenderState::linerSamplerState.Get() };
 	immediateContext->PSSetSamplers(0, 1, samplerStates);
+}
+
+// 定数バッファーとテクスチャ情報の適応
+void Effect::Apply(ID3D11DeviceContext* immediateContext)
+{
+	auto& constantBuffer = constantBuffers;
+	constantBuffer[static_cast<int>(Data::Scene)]->BindGS(immediateContext);
+	constantBuffer[static_cast<int>(Data::Model)]->BindGS(immediateContext);
+	constantBuffer[static_cast<int>(Data::Model)]->BindPS(immediateContext);
+	constantBuffer[static_cast<int>(Data::Light)]->BindPS(immediateContext);
+	constantBuffer[static_cast<int>(Data::Fog)]->BindPS(immediateContext);
+	//constantBuffer[static_cast<int>(Data::Crush)]->BindGS(immediateContext);
+	//constantBuffer[static_cast<int>(Data::Crush)]->BindPS(immediateContext);
+
+	for (auto& buffer : constantBuffers) {
+		buffer->UpdateBuffer(immediateContext);
+	}
 }

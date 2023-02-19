@@ -18,11 +18,16 @@ public:
 	~D3DApp();
 	// 全体の初期化
 	virtual bool Init();
-	
+	// 受信したメッセージに応じた処理
+	// LRESULT WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	// メッセージループの実行
 	int Run();
+	// シーンの更新
 	virtual void UpdateScene() = 0;
+	// シーンの描画
 	virtual void DrawScene() = 0;
+	// ウィンドウのサイズが変更されたときに呼び出される
+	virtual void OnResize();
 	// アスペクト比の取得
 	float AspectRatio() const;
 protected:
@@ -36,16 +41,17 @@ protected:
 	// スワップチェーン
 	ComPtr<IDXGISwapChain> swapchain = nullptr;
 	// レンダーターゲット
-	ComPtr<ID3D11RenderTargetView> renderTargetView[1];
+	ComPtr<ID3D11RenderTargetView> renderTargetView = nullptr;
 	// 深度ステンシル
 	ComPtr<ID3D11DepthStencilView> depthStencilView = nullptr;
 	// 深度ステンシルをシェーダーで利用するためのリソースビュー
 	ComPtr<ID3D11ShaderResourceView> depthStencilResourceView = nullptr;
 	// ビューポート
 	D3D11_VIEWPORT viewports[1] = {};
-
 	// ウィンドウハンドル
 	HWND hWnd = NULL;
+	// 背景色
+	const float backgroundColor[4] = { 0.2f, 0.2f, 0.2f, 1.0f };
 
 	// ウィンドウの初期化
 	bool InitMainWindow();
