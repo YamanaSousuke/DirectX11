@@ -3,6 +3,13 @@
 
 using namespace DirectX;
 
+// コンストラクター
+Transform::Transform(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT3& rotation, const DirectX::XMFLOAT3& scale)
+	: position(position), rotation(rotation), scale(scale)
+{
+
+}
+
 // 座標の設定
 void Transform::SetPosition(const XMFLOAT3& position)
 {

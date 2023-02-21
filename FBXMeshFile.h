@@ -11,6 +11,15 @@
 class FbxMeshFile
 {
 public:
+	FbxMeshFile() = default;
+	~FbxMeshFile() = default;
+
+	FbxMeshFile(const FbxMeshFile&) = delete;
+	FbxMeshFile& operator=(const FbxMeshFile&) = delete;
+
+	FbxMeshFile(FbxMeshFile&&) = default;
+	FbxMeshFile& operator=(FbxMeshFile&&) = default;
+
 	// ‰Šú‰»
 	void Init(ID3D11Device* device);
 	// ƒtƒ@ƒCƒ‹‚Ì“Ç‚İ‚İ

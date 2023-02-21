@@ -5,6 +5,16 @@
 // トランスフォーム
 class Transform {
 public:
+	Transform() = default;
+	Transform(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT3& rotation, const DirectX::XMFLOAT3& scale);
+	~Transform() = default;
+
+	Transform(const Transform&) = default;
+	Transform& operator=(const Transform&) = default;
+
+	Transform(Transform&&) = default;
+	Transform& operator=(Transform&&) = default;
+
 	// 座標の設定
 	void SetPosition(const DirectX::XMFLOAT3& position);
 	void SetPosition(float x, float y, float z);

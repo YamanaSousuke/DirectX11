@@ -1,5 +1,7 @@
 #include "Game.h"
 
+#include <iostream>
+
 using namespace Microsoft::WRL;
 using namespace DirectX;
 
@@ -122,6 +124,13 @@ void Game::UpdateScene()
 		}
 		ImGui::TreePop();
 	}
+
+	// 座標と拡大率のリセット
+	if (ImGui::Button("Reset")) {
+		house.GetTransform().SetPosition(0.0f, 0.0f, 0.0f);
+		house.GetTransform().SetScale(0.04f, 0.04f, 0.04f);
+	}
+
 	ImGui::End();
 	ImGui::Render();
 	
