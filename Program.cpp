@@ -13,7 +13,7 @@
 int main()
 {
 	// ‰Šú‰»
-	Game game(L"DirectX11", static_cast<UINT>(1024 * 1.05f), static_cast<UINT>(576 * 1.2f));
+	Game game(L"DirectX11", static_cast<UINT>(1024 * 1.1f), static_cast<UINT>(576 * 1.25f));
 	if (!game.Init()) {
 		return 0;
 	}

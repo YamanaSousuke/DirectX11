@@ -12,14 +12,17 @@
 class Model
 {
 public:
-	// Model() = default;
-	// ~Model() = default;
-	// 
+	Model() = default;
+	~Model() = default;
+	
 	// Model(const Model&) = delete;
 	// Model& operator=(const Model&) = delete;
-	// 
-	// Model(const Model&&) = delete;
-	// Model& operator=(const Model&&) = delete;
+
+	Model(const Model&) = default;
+	Model& operator=(const Model&) = default;
+	
+	Model(const Model&&) = delete;
+	Model& operator=(const Model&&) = delete;
 
 	template <class T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
