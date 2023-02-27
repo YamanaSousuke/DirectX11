@@ -51,7 +51,7 @@ protected:
 	// ウィンドウハンドル
 	HWND hWnd = NULL;
 	// 背景色
-	const float backgroundColor[4] = { 0.2f, 0.2f, 0.2f, 1.0f };
+	const float backgroundColor[4] = { 0.0f, 0.0f, 0.9f, 1.0f };
 
 	// ウィンドウの初期化
 	bool InitMainWindow();

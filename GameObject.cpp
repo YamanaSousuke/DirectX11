@@ -33,10 +33,10 @@ void GameObject::SetTexture(ID3D11ShaderResourceView* texture)
 }
 
 // ƒ}ƒeƒŠƒAƒ‹‚ÌÝ’è
-void GameObject::SetMaterial(const Material& material)
-{
-	this->material = material;
-}
+// void GameObject::SetMaterial(const Material& material)
+// {
+// 	this->material = material;
+// }
 
 // •`‰æ
 void GameObject::Draw(ID3D11DeviceContext* immediateContext, Effect& effect)

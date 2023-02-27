@@ -15,9 +15,9 @@ public:
 	Model() = default;
 	~Model() = default;
 	
+	// TODO ; ÉRÉsÅ[Ç≈Ç´Ç»Ç¢ÇÊÇ§Ç…Ç∑ÇÈ
 	// Model(const Model&) = delete;
 	// Model& operator=(const Model&) = delete;
-
 	Model(const Model&) = default;
 	Model& operator=(const Model&) = default;
 	

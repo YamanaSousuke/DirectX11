@@ -5,7 +5,7 @@
 using namespace Microsoft::WRL;
 using namespace DirectX;
 
-// コンストラクタ
+// コンストラクター
 Game::Game(LPCWSTR title, UINT width, UINT height) : D3DApp(title, width, height) { }
 
 // 初期化
@@ -46,7 +46,7 @@ bool Game::Init()
 	auto model = fbxMeshfile.Load("Models/House1/House1.fbx", deviceContext.Get());
 	house.SetModel(model);
 	house.GetTransform().SetScale(0.04f, 0.04f, 0.04f);
-
+	house.GetTransform().SetPosition(0.5f, 0.0f, 0.0f);
 	return true;
 }
 
@@ -141,13 +141,13 @@ void Game::UpdateScene()
 	// ライト
 	DirectionalLight directionalLight[4] = {};
 	directionalLight[0].diffuse = XMFLOAT4(1.0f, 0.84f, 0.0f, 1.0f);
-	directionalLight[0].ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+	directionalLight[0].ambient = XMFLOAT4(0.25f, 0.25f, 0.25f, 1.0f);
 	directionalLight[0].direction = XMFLOAT4(-1.0f, -1.0f, 2.0f, 0.0f);
 	directionalLight[1].diffuse = XMFLOAT4(1.0f, 0.84f, 0.0f, 1.0f);
-	directionalLight[1].ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+	directionalLight[1].ambient = XMFLOAT4(0.25f, 0.25f, 0.25f, 1.0f);
 	directionalLight[1].direction = XMFLOAT4(-1.0f, -1.0f, 0.0f, 0.0f);
 	directionalLight[2].diffuse = XMFLOAT4(1.0f, 0.84f, 0.0f, 1.0f);
-	directionalLight[2].ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+	directionalLight[2].ambient = XMFLOAT4(0.25f, 0.25f, 0.25f, 1.0f);
 	directionalLight[2].direction = XMFLOAT4(-1.0f, -1.0f, -2.0f, 0.0f);
 	for (UINT i = 0; i < ARRAYSIZE(directionalLight); i++) {
 		effect.SetDirectionalLight(i, directionalLight[i]);
@@ -161,10 +161,6 @@ void Game::UpdateScene()
 	effect.SetFogState(fogEnable);
 	effect.SetFogStart(fogStart);
 	effect.SetFogRange(abs(fogEnd - fogStart));
-	
-	// 粉砕エフェクトについての設定
-	effect.SetInitialVelocity(XMFLOAT4(0.0f, 5.0f, 0.0f, 0.0f));
-	effect.SetIntencity(6.0f);
 }
 
 // シーンの描画

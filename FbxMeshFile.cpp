@@ -121,10 +121,6 @@ void FbxMeshFile::LoadMaterial(Model::MeshData& meshData, FbxMesh* mesh)
 			}
 		}
 	}
-	else
-	{
-		printf("FbxSurfacePhong\n");
-	}
 
 	// アンビエントカラーの設定
 	FbxDouble3 color = colors[(int)Material::Ambient];

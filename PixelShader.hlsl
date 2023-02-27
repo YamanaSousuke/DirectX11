@@ -1,13 +1,9 @@
 #include "BasicShader.hlsli"
 
-static const float roughness = 0.5f;
-static const float microfacet = 0.3f;
-static const float maxEnergy = 1.5f;
-
 // ƒtƒŒƒlƒ‹”½Ë‚ğl—¶‚µ‚½ŠgU”½Ë—¦‚ÌŒvZ
 float CalcDiffuse(float3 normal, float3 light, float3 view)
 {
-	float halfVector = (light + view);
+	float3 halfVector = normalize(light + view);
 	float dotLH = saturate(dot(light, halfVector));
 
 	// 1‚ğ’´‚¦‚È‚¢‚æ‚¤‚ÉmaxEnergy‚Å³‹K‰»‚ğ‚·‚é
@@ -109,6 +105,7 @@ float4 main(PSInput input) : SV_TARGET
 		// ŠgU”½Ë‚Æ‹¾–Ê”½Ë‚Ì‡¬
 		light += diffuse * (1.0f - material.smooth) + specular;
 	}
+	// ŠÂ‹«Œõ‚É‚æ‚é’êã‚°
 	light += ambientColor * albedoColor;
 
 	// ƒtƒHƒO

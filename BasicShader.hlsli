@@ -4,12 +4,16 @@ SamplerState diffuseSampler;
 
 // ディレクショナルライトの個数
 static const int numDirectionalLight = 4;
-// 環境光
-static const float ambient = 0.2f;
 // π
 static const float PI = 3.1415926f;
 // 重力
 static const float4 gravity = float4(0.0f, -9.8f, 0.0f, 0.0f);
+// 粗さ
+static const float roughness = 0.2f;
+// マイクロファセット
+static const float microfacet = 0.76f;
+// 拡散反射の計算時の正規化用
+static const float maxEnergy = 1.5f;
 
 // ディレクショナルライト
 struct DirectionalLight {
