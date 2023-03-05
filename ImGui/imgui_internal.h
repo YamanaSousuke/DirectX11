@@ -970,7 +970,8 @@ struct ImGuiDataTypeInfo
 {
     size_t      Size;           // Size in bytes
     const char* Name;           // Short descriptive name for the type, for debugging
-    const char* PrintFmt;       // Default printf format for the type
+    const char* 
+        PrintFmt;       // Default printf format for the type
     const char* ScanFmt;        // Default scanf format for the type
 };
 

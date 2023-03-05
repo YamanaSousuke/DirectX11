@@ -63,9 +63,9 @@ XMFLOAT3 Transform::GetRotation() const
 // 度で回転の取得
 XMFLOAT3 Transform::GetRotationInDegree() const
 {
-	return XMFLOAT3(fmod(XMConvertToDegrees(rotation.x), 360.0f), 
-		fmod(XMConvertToDegrees(rotation.y), 360.0f), 
-		fmod(XMConvertToDegrees(rotation.z), 360.0f));
+	return XMFLOAT3(float(fmod(XMConvertToDegrees(rotation.x), 360.0f)), 
+		float(fmod(XMConvertToDegrees(rotation.y), 360.0f)), 
+		float(fmod(XMConvertToDegrees(rotation.z), 360.0f)));
 }
 
 // スケールの取得
