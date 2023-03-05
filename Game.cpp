@@ -41,7 +41,12 @@ bool Game::Init()
 	camera.SetProjectionMatrix(XMConvertToRadians(fovAngle), aspectRatio, nearZ, farZ);
 
 	// FBXÉÇÉfÉãÇÃì«Ç›çûÇ›
+#ifdef NDEBUG
+	auto model = fbxMeshfile.Load("../../Models/House1/House1.fbx", deviceContext.Get());
+#else
 	auto model = fbxMeshfile.Load("Models/House1/House1.fbx", deviceContext.Get());
+#endif // NDEBUG
+
 	house.SetModel(model);
 	house.GetTransform().SetScale(0.04f, 0.04f, 0.04f);
 	house.GetTransform().SetPosition(0.5f, 0.0f, 0.0f);
