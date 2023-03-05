@@ -1,9 +1,6 @@
 #pragma once
 
-#pragma warning (push)
 #include <fbxsdk.h>
-// #pragma warning(disable : 26495)
-#pragma warning (pop)
 #include <DirectXMath.h>
 #include "Model.h"
 

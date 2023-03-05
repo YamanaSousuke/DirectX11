@@ -1,7 +1,5 @@
 #include "Game.h"
 
-#include <iostream>
-
 using namespace Microsoft::WRL;
 using namespace DirectX;
 
@@ -114,10 +112,16 @@ void Game::UpdateScene()
 	if (ImGui::TreeNode("Material Parameter")) {
 		static float smooth = 0.0f;
 		static float metallic = 0.0f;
+		for (auto& mesh : meshList) {
+			smooth = mesh.material.smooth;
+			metallic = mesh.material.metallic;
+		}
+
 		ImGui::Text("smooth");
 		ImGui::SliderFloat("##smooth", &smooth, 0.0f, 1.0f, "%.2f");
 		ImGui::Text("metallic");
 		ImGui::SliderFloat("##metallic", &metallic, 0.0f, 1.0f, "%.2f");
+
 		for (auto& mesh : meshList) {
 			mesh.material.smooth = smooth;
 			mesh.material.metallic = metallic;
@@ -127,7 +131,7 @@ void Game::UpdateScene()
 
 	// 座標と拡大率のリセット
 	if (ImGui::Button("Reset")) {
-		house.GetTransform().SetPosition(0.0f, 0.0f, 0.0f);
+		house.GetTransform().SetPosition(0.5f, 0.0f, 0.0f);
 		house.GetTransform().SetScale(0.04f, 0.04f, 0.04f);
 	}
 
@@ -141,13 +145,13 @@ void Game::UpdateScene()
 	// ライト
 	DirectionalLight directionalLight[4] = {};
 	directionalLight[0].diffuse = XMFLOAT4(1.0f, 0.84f, 0.0f, 1.0f);
-	directionalLight[0].ambient = XMFLOAT4(0.25f, 0.25f, 0.25f, 1.0f);
+	directionalLight[0].ambient = XMFLOAT4(0.15f, 0.15f, 0.15f, 1.0f);
 	directionalLight[0].direction = XMFLOAT4(-1.0f, -1.0f, 2.0f, 0.0f);
 	directionalLight[1].diffuse = XMFLOAT4(1.0f, 0.84f, 0.0f, 1.0f);
-	directionalLight[1].ambient = XMFLOAT4(0.25f, 0.25f, 0.25f, 1.0f);
+	directionalLight[1].ambient = XMFLOAT4(0.15f, 0.15f, 0.15f, 1.0f);
 	directionalLight[1].direction = XMFLOAT4(-1.0f, -1.0f, 0.0f, 0.0f);
 	directionalLight[2].diffuse = XMFLOAT4(1.0f, 0.84f, 0.0f, 1.0f);
-	directionalLight[2].ambient = XMFLOAT4(0.25f, 0.25f, 0.25f, 1.0f);
+	directionalLight[2].ambient = XMFLOAT4(0.15f, 0.15f, 0.15f, 1.0f);
 	directionalLight[2].direction = XMFLOAT4(-1.0f, -1.0f, -2.0f, 0.0f);
 	for (UINT i = 0; i < ARRAYSIZE(directionalLight); i++) {
 		effect.SetDirectionalLight(i, directionalLight[i]);

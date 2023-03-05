@@ -16,6 +16,6 @@ struct Material {
 	DirectX::XMFLOAT4 diffuse;
 	DirectX::XMFLOAT4 ambient;
 	DirectX::XMFLOAT4 specular;
-	float smooth;
-	float metallic;
+	float smooth = 0.5f;
+	float metallic = 0.0f;
 };

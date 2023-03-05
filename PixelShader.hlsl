@@ -48,7 +48,7 @@ float GeometricDamping(float dotNH, float dotNV, float dotVH, float dotNL)
 // Cook-Trranceモデルの鏡面反射
 float CookTrranceSpecular(float3 light, float3 view, float3 normal, float metallic)
 {
-	float halfVector = normalize(light + view);
+	float3 halfVector = normalize(light + view);
 	// 内積の計算
 	float dotNH = saturate(dot(normal, halfVector));
 	float dotVH = saturate(dot(view, halfVector));
@@ -74,14 +74,14 @@ float4 main(PSInput input) : SV_TARGET
 	float3 specularColor = albedoColor.xyz;
 
 	// 視線ベクトルと視線までの距離
-	float3 toEye = normalize(eyePosition - input.worldPosition);
-	float distanceToEye = distance(eyePosition, input.worldPosition);
+	float3 toEye = normalize(eyePosition - input.worldPosition.xyz);
+	float distanceToEye = distance(eyePosition, input.worldPosition.xyz);
 
 	// マテリアルの強さの取得
 	float ambientFactor = material.materialAmbient[3];
 	float diffuseFactor = material.materialDiffuse[3];
 	
-	float3 light = 0.0f;
+	float4 light = 0.0f;
 	float4 ambientColor = 0.0f;
 	[unroll]
 	for (int i = 0; i < numDirectionalLight; i++) {
@@ -95,7 +95,7 @@ float4 main(PSInput input) : SV_TARGET
 		// 正規化ランバート反射
 		float dotNL = saturate(dot(lightVector.xyz, input.normal));
 		float3 lambertDiffuse = directionalLight[i].lightDiffuse.xyz * dotNL / PI;
-		float3 diffuse = material.materialDiffuse.xyz * lambertDiffuse * diffuseFresnel * albedoColor * diffuseFactor;
+		float3 diffuse = material.materialDiffuse.xyz * lambertDiffuse * diffuseFresnel * albedoColor.xyz * diffuseFactor;
 
 		// 鏡面反射
 		float3 specular = CookTrranceSpecular(lightVector, toEye, input.normal, material.smooth) * directionalLight[i].lightDiffuse.xyz;
@@ -103,7 +103,7 @@ float4 main(PSInput input) : SV_TARGET
 		// 金属度が高ければスぺキュラ反射には色が付く、低ければ白
 		specular *= lerp(float3(1.0f, 1.0f, 1.0f), specularColor, material.metallic);
 		// 拡散反射と鏡面反射の合成
-		light += diffuse * (1.0f - material.smooth) + specular;
+		light += float4(diffuse, 1.0f) * (1.0f - material.smooth) + float4(specular, 1.0f);
 	}
 	// 環境光による底上げ
 	light += ambientColor * albedoColor;
@@ -112,7 +112,7 @@ float4 main(PSInput input) : SV_TARGET
 	[flatten]
 	if (fogEnable) {
 		float fogLerp = saturate((distanceToEye - fogStart) / fogRange);
-		light = lerp(light, fogColor, fogLerp);
+		light = lerp(light, float4(fogColor, 1.0f), fogLerp);
 	}
-	return float4(light, 1.0f);
+	return light;
 }
