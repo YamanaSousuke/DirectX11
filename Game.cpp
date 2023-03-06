@@ -43,7 +43,7 @@ bool Game::Init()
 	// FBXÉÇÉfÉãÇÃì«Ç›çûÇ›
 #ifdef NDEBUG
 	auto model = fbxMeshfile.Load("../../Models/House1/House1.fbx", deviceContext.Get());
-#else
+#else 
 	auto model = fbxMeshfile.Load("Models/House1/House1.fbx", deviceContext.Get());
 #endif // NDEBUG
 
